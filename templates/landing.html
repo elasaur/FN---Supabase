@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>File Nest — Smart File Sorter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing_style.css') }}">
+</head>
+<body>
+
+<!-- Background blobs -->
+<div class="blob-wrap">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="blob blob4"></div>
+</div>
+
+<nav>
+  <a class="nav-logo" href="#">
+
+    <div class="nav-logo-icon">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" 
+           alt="File Nest Logo" 
+           class="logo-img">
+    </div>
+
+    <div>
+      <div class="nav-logo-text">File Nest</div>
+      <div class="nav-logo-sub">AI-Assisted File Organization</div>
+    </div>
+  </a>
+
+  <div class="nav-links">
+    <a class="nav-link" href="/features">Features</a>
+    <a class="nav-link" href="#">How it works</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+
+  <div class="hero-badge">
+    <span class="material-symbols-rounded">auto_awesome</span>
+    AI-Assisted File Organization
+  </div>
+
+  <h1 class="hero-title">
+    Turning file<br>
+    <span class="accent-word">chaos</span> into
+    <span class="italic-word">smart</span> organization.
+  </h1>
+
+  <p class="hero-tagline">
+    File Nest uses NLP to read your documents and recommend the right folders, so you never hunt for a file again.
+  </p>
+
+  <div class="hero-cta-group">
+    <a class="cta-btn" href="/login">
+      <span class="material-symbols-rounded">nest_eco_leaf</span>
+      Get started
+    </a>
+    <a class="cta-ghost" href="#">
+      <span class="material-symbols-rounded">play_circle</span>
+      See how it works
+    </a>
+  </div>
+
+  <div class="hero-social-proof">
+    <div class="avatar-stack">
+      <div class="avatar-pill" style="background:linear-gradient(135deg,#e8855a,#f5a7c7)">M</div>
+      <div class="avatar-pill" style="background:linear-gradient(135deg,#9b87d4,#7ec8e3)">J</div>
+      <div class="avatar-pill" style="background:linear-gradient(135deg,#7ecfb3,#e8b84b)">A</div>
+      <div class="avatar-pill" style="background:linear-gradient(135deg,#f5a7c7,#9b87d4)">K</div>
+    </div>
+    <span>Loved by students & professionals ✨</span>
+  </div>
+
+</body>
+</html>

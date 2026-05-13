@@ -1,0 +1,36 @@
+/* STATISTICS */
+/* ── 2-COL LAYOUT ── */
+.row2,
+.stats-stack { display: grid; grid-template-columns: 1fr; gap: 20px; }
+.stats-card-panel { padding: 24px; }
+.stats-card-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.stats-loading {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── CHART BARS ── */
+.chart-bar-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.chart-bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text2);
+  width: 180px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chart-bar-label .file-type-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}
+.chart-bar-bg { flex: 1; height: 22px; background: var(--bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.chart-bar-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding-left: 8px; font-size: 0.72rem; font-weight: 800; color: #fff; transition: width 0.6s ease; }
+.chart-count { font-size: 0.78rem; font-weight: 700; color: var(--text2); width: 24px; text-align: right; flex-shrink: 0; }

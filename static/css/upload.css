@@ -1,0 +1,187 @@
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  background: var(--surface);
+  border: 2.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent3);
+}
+
+.upload-icon-wrap { font-size: 3rem; margin-bottom: 14px; display: block; }
+.upload-title { font-family: 'Fraunces', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 6px; }
+.upload-sub { font-size: 0.82rem; color: var(--text3); margin-bottom: 16px; }
+
+.browse-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all .18s;
+  margin-bottom: 16px;
+  color: var(--text2);
+}
+
+.browse-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.file-types { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.file-type-chip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text3);
+}
+
+/* ── UPLOAD LOADING ── */
+.upload-loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin-bottom: 6px;
+}
+
+.upload-loading-title {
+  font-family: 'Fraunces', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.upload-loading-sub {
+  font-size: 0.78rem;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+.upload-loading-steps {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 8px;
+}
+
+.upload-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text3);
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  transition: all .3s;
+  white-space: nowrap;
+}
+
+.upload-step .material-symbols-rounded {
+  font-size: 0.9rem;
+}
+
+.upload-step.active {
+  color: var(--accent);
+  background: var(--accent3);
+  border-color: var(--accent2);
+}
+
+.upload-step.active .material-symbols-rounded {
+  animation: spin .8s linear infinite;
+}
+
+.upload-step.done {
+  color: var(--mint);
+  background: var(--mint2);
+  border-color: var(--mint);
+}
+
+.upload-step.pending {
+  opacity: 0.35;
+}
+
+.upload-step .material-symbols-rounded { font-size: 1rem; }
+.upload-step.active { color: var(--accent); border-color: var(--accent2); background: var(--accent3); }
+.upload-step.done { color: var(--mint); border-color: var(--mint2); background: var(--mint2); }
+.upload-step.pending { opacity: 0.45; }
+
+.prediction-card.saving {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+/* ── STEPS ROW ── */
+.steps-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+
+.step-card {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.step-num { font-size: 0.68rem; font-weight: 900; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+.step-icon { font-size: 1.6rem; margin-bottom: 6px; }
+.step-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); }
+
+/* ── UPLOAD GUIDELINES ── */
+.upload-guidelines {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 28px;
+}
+
+.guideline-card {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.guideline-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.guideline-icon .material-symbols-rounded { font-size: 1.1rem; }
+.guideline-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+.guideline-sub { font-size: 0.75rem; color: var(--text3); line-height: 1.6; }
+
+#page-upload .sort-chip2.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}

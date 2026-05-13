@@ -1,0 +1,123 @@
+// static/js/dashboard.js
+
+async function loadDashboard() {
+  updateDashboardGreeting();
+  setDashboardLoading();
+  const [data, folders, files] = await Promise.all([
+    apiGet('/api/stats'),
+    apiGet('/api/folders'),
+    apiGet('/api/files?sort=date'),
+  ]);
+
+  document.getElementById('dashTotalFolders').textContent = data.total_folders;
+  document.getElementById('dashTotalFiles').textContent = data.total_files;
+  document.getElementById('dashRecentCount').textContent = data.recent_count;
+  document.getElementById('dashAiSorted').textContent = data.ai_sorted;
+
+  allFolders = folders;
+
+  const pinned = allFolders.filter(f => f.pinned);
+  const pinnedEl = document.getElementById('dashPinnedFolders');
+  pinnedEl.innerHTML = pinned.length
+    ? pinned.map(f => makeFolderCard(f, true)).join('')
+    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;">
+    <div class="es-icon">
+        <img src="https://img.icons8.com/pulsar-color/48/pin.png" alt="Pin Icon">
+    </div>
+    <div class="es-text">
+        No pinned folders — pin one from the Folders page!
+    </div>
+</div>`;
+
+  dashRecentFiles = files;
+  renderDashboardRecentUploads();
+}
+
+function displayGivenNames(fullName) {
+  const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return parts[0] || 'there';
+  return parts.slice(0, 2).join(' ');
+}
+
+function philippineGreeting() {
+  const hour = Number(new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    hour12: false,
+    timeZone: 'Asia/Manila',
+  }).format(new Date()));
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function updateDashboardGreeting(name) {
+  const greetText = document.getElementById('greetText');
+  const greetName = document.getElementById('greetName');
+  if (greetText) greetText.textContent = philippineGreeting();
+  if (greetName) greetName.textContent = displayGivenNames(name || window.FILE_NEST_USER?.name || greetName.textContent);
+}
+
+function setDashboardRecentSort(mode, el) {
+  dashRecentSortMode = mode;
+  document.querySelectorAll('.dashboard-recent-sort .sort-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderDashboardRecentUploads();
+}
+
+function renderDashboardRecentUploads() {
+  const recEl = document.getElementById('dashRecentList');
+  if (!recEl) return;
+  const sorted = [...dashRecentFiles];
+  if (dashRecentSortMode === 'name') sorted.sort((a,b) => a.original_name.localeCompare(b.original_name));
+  if (dashRecentSortMode === 'folder') sorted.sort((a,b) => String(a.folder_name || '').localeCompare(String(b.folder_name || '')));
+  if (dashRecentSortMode === 'type') sorted.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
+  if (dashRecentSortMode === 'date') sorted.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+  recEl.innerHTML = sorted.length
+    ? sorted.slice(0,5).map(f => makeRecentItem(f)).join('')
+    : `<div class="empty-state">
+      <div class="es-icon">
+          <img src="https://img.icons8.com/pulsar-color/48/google-docs.png" alt="Files Icon">
+      </div>
+      <div class="es-text">
+          No files yet — upload one to get started!
+      </div>
+  </div>`;
+  }
+
+function makeRecentItem(f) {
+  const createdAt = parseAppDate(f.created_at);
+  const isNew = createdAt && (Date.now() - createdAt.getTime()) < 24 * 3600 * 1000;
+  return `
+    <div class="recent-item">
+      <div class="recent-file-icon">${getExtIcon(f.original_name)}</div>
+      <div class="recent-meta">
+        <div class="recent-name">${f.original_name}${isNew ? ' <span class="new-badge">NEW</span>' : ''}</div>
+        <div class="recent-info">${folderIconHtml(f.folder_emoji, 'recent-folder-icon')} ${escHtml(f.folder_name)} · ${getExt(f.original_name).toUpperCase()} · ${formatSize(f.file_size)}</div>
+      </div>
+      <div class="recent-date">${timeAgo(f.created_at)}</div>
+      ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileDashboard(${f.id})`)}
+    </div>`;
+}
+
+async function deleteFileDashboard(id) {
+  if (!confirm('Delete this file permanently?')) return;
+  const res = await fetch(`/api/files/${id}`, { method:'DELETE' });
+  const data = await res.json();
+  if (data.success) {
+    await Promise.all([loadDashboard(), loadFolders()]);
+    showToast('File deleted.', 'warn');
+  } else {
+    showToast(data.message, 'error');
+  }
+}
+
+function setDashboardLoading() {
+  ['dashTotalFolders', 'dashTotalFiles', 'dashRecentCount', 'dashAiSorted'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<span class="spinner"></span>';
+  });
+  const pinnedEl = document.getElementById('dashPinnedFolders');
+  if (pinnedEl) pinnedEl.innerHTML = '<div class="section-loading"><div class="spinner"></div></div>';
+  const recEl = document.getElementById('dashRecentList');
+  if (recEl) recEl.innerHTML = '<div class="section-loading"><div class="spinner"></div></div>';
+}

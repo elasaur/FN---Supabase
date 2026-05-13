@@ -1,0 +1,256 @@
+<!-- ══════════════ MODALS ══════════════ -->
+<!-- Create Folder -->
+<div class="modal-bg" id="modal-createFolder" onclick="if(event.target===this)closeModal('createFolder')">
+  <div class="modal">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt=""> Create New Folder</div>
+    <div class="modal-form">
+      <div><label class="form-label">Folder Name</label><input class="form-input" id="cf-name" placeholder="e.g. Tax Documents"/></div>
+      <div><label class="form-label">Folder Emoji</label><input class="form-input" id="cf-emoji" placeholder="e.g. 📁" maxlength="8" value="📁"/></div>
+      <div>
+        <label class="form-label">Folder Color</label>
+        <div class="color-picker" id="cf-colorPicker"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('createFolder')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateFolder()">Create Folder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Folder -->
+<div class="modal-bg" id="modal-editFolder" onclick="if(event.target===this)closeModal('editFolder')">
+  <div class="modal">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/pencil.png" alt=""> Edit Folder</div>
+    <div class="modal-form">
+      <div><label class="form-label">Folder Name</label><input class="form-input" id="rf-name"/></div>
+      <div><label class="form-label">Folder Emoji</label><input class="form-input" id="rf-emoji" placeholder="e.g. 📁" maxlength="8"/></div>
+      <div>
+        <label class="form-label">Folder Color</label>
+        <div class="color-picker" id="rf-colorPicker"></div>
+      </div>
+      <input type="hidden" id="rf-id"/>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('editFolder')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitEditFolder()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Change Name -->
+<div class="modal-bg" id="modal-editName" onclick="if(event.target===this)closeModal('editName')">
+  <div class="modal">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/edit-user.png" alt=""> Edit Name</div>
+    <div class="modal-form">
+      <div><label class="form-label">Full Name</label><input class="form-input" id="editNameInput" value="{{ user['name'] }}"/></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('editName')">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveName()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Email Address -->
+<div class="modal-bg" id="modal-editEmail" onclick="if(event.target===this)closeModal('editEmail')">
+  <div class="modal">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/new-post.png" alt=""> Edit Email</div>
+    <div class="modal-form">
+      <div><label class="form-label">Email Address</label><input class="form-input" id="editEmailInput" value="{{ user['email'] }}"/></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('editEmail')">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveEmail()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password: Email Step -->
+<div class="modal-bg" id="modal-editPassword" onclick="if(event.target===this)closeModal('editPassword')">
+  <div class="modal">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/re-enter-pincode.png" alt=""> Change Password</div>
+    <form class="modal-form" onsubmit="event.preventDefault();sendSettingsPasswordReset(this.querySelector('[type=submit]'));">
+      <p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin:0;">
+        Send a secure reset link to your account email.
+      </p>
+      <div><label class="form-label">Account Email</label><input class="form-input" id="editPasswordEmail" type="email" value="{{ user['email'] }}" readonly required></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('editPassword')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Send Reset Link</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Change Password: Sent Step -->
+<div class="modal-bg" id="modal-passwordResetSent" onclick="if(event.target===this)closeModal('passwordResetSent')">
+  <div class="modal">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/new-post.png" alt=""> Check Your Email</div>
+    <div class="modal-form">
+      <p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin:0;">
+        We sent a password reset link to <strong id="passwordResetSentEmail">{{ user['email'] }}</strong>. Open the link to set your new password.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('passwordResetSent');openModal('editPassword')">Back</button>
+        <button type="button" class="btn btn-primary" onclick="closeModal('passwordResetSent')">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Folder contents modal -->
+<div class="modal-bg" id="modal-folderFiles" onclick="if(event.target===this)closeModal('folderFiles')">
+  <div class="modal folder-files-modal">
+    <div class="modal-title" id="folderFilesTitle"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt=""> Folder Files</div>
+    <div class="sort-bar folder-files-sort">
+      <span style="font-size:0.78rem;font-weight:800;color:var(--text3);">Sort by:</span>
+      <button class="sort-chip active" onclick="setFolderFilesSort('name',this)">Name</button>
+      <button class="sort-chip" onclick="setFolderFilesSort('date',this)">Date</button>
+      <button class="sort-chip" onclick="setFolderFilesSort('type',this)">Type</button>
+    </div>
+    <div id="folderFilesList" class="folder-files-list-wrap"></div>
+    <button class="btn btn-ghost" onclick="closeModal('folderFiles')" style="width:100%;justify-content:center;">Close</button>
+  </div>
+</div>
+
+<!-- Rename File -->
+<div class="modal-bg" id="modal-renameFile" onclick="if(event.target===this)closeModal('renameFile')">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/rename.png" alt=""> Rename File</div>
+    <div class="modal-form">
+      <div>
+        <label class="form-label">File Name</label>
+        <input class="form-input" id="renameFileInput" maxlength="160">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('renameFile')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitRenameFile()">Rename</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Move File -->
+<div class="modal-bg" id="modal-moveFile" onclick="if(event.target===this)closeModal('moveFile')">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/right.png" alt=""> Move File</div>
+    <div class="modal-form">
+      <div>
+        <label class="form-label">Destination Folder</label>
+        <select class="form-input" id="moveFileFolder"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('moveFile')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitMoveFile()">Move</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE ALL FILES CONFIRMATION MODAL ── -->
+<div class="modal-bg" id="modal-deleteAllFiles">
+  <div class="modal" style="max-width: 400px;">
+    <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
+    <div class="modal-title danger-title">Delete All Files?</div>
+    <p style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;">
+      This will permanently delete <strong>all your uploaded files</strong>.
+      This action cannot be undone. Do you want to proceed?
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('deleteAllFiles')">
+        No, cancel
+      </button>
+      <button class="btn btn-primary"
+              style="background:var(--red); box-shadow:none;"
+              onclick="confirmDeleteAllFiles()">
+        Yes, delete all
+      </button>
+    </div>
+  </div>
+</div>
+ 
+ 
+<!-- ── DELETE ACCOUNT CONFIRMATION MODAL ── -->
+<div class="modal-bg" id="modal-deleteAccount">
+  <div class="modal" style="max-width: 400px;">
+    <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
+    <div class="modal-title danger-title">Delete Account?</div>
+    <p style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;">
+      This will permanently delete your <strong>account, all files, and all folders</strong>.
+      There is no way to recover your data after this. Do you want to proceed?
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('deleteAccount')">
+        No, cancel
+      </button>
+      <button class="btn btn-primary"
+              style="background:var(--red); box-shadow:none;"
+              onclick="confirmDeleteAccount()">
+        Yes, delete account
+      </button>
+    </div>
+  </div>
+</div>
+ 
+ 
+<!-- Delete Folder -->
+<div class="modal-bg" id="modal-deleteFolder">
+  <div class="modal" style="max-width: 400px;">
+    <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
+    <div class="modal-title danger-title">Delete Folder?</div>
+    <p id="deleteFolderMsg" style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="hideDeleteFolderModal('deleteFolder')">No, cancel</button>
+      <button class="btn btn-primary" style="background:var(--red); box-shadow:none;" onclick="confirmDeleteFolder()">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE ALL FOLDERS CONFIRMATION MODAL ── -->
+<div class="modal-bg" id="modal-deleteAllFolders">
+  <div class="modal" style="max-width: 400px;">
+    <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
+    <div class="modal-title danger-title">Delete All Folders?</div>
+    <p style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;">
+      Deleting all folders will move files from those folders to
+      <strong>Uncategorized</strong>. Make sure to move important files to
+      <strong>Uncategorized</strong> before deletion. This action cannot be undone.
+      Do you want to proceed?
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('deleteAllFolders')">
+        No, cancel
+      </button>
+      <button class="btn btn-primary"
+              style="background:var(--red); box-shadow:none;"
+              onclick="confirmDeleteAllFolders()">
+        Yes, delete all
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SESSION EXPIRED MODAL ── -->
+<div class="modal-bg" id="modal-sessionExpired">
+  <div class="modal" style="max-width: 400px;">
+    
+    <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⏳</div>
+    
+    <div class="modal-title" style="text-align:center;">
+      Session Expired
+    </div>
+
+    <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
+      Your session has expired due to inactivity. Please log in again to continue using the system.
+    </p>
+
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn btn-primary"
+              onclick="handleSessionExpired()">
+        Go to Login
+      </button>
+    </div>
+
+  </div>
+</div>

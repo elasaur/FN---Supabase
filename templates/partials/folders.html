@@ -1,0 +1,21 @@
+  <!-- ══ PAGE: ALL FOLDERS ══ -->
+  <div class="page" id="page-folders">
+    <div class="section-header">
+      <div>
+        <div class="section-title">All Folders</div>
+        <div class="section-sub">Manage all your folders here.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateFolderModal()">New Folder</button>
+    </div>
+    <div class="sort-bar">
+      <span style="font-size:0.78rem;font-weight:800;color:var(--text3);">Sort by:</span>
+      <button class="sort-chip active" data-sort="name" onclick="setFolderSort('name',this)">Name</button>
+      <button class="sort-chip" data-sort="count" onclick="setFolderSort('count',this)">File Count</button>
+      <button class="sort-chip" data-sort="pinned" onclick="setFolderSort('pinned',this)">Pinned First</button>
+    </div>
+    <div class="folders-grid" id="allFoldersList"></div>
+    <button class="folder-menu-btn" onclick="toggleFolderMenu(this, event)" title="Options"></button>
+    
+  </div>
+
+  

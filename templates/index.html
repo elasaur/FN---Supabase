@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Nest - Smart File Sorter</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reusable_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/folders.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/files.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
+</head>
+<body>
+
+<!-- Background blobs -->
+<div class="blob-wrap">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="blob blob4"></div>
+</div>
+
+<!-- Login Page -->
+<div class="auth-page open" id="loginPage">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}"
+          alt="File Nest Logo"
+          class="auth-logo-img">
+      <div>
+        <div class="logo-text">File Nest</div>
+        <div class="logo-sub">AI-Assisted File Sorting</div>
+      </div>
+    </div>
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Log into your File Nest account to continue.</div>
+    <div class="modal-form">
+      <div>
+        <label class="form-label">Email</label>
+        <input class="form-input" placeholder="maria@email.com" id="loginEmail" type="email">
+      </div>
+      <div>
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" placeholder="••••••••" id="loginPassword">
+        <div style="text-align:right;margin-top:5px;">
+          <span class="auth-link" style="font-size:0.78rem;" onclick="showForgot()">Forgot password?</span>
+        </div>
+      </div>
+      <div id="loginError" class="auth-error" style="display:none;"></div>
+      <button id="loginSubmit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doLogin()">Login</button>
+    </div>
+    <div class="auth-divider">Don't have an account? <span class="auth-link" onclick="showSignup()">Create one</span></div>
+  </div>
+</div>
+
+<!-- Signup Page -->
+<div class="auth-page" id="signupPage">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}"
+          alt="File Nest Logo"
+          class="auth-logo-img">
+      <div>
+        <div class="logo-text">File Nest</div>
+        <div class="logo-sub">Smart File Sorter</div>
+      </div>
+    </div>
+    <div class="auth-title">Create Account</div>
+    <div class="auth-sub">Start organizing your files with AI-powered sorting.</div>
+    <div class="modal-form">
+      <div>
+        <label class="form-label">Full Name</label>
+        <input class="form-input" placeholder="Maria Cruz" id="signupName">
+      </div>
+      <div>
+        <label class="form-label">Email</label>
+        <input class="form-input" placeholder="maria@email.com" id="signupEmail">
+      </div>
+      <div>
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" placeholder="••••••••" id="signupPassword" oninput="updateStrength(this)">
+        <div class="pw-strength" style="margin-top:6px;">
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Confirm Password</label>
+        <input class="form-input" type="password" placeholder="••••••••" id="signupConfirm">
+      </div>
+      <div id="signupError" class="auth-error" style="display:none;"></div>
+      <button id="signupSubmit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doSignup()">Create Account</button>
+    </div>
+    <div class="auth-divider">Already have an account? <span class="auth-link" onclick="showLogin()">Log In</span></div>
+  </div>
+</div>
+
+<!-- Forgot Password Page -->
+<div class="auth-page" id="forgotPage">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}"
+           alt="File Nest Logo" class="auth-logo-img">
+      <div>
+        <div class="logo-text">File Nest</div>
+        <div class="logo-sub">Reset Password</div>
+      </div>
+    </div>
+    <div class="auth-title">Reset Password</div>
+    <div class="auth-sub">Enter your email and we'll send you a reset link.</div>
+    <div class="modal-form">
+      <div>
+        <label class="form-label">Email</label>
+        <input class="form-input" placeholder="maria@email.com" id="forgotEmail" type="email">
+      </div>
+      <div id="forgotError" class="auth-error" style="display:none;"></div>
+      <button id="forgotSubmit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doForgot()">Send Reset Link</button>
+    </div>
+    <div class="auth-divider">Remembered it? <span class="auth-link" onclick="showLogin()">Back to Login</span></div>
+  </div>
+</div>
+
+<!-- Reset Password Page -->
+<div class="auth-page" id="resetPage">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}"
+           alt="File Nest Logo" class="auth-logo-img">
+      <div>
+        <div class="logo-text">File Nest</div>
+        <div class="logo-sub">Reset Password</div>
+      </div>
+    </div>
+    <div class="auth-title">Create New Password</div>
+    <div class="auth-sub">Enter your new password below.</div>
+    <div class="modal-form">
+      <div>
+        <label class="form-label">New Password</label>
+        <input class="form-input" type="password" id="newPw" placeholder="••••••••" oninput="updateStrength(this)">
+        <div class="pw-strength" style="margin-top:6px;">
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Confirm Password</label>
+        <input class="form-input" type="password" id="confirmPw" placeholder="••••••••">
+      </div>
+      <div id="resetError" class="auth-error" style="display:none;"></div>
+      <button id="resetSubmit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="resetPassword()" disabled>Reset Password</button>
+    </div>
+    <div class="auth-divider">Remember it? <span class="auth-link" onclick="showLogin()">Back to Login</span></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Toast JS -->
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+
+<script>
+// ── Token Storage Helpers ────────────────────────────────────────────────────
+// Tokens are kept in memory (primary) + sessionStorage (tab persistence).
+// They are also sent to the Flask backend on login so the server-side
+// session cookie is set for browser-navigated routes (/app).
+
+const TokenStore = {
+  _access:  null,
+  _refresh: null,
+
+  set(access, refresh) {
+    this._access  = access;
+    this._refresh = refresh;
+    try {
+      sessionStorage.setItem('fn_access',  access);
+      sessionStorage.setItem('fn_refresh', refresh);
+    } catch (_) {}
+  },
+
+  get access()  {
+    return this._access  || sessionStorage.getItem('fn_access')  || '';
+  },
+  get refresh() {
+    return this._refresh || sessionStorage.getItem('fn_refresh') || '';
+  },
+
+  clear() {
+    this._access  = null;
+    this._refresh = null;
+    try {
+      sessionStorage.removeItem('fn_access');
+      sessionStorage.removeItem('fn_refresh');
+    } catch (_) {}
+  },
+};
+
+function setAuthButtonLoading(button, loading, label) {
+  if (!button) return;
+  if (loading) {
+    if (!button.dataset.originalHtml) button.dataset.originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.classList.add('is-loading');
+    button.innerHTML = `<span class="btn-spinner"></span><span>${label || 'Loading...'}</span>`;
+  } else {
+    button.disabled = false;
+    button.classList.remove('is-loading');
+    if (button.dataset.originalHtml) {
+      button.innerHTML = button.dataset.originalHtml;
+      delete button.dataset.originalHtml;
+    }
+  }
+}
+
+// ── Page Navigation ──────────────────────────────────────────────────────────
+function showSignup() {
+  document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('open'));
+  document.getElementById('signupPage').classList.add('open');
+}
+
+function showLogin() {
+  document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('open'));
+  document.getElementById('loginPage').classList.add('open');
+}
+
+function showForgot() {
+  document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('open'));
+  document.getElementById('forgotPage').classList.add('open');
+}
+
+function showReset() {
+  document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('open'));
+  document.getElementById('resetPage').classList.add('open');
+}
+
+// ── Password Strength Bar ────────────────────────────────────────────────────
+function updateStrength(inputEl) {
+  if (!inputEl || !inputEl.closest) return;
+
+  const bars = Array.from(inputEl.closest('.modal-form').querySelectorAll('.pw-bar'));
+  if (bars.length !== 4) return;
+
+  const val = inputEl.value || '';
+  let lvl = 0;
+  if (val.length >= 10) lvl = 3;
+  else if (val.length >= 7) lvl = 2;
+  else if (val.length >= 4) lvl = 1;
+
+  const colors = ['#e87a7a', '#f5d06b', '#7ecfb3', '#7ecfb3'];
+
+  bars.forEach((bar, i) => {
+    bar.style.background = i <= lvl ? colors[lvl] : '#ddd';
+  });
+
+  const resetBtn = document.getElementById('resetSubmit');
+  if (resetBtn) {
+    resetBtn.disabled = lvl < 3;
+  }
+}
+
+// ── Login ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const btn = document.getElementById('loginSubmit');
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const errEl    = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
+  if (!email || !password) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // POST to Flask proxy → Flask calls Supabase Auth and sets session cookie
+  setAuthButtonLoading(btn, true, 'Logging in...');
+  try {
+    const res  = await fetch('/login', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      window.location.href = '/dashboard';
+    } else {
+      errEl.textContent    = data.message;
+      errEl.style.display  = 'block';
+    }
+  } catch (err) {
+    errEl.textContent = 'Something went wrong. Try again.';
+    errEl.style.display = 'block';
+  } finally {
+    setAuthButtonLoading(btn, false);
+  }
+}
+
+// ── Signup ───────────────────────────────────────────────────────────────────
+async function doSignup() {
+  const btn = document.getElementById('signupSubmit');
+  const name     = document.getElementById('signupName').value.trim();
+  const email    = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value.trim();
+  const confirm  = document.getElementById('signupConfirm').value.trim();
+  const errEl    = document.getElementById('signupError');
+  errEl.style.display = 'none';
+
+  if (!name || !email || !password || !confirm) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (password !== confirm) {
+    errEl.textContent = 'Passwords do not match.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  setAuthButtonLoading(btn, true, 'Creating...');
+  try {
+  const res  = await fetch('/signup', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ name, email, password, confirm }),
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    if (data.confirm_email) {
+      // Supabase email confirmation required
+      showToast('📧 Check your email to confirm your account, then log in.', 'success');
+      showLogin();
+    } else {
+      // Signup successful, redirect to dashboard
+      window.location.href = '/dashboard';
+    }
+  } else {
+    errEl.textContent   = data.message;
+    errEl.style.display = 'block';
+  }
+  } catch (err) {
+    errEl.textContent = 'Something went wrong. Try again.';
+    errEl.style.display = 'block';
+  } finally {
+    setAuthButtonLoading(btn, false);
+  }
+}
+
+// ── Forgot Password ───────────────────────────────────────────────────────────
+async function doForgot() {
+  const btn = document.getElementById('forgotSubmit');
+  const email = document.getElementById('forgotEmail').value.trim();
+  const errEl = document.getElementById('forgotError');
+
+  errEl.style.display = 'none';
+
+  if (!email) {
+    errEl.textContent = 'Please enter your email address.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  setAuthButtonLoading(btn, true, 'Sending...');
+  try {
+    const res = await fetch('/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await res.json();
+
+    // 👇 SHOW MODAL IF LINK EXISTS (dev/demo mode)
+    if (data.link) {
+      document.getElementById('resetLinkInput').value = data.link;
+      document.getElementById('linkModal').classList.add('open');
+    } else {
+      showToast('If that email exists, a reset link is on its way!', 'success');
+      showLogin();
+    }
+
+  } catch (err) {
+    errEl.textContent = 'Something went wrong. Try again.';
+    errEl.style.display = 'block';
+  } finally {
+    setAuthButtonLoading(btn, false);
+  }
+}
+
+function closeLinkModal() {
+  document.getElementById('linkModal').classList.remove('open');
+}
+
+function copyResetLink() {
+  const input = document.getElementById('resetLinkInput');
+  input.select();
+  document.execCommand('copy');
+  showToast('📋 Link copied!', 'success');
+}
+
+// ── Reset Password Token ────────────────────────────────────────────────────
+const resetToken = "{{ token }}";
+const resetHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+const resetAccessToken = resetHash.get('access_token') || '';
+
+async function resetPassword() {
+  const btn = document.getElementById('resetSubmit');
+  const new_password = document.getElementById('newPw').value;
+  const confirm_password = document.getElementById('confirmPw').value;
+  const err = document.getElementById('resetError');
+
+  err.style.display = 'none';
+
+  if (!new_password || !confirm_password) {
+    err.textContent = "Fill all fields.";
+    err.style.display = "block";
+    return;
+  }
+
+  setAuthButtonLoading(btn, true, 'Resetting...');
+  try {
+  const res = await fetch('/api/reset-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type':'application/json',
+      'X-Access-Token': resetAccessToken,
+    },
+    body: JSON.stringify({ token: resetToken, new_password, confirm_password })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    showToast('Password updated. Please log in with your new password.', 'success');
+    window.location.href = "/login?reset=1";
+  } else {
+    err.textContent = data.message;
+    err.style.display = "block";
+  }
+  } catch (error) {
+    err.textContent = 'Something went wrong. Try again.';
+    err.style.display = "block";
+  } finally {
+    setAuthButtonLoading(btn, false);
+  }
+}
+
+// ── Enter key submits active form ────────────────────────────────────────────
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('loginPage').classList.contains('open'))  doLogin();
+  else if (document.getElementById('signupPage').classList.contains('open')) doSignup();
+  else if (document.getElementById('forgotPage').classList.contains('open')) doForgot();
+  else if (document.getElementById('resetPage').classList.contains('open')) resetPassword();
+});
+
+// ── Show reset page if token is present ────────────────────────────────────
+if (resetAccessToken) {
+  window.location.replace('/change-password' + window.location.hash);
+} else if (resetToken && resetToken.trim()) {
+  showReset();
+}
+
+if (new URLSearchParams(window.location.search).get('expired') === '1') {
+  showLogin();
+  const loginError = document.getElementById('loginError');
+  loginError.textContent = 'Session expired. Please log in again.';
+  loginError.style.display = 'block';
+}
+
+if (new URLSearchParams(window.location.search).get('reset') === '1') {
+  showLogin();
+  const loginError = document.getElementById('loginError');
+  loginError.textContent = 'Password updated. Log in with your new password.';
+  loginError.style.display = 'block';
+}
+</script>
+</body>
+</html>

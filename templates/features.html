@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Nest — Features</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing_style.css') }}">
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="{{ url_for('landing') }}">
+    <div class="nav-logo-icon">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="File Nest Logo" class="logo-img">
+    </div>
+    <div>
+      <div class="nav-logo-text">File Nest</div>
+      <div class="nav-logo-sub">AI-Assisted File Organization</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="{{ url_for('landing') }}">Home</a>
+    <a class="nav-link" href="{{ url_for('features') }}">Features</a>
+  </div>
+</nav>
+
+<!-- Background blobs -->
+<div class="blob-wrap">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="blob blob4"></div>
+</div>
+<!-- Floating feature cards -->
+<div class="floating-cards">
+
+  <div class="float-card">
+    <div class="fc-icon" style="background:var(--lavender2)">
+      <span class="material-symbols-rounded" style="color:var(--lavender)">psychology</span>
+    </div>
+    <div>
+      <div class="fc-label">AI Reads Content</div>
+      <div class="fc-sub">NLP via TextBlob</div>
+    </div>
+  </div>
+
+  <div class="float-card">
+    <div class="fc-icon" style="background:var(--accent3)">
+      <span class="material-symbols-rounded" style="color:var(--accent)">folder_open</span>
+    </div>
+    <div>
+      <div class="fc-label">Auto-Sorted</div>
+      <div class="fc-sub">Right folder, instantly</div>
+    </div>
+  </div>
+
+  <div class="float-card">
+    <div class="fc-icon" style="background:var(--mint2)">
+      <span class="material-symbols-rounded" style="color:var(--mint)">check_circle</span>
+    </div>
+    <div>
+      <div class="fc-label">You're in Control</div>
+      <div class="fc-sub">Review before saving</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Features section -->
+<section class="features">
+  <div class="features-eyebrow">Why File Nest?</div>
+  <h2 class="features-title">Everything you need to stay organized 🗂️</h2>
+  <div class="features-grid">
+
+    <div class="feat-card">
+      <div class="feat-icon" style="background:var(--lavender2)">
+        <span class="material-symbols-rounded" style="color:var(--lavender)">psychology</span>
+      </div>
+      <div class="feat-name">Smart AI Sorting</div>
+      <div class="feat-desc">NLP reads your file's actual content and filename to predict the most fitting folder with confidence scoring.</div>
+    </div>
+
+    <div class="feat-card">
+      <div class="feat-icon" style="background:var(--accent3)">
+        <span class="material-symbols-rounded" style="color:var(--accent)">folder_special</span>
+      </div>
+      <div class="feat-name">Custom Folders</div>
+      <div class="feat-desc">Create folders with custom icons, colors, and names. Pin your favorites for quick access on the dashboard.</div>
+    </div>
+
+    <div class="feat-card">
+      <div class="feat-icon" style="background:var(--mint2)">
+        <span class="material-symbols-rounded" style="color:var(--mint)">cloud_upload</span>
+      </div>
+      <div class="feat-name">Drag & Drop Upload</div>
+      <div class="feat-desc">Drop any file — PDF, DOCX, PPTX, images, audio — and let the AI handle the rest. Up to 50 MB per file.</div>
+    </div>
+
+    <div class="feat-card">
+      <div class="feat-icon" style="background:var(--yellow2)">
+        <span class="material-symbols-rounded" style="color:var(--yellow)">bar_chart</span>
+      </div>
+      <div class="feat-name">Visual Statistics</div>
+      <div class="feat-desc">See how your files are distributed across folders and track how much the AI is doing for you.</div>
+    </div>
+
+    <div class="feat-card">
+      <div class="feat-icon" style="background:var(--sky2)">
+        <span class="material-symbols-rounded" style="color:var(--sky)">search</span>
+      </div>
+      <div class="feat-name">Instant Search</div>
+      <div class="feat-desc">Find any file across all your folders in a second with the global search bar.</div>
+    </div>
+
+    <div class="feat-card">
+      <div class="feat-icon" style="background:var(--pink2)">
+        <span class="material-symbols-rounded" style="color:var(--pink)">edit</span>
+      </div>
+      <div class="feat-name">Always Overridable</div>
+      <div class="feat-desc">AI suggestions are just that — suggestions. You review and confirm before anything gets saved.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  Made with <span>♥</span> · File Nest · Smart File Sorter
+</footer>
+</body>
+</html>

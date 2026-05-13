@@ -1,0 +1,26 @@
+  <!-- ══ PAGE: ALL FILES ══ -->
+  <div class="page" id="page-files">
+    <div class="section-header">
+      <div>
+        <div class="section-title">All Files</div>
+        <div class="section-sub">Browse all uploaded files across every folder.</div>
+      </div>
+    </div>
+    <div class="sort-bar">
+      <span style="font-size:0.78rem;font-weight:800;color:var(--text3);">Sort by:</span>
+      <button class="sort-chip active" onclick="setAllFilesSort('name',this)">Name</button>
+      <button class="sort-chip" onclick="setAllFilesSort('folder',this)">Folder</button>
+      <button class="sort-chip" onclick="setAllFilesSort('type',this)">Type</button>
+      <button class="sort-chip" onclick="setAllFilesSort('date',this)">Date</button>
+    </div>
+    <div class="card files-table-card">
+      <table class="file-table">
+        <thead><tr><th>File</th><th>Type</th><th>Folder</th><th>Size</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="allFilesTbody">
+          <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  

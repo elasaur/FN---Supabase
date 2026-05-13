@@ -1,0 +1,205 @@
+  <!-- ══ PAGE: UPLOAD ══ -->
+  <div class="page" id="page-upload">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Upload Files</div>
+        <div class="section-sub">AI reads your file content and filename to suggest the best folder — including new folders!</div>
+      </div>
+    </div>
+
+    <!-- UPLOAD ZONE -->
+    <div class="upload-zone" id="uploadZone"
+      ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)"
+      onclick="document.getElementById('fileInput').click()">
+
+      <!-- Default state -->
+      <div id="uploadDefault">
+        <div class="upload-icon-wrap"><img class="ui-icon ui-icon-xl" src="https://img.icons8.com/pulsar-color/48/drag-and-drop.png" alt=""></div>
+        <div class="upload-title" id="uploadZoneTitle">Drag & drop your file here</div>
+        <div class="upload-sub">or click to browse from your device</div>
+        <button class="browse-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Browse Files</button>
+        <div class="file-types">
+          <span class="file-type-chip">PDF</span><span class="file-type-chip">DOCX</span>
+          <span class="file-type-chip">XLSX</span><span class="file-type-chip">PPTX</span>
+          <span class="file-type-chip">JPG</span><span class="file-type-chip">PNG</span>
+          <span class="file-type-chip">MP3</span><span class="file-type-chip">TXT</span>
+          <span class="file-type-chip">+ more</span>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="uploadLoading" style="display:none;flex-direction:column;align-items:center;gap:10px;">
+        <div class="upload-loading-spinner"></div>
+        <div class="upload-loading-title">Analyzing your file...</div>
+        <div class="upload-loading-sub">AI is working with your files.</div>
+        <div class="upload-loading-steps">
+          <div class="upload-step done"    id="step1"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/upload.png" alt=""> File received</div>
+          <div class="upload-step active"  id="step2"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/learning.png" alt=""> Extracting content</div>
+          <div class="upload-step pending" id="step3"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/ai-generated-text.png" alt=""> Predicting folder</div>
+        </div>
+      </div>
+
+      <input type="file" id="fileInput" style="display:none" onchange="handleFiles(this.files)"/>
+    </div>
+
+    <!-- AI PREDICTION CARD -->
+    <div class="prediction-card ai-prediction-card" id="predictionCard">
+      <div class="pred-header">
+        <span class="pred-header-icon"><img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/gemini-ai.png" alt=""></span>
+        <div class="pred-header-copy"><div><div class="pred-header-title">AI Folder Prediction</div><div class="pred-header-sub" id="predEngineLabel">Analyzed by Gemini 2.5 Flash · Review and confirm below</div></div><span class="engine-tag" id="predEngineTag">Gemini</span></div>
+        <!-- AI FALLBACK NOTICE — shown only when Gemini limit is hit -->
+        <div id="aiLimitBanner" style="display:none;
+          background: linear-gradient(135deg, var(--yellow2), #fff8e6);
+          border: 1.5px solid var(--yellow);
+          border-radius: var(--radius-sm);
+          padding: 12px 16px;
+          margin-bottom: 16px;
+          display: none;
+          align-items: center;
+          gap: 12px;">
+          <span style="font-size:1.5rem; flex-shrink:0;">⚠️</span>
+          <div style="flex:1;">
+            <div style="font-weight:800; font-size:0.85rem; color:#a07b10;">
+              Gemini API limit reached — using TextBlob instead
+            </div>
+            <div style="font-size:0.75rem; color:var(--text2); margin-top:3px; line-height:1.5;">
+              Suggestions are based on <strong>keyword frequency analysis</strong> (TextBlob NLP) rather than Gemini AI. Results may be less precise. The Gemini limit resets periodically.
+            </div>
+          </div>
+          <span style="flex-shrink:0; font-size:0.68rem; font-weight:800;
+            background:var(--yellow); color:#fff;
+            padding:3px 10px; border-radius:20px; white-space:nowrap;">
+            TextBlob Mode
+          </span>
+        </div>
+      </div>
+
+      <!-- File info -->
+      <div class="pred-file-row">
+        <div class="pred-file-icon" id="predFileIcon">📄</div>
+        <div>
+          <div class="pred-file-name" id="predFileName"></div>
+          <div class="pred-file-meta" id="predFileMeta"></div>
+        </div>
+      </div>
+
+      <!-- Keywords -->
+      <div class="keywords-row" id="keywordsRow">
+        <span class="kw-label"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/key.png" alt=""> Keywords detected:</span>
+      </div>
+
+      <!-- Confidence bar -->
+      <div class="conf-bar-wrap" id="confBarWrap" style="display:none;">
+        <div class="conf-bar-bg"><div class="conf-bar-fill" id="confBar" style="width:0%"></div></div>
+      </div>
+
+      <!-- Recommendations list -->
+      <div class="rec-section-title">Recommended Folders</div>
+      <div class="rec-list" id="recList"></div>
+
+      <!-- Show all folders toggle -->
+      <button class="show-all-btn" id="showAllBtn" onclick="toggleAllFolders()">Show all folders ▾</button>
+      <div id="allFoldersWrap" style="display:none;">
+        <div class="folder-options" id="folderOptions"></div>
+      </div>
+
+      <!-- Create new folder inline -->
+      <div style="margin-top:14px;">
+        <button class="create-folder-btn" onclick="toggleNewFolder()" id="createFolderBtn">
+          ＋ Create New Folder
+        </button>
+
+        <div class="new-folder-inline" id="newFolderPanel">
+          <div class="nf-title">Create a New Folder</div>
+
+          <div class="nf-row">
+            <input class="nf-input" id="nfName" placeholder="Folder name e.g. School, Medical, Travel…" maxlength="30"
+              oninput="updateFolderPreview()"/>
+          </div>
+
+          <div class="nf-label">Folder Color</div>
+          <div class="color-picker" id="colorPicker"></div>
+
+          <div class="nf-label">Folder Emoji</div>
+          <div class="nf-row">
+            <input class="nf-input nf-emoji-input" id="nfEmoji" placeholder="Emoji e.g. 📁" maxlength="8" oninput="updateFolderPreview()"/>
+          </div>
+
+          <div class="nf-actions">
+            <button class="nf-btn nf-btn-ghost" onclick="toggleNewFolder()">Cancel</button>
+            <button class="nf-btn nf-btn-primary" onclick="createNewFolder()">Create & Select</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pred-actions">
+        <button class="btn btn-pred-ghost" onclick="cancelUpload()">Cancel</button>
+        <button class="btn btn-pred-primary" onclick="confirmUpload()">Confirm & Save File</button>
+      </div>
+    </div>
+
+    <div class="upload-guidelines">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/upload.png" alt="">
+          </div>
+          <div class="guideline-title">Upload Files</div>
+          <div class="guideline-sub">Drag & drop or click to upload. One file at a time for best AI results.</div>
+        </div>
+
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/learning.png" alt="">
+          </div>
+          <div class="guideline-title">AI Reads File Content</div>
+          <div class="guideline-sub">For PDF, DOCX, XLSX and PPTX, AI extracts and analyzes the actual document text.</div>
+        </div>
+
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/ai-generated-text.png" alt="">
+          </div>
+          <div class="guideline-title">AI Recommends Folder</div>
+          <div class="guideline-sub">Gemini analyzes the content and suggests the 3 best matching folders ranked by confidence.</div>
+        </div>
+
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/pencil.png" alt="">
+          </div>
+          <div class="guideline-title">Override Anytime</div>
+          <div class="guideline-sub">Review and change the predicted folder before confirming — you're always in control.</div>
+        </div>
+
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/length.png" alt="">
+          </div>
+          <div class="guideline-title">Max File Size: 50 MB</div>
+          <div class="guideline-sub">Supported: PDF, DOCX, XLSX, PPTX, TXT, JPG, PNG, MP3, MP4 and more.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Uploaded files in session -->
+    <div class="files-section">
+      <div class="files-header">
+        <div><span class="files-title">Uploaded Files</span><span class="files-count" id="filesCount">0</span></div>
+        <div class="sort-row">
+          <button class="sort-chip2 active" onclick="sortFiles('date',this)">Date</button>
+          <button class="sort-chip2" onclick="sortFiles('name',this)">Name</button>
+          <button class="sort-chip2" onclick="sortFiles('folder',this)">Folder</button>
+          <button class="sort-chip2" onclick="sortFiles('type',this)">Type</button>
+        </div>
+      </div>
+      <div class="file-list" id="fileList">
+        <div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/drag-and-drop.png" alt=""></div><div class="es-text">No files yet — upload one above to get started!</div></div>
+      </div>
+    </div>
+  </div>
+
+  
+

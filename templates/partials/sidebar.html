@@ -1,0 +1,39 @@
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<div class="sidebar" id="sidebar">
+<div class="logo">
+  <img src="{{ url_for('static', filename='images/logo.png') }}" 
+       alt="File Nest Logo" 
+       class="logo-img">
+
+  <div>
+    <div class="logo-text">File Nest</div>
+    <div class="logo-sub">AI-Assisted Organization</div>
+  </div>
+</div>
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard',this)"><img class="icon ui-icon" src="https://img.icons8.com/pulsar-color/48/home.png" alt="">Dashboard</div>
+    <div class="nav-item" id="nav-upload" onclick="navigate('upload',this)"><img class="icon ui-icon" src="https://img.icons8.com/pulsar-color/48/upload.png" alt="">Upload Files <span class="nav-badge">+</span></div>
+  </div>
+  <div class="nav-section" style="margin-top:8px;">
+    <div class="nav-label">Folders</div>
+    <div class="nav-item" id="nav-folders" onclick="navigate('folders',this)"><img class="icon ui-icon" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt="">All Folders</div>
+    <div class="nav-item" id="nav-files" onclick="navigate('files',this)"><img class="icon ui-icon" src="https://img.icons8.com/pulsar-color/48/google-docs.png" alt="">All Files</div>
+    <div class="nav-item" id="nav-stats" onclick="navigate('stats',this)"><img class="icon ui-icon" src="https://img.icons8.com/pulsar-color/48/futures.png" alt="">Statistics</div>
+  </div>
+  <div class="nav-section" style="margin-top:8px;">
+    <div class="nav-label">Account</div>
+    <div class="nav-item" id="nav-settings" onclick="navigate('settings',this)"><img class="icon ui-icon" src="https://img.icons8.com/pulsar-color/48/settings.png" alt="">Settings</div>
+    <div class="nav-item" onclick="doLogout()" style="color:var(--red)"><img class="icon ui-icon" src="https://img.icons8.com/pulsar-color/48/exit.png" alt="">Logout</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="userAvatar">{{ user['name'][0].upper() }}</div>
+      <div>
+        <div class="user-name" id="userName">{{ user['name'] }}</div>
+        <div class="user-email" id="userEmail">{{ user['email'] }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
