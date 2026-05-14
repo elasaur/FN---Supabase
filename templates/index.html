@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (() => {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      if (!hash.get('access_token')) return;
+      const target = localStorage.getItem('passwordRecoveryTarget');
+      localStorage.removeItem('passwordRecoveryTarget');
+      window.location.replace((target === 'change' ? '/change_password.html' : '/reset_password.html') + window.location.hash);
+    })();
+  </script>
   <title>File Nest - Smart File Sorter</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -173,6 +182,7 @@
 
 <!-- Toast JS -->
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/password_validation.js') }}"></script>
 
 <script>
 // ── Token Storage Helpers ────────────────────────────────────────────────────
@@ -250,27 +260,7 @@ function showReset() {
 
 // ── Password Strength Bar ────────────────────────────────────────────────────
 function updateStrength(inputEl) {
-  if (!inputEl || !inputEl.closest) return;
-
-  const bars = Array.from(inputEl.closest('.modal-form').querySelectorAll('.pw-bar'));
-  if (bars.length !== 4) return;
-
-  const val = inputEl.value || '';
-  let lvl = 0;
-  if (val.length >= 10) lvl = 3;
-  else if (val.length >= 7) lvl = 2;
-  else if (val.length >= 4) lvl = 1;
-
-  const colors = ['#e87a7a', '#f5d06b', '#7ecfb3', '#7ecfb3'];
-
-  bars.forEach((bar, i) => {
-    bar.style.background = i <= lvl ? colors[lvl] : '#ddd';
-  });
-
-  const resetBtn = document.getElementById('resetSubmit');
-  if (resetBtn) {
-    resetBtn.disabled = lvl < 3;
-  }
+  updatePasswordStrength(inputEl, inputEl?.id === 'newPw' ? 'resetSubmit' : '');
 }
 
 // ── Login ────────────────────────────────────────────────────────────────────
@@ -331,6 +321,12 @@ async function doSignup() {
     errEl.style.display = 'block';
     return;
   }
+  const passwordMessage = passwordValidationMessage(password);
+  if (passwordMessage) {
+    errEl.textContent = passwordMessage;
+    errEl.style.display = 'block';
+    return;
+  }
 
   setAuthButtonLoading(btn, true, 'Creating...');
   try {
@@ -378,6 +374,7 @@ async function doForgot() {
 
   setAuthButtonLoading(btn, true, 'Sending...');
   try {
+    localStorage.setItem('passwordRecoveryTarget', 'reset');
     const res = await fetch('/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -432,6 +429,17 @@ async function resetPassword() {
     err.style.display = "block";
     return;
   }
+  const passwordMessage = passwordValidationMessage(new_password);
+  if (passwordMessage) {
+    err.textContent = passwordMessage;
+    err.style.display = "block";
+    return;
+  }
+  if (new_password !== confirm_password) {
+    err.textContent = "Passwords do not match.";
+    err.style.display = "block";
+    return;
+  }
 
   setAuthButtonLoading(btn, true, 'Resetting...');
   try {
@@ -472,7 +480,9 @@ document.addEventListener('keydown', function (e) {
 
 // ── Show reset page if token is present ────────────────────────────────────
 if (resetAccessToken) {
-  window.location.replace('/change-password' + window.location.hash);
+  const recoveryTarget = localStorage.getItem('passwordRecoveryTarget');
+  localStorage.removeItem('passwordRecoveryTarget');
+  window.location.replace((recoveryTarget === 'change' ? '/change_password.html' : '/reset_password.html') + window.location.hash);
 } else if (resetToken && resetToken.trim()) {
   showReset();
 }

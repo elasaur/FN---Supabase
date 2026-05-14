@@ -48,6 +48,10 @@
   width: 32px;
   height: 32px;
 }
+.search-modal-icon .folder-image-icon {
+  width: 28px;
+  height: 28px;
+}
 .search-modal-label {
   font-weight: 700;
   font-size: 1.01rem;

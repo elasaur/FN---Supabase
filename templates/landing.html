@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script>
+    (() => {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      if (!hash.get('access_token')) return;
+      const target = localStorage.getItem('passwordRecoveryTarget');
+      localStorage.removeItem('passwordRecoveryTarget');
+      window.location.replace((target === 'change' ? '/change_password.html' : '/reset_password.html') + window.location.hash);
+    })();
+  </script>
   <title>File Nest — Smart File Sorter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

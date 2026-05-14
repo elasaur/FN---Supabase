@@ -109,7 +109,7 @@ function showPredictionCard(file, analysis) {
 
   if (ranked.length) {
     const top = ranked[0];
-    showToast(`Best match: ${top.emoji} ${top.folder}${top.is_new ? ' (new folder)' : ''}`, 'info');
+    showToast(`Best match: ${top.folder}${top.is_new ? ' (new folder)' : ''}`, 'info');
   } else {
     showToast('No match found. Please pick a folder manually.', 'warn');
   }

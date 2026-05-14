@@ -311,7 +311,7 @@ async function submitCreateFolder() {
 function openEditModal(id, name, emoji, color, bg) {
   document.getElementById('rf-id').value = id;
   document.getElementById('rf-name').value = name;
-  document.getElementById('rf-emoji').value = isSystemIcon(emoji) ? '📁' : emoji;
+  document.getElementById('rf-emoji').value = isIconUrl(emoji) ? '📁' : emoji;
 
   openModal('editFolder'); // ← open first
 
@@ -361,7 +361,43 @@ async function submitEditFolder() {
     const data = await res.json();
 
     if (data.success) {
-      window.location.reload();
+      closeModal('editFolder');
+      const updated = allFolders.find(f => Number(f.id) === Number(id));
+      if (updated) {
+        updated.name = name;
+        updated.emoji = emoji;
+        updated.color = rfModalColor.val;
+        updated.bg = rfModalColor.bg;
+      }
+      allFiles.forEach(f => {
+        if (Number(f.folder_id) === Number(id)) {
+          f.folder_name = name;
+          f.folder_emoji = emoji;
+          f.folder_color = rfModalColor.val;
+          f.folder_bg = rfModalColor.bg;
+        }
+      });
+      dashRecentFiles.forEach(f => {
+        if (Number(f.folder_id) === Number(id)) {
+          f.folder_name = name;
+          f.folder_emoji = emoji;
+        }
+      });
+      uploadFiles.forEach(f => {
+        if (Number(f.folder_id) === Number(id)) {
+          f.folder_name = name;
+          f.folder_emoji = emoji;
+          f.folder_color = rfModalColor.val;
+          f.folder_bg = rfModalColor.bg;
+        }
+      });
+      renderFolderGrid();
+      renderAllFilesTable();
+      renderUploadFileList();
+      renderDashboardPinnedFoldersFromCache();
+      renderDashboardRecentUploads();
+      await Promise.all([loadFolders(), loadDashboard(), loadStats()]);
+      toastMessage = 'Folder updated.';
     } else {
       toastType = 'error';
       toastMessage = data.message;

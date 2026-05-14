@@ -6,6 +6,7 @@ async function loadAllFiles(search) {
   if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr>`;
   const res = await fetch(url);
   allFiles = await res.json();
+  sortAllFilesCache();
   renderAllFilesTable();
 }
 
@@ -13,11 +14,20 @@ function setAllFilesSort(mode, el) {
   allFilesSortMode = mode;
   document.querySelectorAll('#page-files .sort-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
-  loadAllFiles();
+  sortAllFilesCache();
+  renderAllFilesTable();
+}
+
+function sortAllFilesCache() {
+  if (allFilesSortMode === 'name') allFiles.sort((a,b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
+  if (allFilesSortMode === 'folder') allFiles.sort((a,b) => String(a.folder_name || '').localeCompare(String(b.folder_name || ''), undefined, { sensitivity: 'base' }));
+  if (allFilesSortMode === 'type') allFiles.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
+  if (allFilesSortMode === 'date') allFiles.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
 }
 
 function renderAllFilesTable() {
   const tbody = document.getElementById('allFilesTbody');
+  if (!tbody) return;
   if (!allFiles.length) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">No files yet. Upload some to get started!</td></tr>`;
     return;
@@ -117,8 +127,30 @@ async function submitRenameFile() {
     }
 
     closeModal('renameFile');
+    allFiles.forEach(f => {
+      if (Number(f.id) === Number(fileToRenameId)) {
+        f.original_name = data.name || name;
+        f.extension = getExt(data.name || name);
+      }
+    });
+    dashRecentFiles.forEach(f => {
+      if (Number(f.id) === Number(fileToRenameId)) {
+        f.original_name = data.name || name;
+        f.extension = getExt(data.name || name);
+      }
+    });
+    uploadFiles.forEach(f => {
+      if (Number(f.id) === Number(fileToRenameId)) {
+        f.original_name = data.name || name;
+        f.extension = getExt(data.name || name);
+      }
+    });
+    sortAllFilesCache();
+    sortUploadFilesCache();
+    renderAllFilesTable();
+    renderUploadFileList();
+    renderDashboardRecentUploads();
     fileToRenameId = null;
-    await Promise.all([loadAllFiles(), loadUploadFileList(), loadDashboard(), loadStats()]);
     if (currentFolderFilesContext && document.getElementById('modal-folderFiles')?.classList.contains('open')) {
       await openFolderFiles(
         currentFolderFilesContext.id,

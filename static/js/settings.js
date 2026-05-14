@@ -235,6 +235,7 @@ async function sendSettingsPasswordReset(button) {
 
   setButtonLoading(btn, true, 'Sending...');
   try {
+    localStorage.setItem('passwordRecoveryTarget', 'change');
     const res = await fetch('/change-password-email', {
       method:  'POST',
       credentials: 'same-origin',

@@ -253,9 +253,24 @@ async function loadUploadFileList(sortMode) {
   const list    = document.getElementById('fileList');
   if (list) list.innerHTML = '<div style="text-align:center;padding:24px;"><div class="spinner"></div></div>';
   const res = await fetch(`/api/files?sort=${uploadSortMode}&t=${Date.now()}`);
-  const files = await res.json();
+  uploadFiles = await res.json();
+  sortUploadFilesCache();
+  renderUploadFileList();
+}
+
+function sortUploadFilesCache() {
+  if (uploadSortMode === 'name') uploadFiles.sort((a,b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
+  if (uploadSortMode === 'folder') uploadFiles.sort((a,b) => String(a.folder_name || '').localeCompare(String(b.folder_name || ''), undefined, { sensitivity: 'base' }));
+  if (uploadSortMode === 'type') uploadFiles.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
+  if (uploadSortMode === 'date') uploadFiles.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+}
+
+function renderUploadFileList() {
+  const list = document.getElementById('fileList');
+  if (!list) return;
+  const files = uploadFiles;
   const countEl = document.getElementById('filesCount');
-  countEl.textContent = files.length;
+  if (countEl) countEl.textContent = files.length;
   if (!files.length) {
     list.innerHTML = `<div class="empty-state"><div class="es-icon">🪺</div><div class="es-text">No files yet — upload one above to get started!</div></div>`;
     return;
@@ -277,7 +292,8 @@ function sortFiles(mode, el) {
   uploadSortMode = mode;
   document.querySelectorAll('.sort-chip2').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
-  loadUploadFileList(mode);
+  sortUploadFilesCache();
+  renderUploadFileList();
 }
 
 async function deleteFileUpload(id) {

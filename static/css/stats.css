@@ -31,6 +31,11 @@
   height: 24px;
   flex: 0 0 24px;
 }
+.chart-bar-label .folder-image-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
 .chart-bar-bg { flex: 1; height: 22px; background: var(--bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 .chart-bar-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding-left: 8px; font-size: 0.72rem; font-weight: 800; color: #fff; transition: width 0.6s ease; }
 .chart-count { font-size: 0.78rem; font-weight: 700; color: var(--text2); width: 24px; text-align: right; flex-shrink: 0; }

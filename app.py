@@ -58,6 +58,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 SESSION_TIMEOUT = timedelta(minutes=30)
+DEFAULT_FOLDER_EMOJI = '📁'
 
 # Rate limiting configuration
 limiter = Limiter(
@@ -83,7 +84,7 @@ def add_security_headers(response):
     response.headers.setdefault('X-Frame-Options', 'DENY')
     response.headers.setdefault('Referrer-Policy', 'same-origin')
     response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-    if request.endpoint in {'landing', 'index', 'index_html', 'dashboard', 'logout', 'reset_page', 'update_password_page', 'change_password_page'}:
+    if request.endpoint in {'landing', 'index', 'index_html', 'dashboard', 'logout', 'reset_page', 'reset_password_html', 'update_password_page', 'change_password_page', 'change_password_html'}:
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache'
     return response
@@ -94,6 +95,24 @@ def now_utc():
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def password_validation_message(password):
+    password = str(password or '')
+    missing = []
+    if len(password) < 8:
+        missing.append('at least 8 characters')
+    if not any(ch.isupper() for ch in password):
+        missing.append('one uppercase letter')
+    if not any(ch.islower() for ch in password):
+        missing.append('one lowercase letter')
+    if not any(ch.isdigit() for ch in password):
+        missing.append('one number')
+    if not any(not ch.isalnum() for ch in password):
+        missing.append('one special character')
+    if any(ch.isspace() for ch in password):
+        missing.append('no spaces')
+    return f"Password must include {', '.join(missing)}." if missing else ''
 
 
 def uploaded_file_size(file_storage):
@@ -246,8 +265,8 @@ def signup():
 
     name     = data.get('name', '').strip()
     email    = data.get('email', '').strip()
-    password = data.get('password', '').strip()
-    confirm  = data.get('confirm', '').strip()
+    password = data.get('password', '')
+    confirm  = data.get('confirm', '')
 
     if not name or not email or not password:
         return jsonify({'success': False, 'message': 'Please fill in all fields.'})
@@ -255,8 +274,9 @@ def signup():
     if password != confirm:
         return jsonify({'success': False, 'message': 'Passwords do not match.'})
 
-    if len(password) < 6:
-        return jsonify({'success': False, 'message': 'Password must be at least 6 characters.'})
+    password_message = password_validation_message(password)
+    if password_message:
+        return jsonify({'success': False, 'message': password_message})
 
     auth = sign_up(email, password, name)
     if auth.get('error') or auth.get('msg'):
@@ -316,11 +336,8 @@ def forgot_password():
     if not email:
         return jsonify(response)
 
-    configured_redirect = (
-        os.getenv('FORGOT_PASSWORD_REDIRECT_URL', '').strip()
-        or os.getenv('PASSWORD_RESET_REDIRECT_URL', '').strip()
-    )
-    reset_redirect = f"{request.host_url.rstrip('/')}{url_for('update_password_page')}"
+    configured_redirect = os.getenv('FORGOT_PASSWORD_REDIRECT_URL', '').strip()
+    reset_redirect = f"{request.host_url.rstrip('/')}{url_for('reset_password_html')}"
     redirect_to = configured_redirect or reset_redirect
     if redirect_to.rstrip('/').endswith('/index.html'):
         redirect_to = reset_redirect
@@ -339,9 +356,9 @@ def change_password_email():
         return jsonify(response)
 
     configured_redirect = os.getenv('CHANGE_PASSWORD_REDIRECT_URL', '').strip()
-    redirect_to = configured_redirect or f"{request.host_url.rstrip('/')}{url_for('change_password_page')}"
+    redirect_to = configured_redirect or f"{request.host_url.rstrip('/')}{url_for('change_password_html')}"
     if redirect_to.rstrip('/').endswith('/index.html'):
-        redirect_to = f"{request.host_url.rstrip('/')}{url_for('change_password_page')}"
+        redirect_to = f"{request.host_url.rstrip('/')}{url_for('change_password_html')}"
     reset_password_for_email(email, redirect_to)
     return jsonify(response)
 
@@ -349,6 +366,11 @@ def change_password_email():
 @app.route('/reset/<token>')
 def reset_page(token):
     return render_template('reset_password.html', token=token)
+
+
+@app.route('/reset_password.html')
+def reset_password_html():
+    return render_template('reset_password.html', token='')
 
 
 @app.route('/update-password')
@@ -361,14 +383,19 @@ def change_password_page():
     return render_template('change_password.html')
 
 
+@app.route('/change_password.html')
+def change_password_html():
+    return render_template('change_password.html')
+
+
 @app.route('/api/reset-password', methods=['POST'])
 @limiter.limit("10 per minute")
 def perform_reset():
     data = request.get_json(silent=True) or {}
 
     access_token = request.headers.get('X-Access-Token') or session.get('access_token') or ''
-    new_pw = data.get('new_password')
-    confirm_pw = data.get('confirm_password')
+    new_pw = data.get('new_password') or ''
+    confirm_pw = data.get('confirm_password') or ''
 
     if not all([new_pw, confirm_pw]):
         return jsonify({'success': False, 'message': 'Missing fields'})
@@ -376,8 +403,9 @@ def perform_reset():
     if new_pw != confirm_pw:
         return jsonify({'success': False, 'message': 'Passwords do not match'})
 
-    if len(new_pw) < 6:
-        return jsonify({'success': False, 'message': 'Password too weak'})
+    password_message = password_validation_message(new_pw)
+    if password_message:
+        return jsonify({'success': False, 'message': password_message})
 
     if not access_token:
         return jsonify({'success': False, 'message': 'Open the Supabase reset link from your email, then set the new password.'})
@@ -455,7 +483,7 @@ def api_get_folders():
 def api_create_folder():
     data  = request.get_json()
     name  = data.get('name',  '').strip()
-    emoji = data.get('emoji', '📁').strip() or '📁'
+    emoji = data.get('emoji', DEFAULT_FOLDER_EMOJI).strip() or DEFAULT_FOLDER_EMOJI
     color = data.get('color', '#e8855a')
     bg    = data.get('bg',    '#fde8de')
 
@@ -760,7 +788,7 @@ def api_confirm_upload():
     file        = request.files['file']
     folder_id   = request.form.get('folder_id',    '').strip()
     folder_name = request.form.get('folder_name',  '').strip()
-    emoji       = request.form.get('folder_emoji', '📁').strip() or '📁'
+    emoji       = request.form.get('folder_emoji', DEFAULT_FOLDER_EMOJI).strip() or DEFAULT_FOLDER_EMOJI
     color       = request.form.get('folder_color', '#7ec8e3')
     bg          = request.form.get('folder_bg',    '#e0f4fb')
     ai_sorted   = request.form.get('ai_sorted',    '0') == '1'
@@ -890,7 +918,7 @@ def api_stats_chart():
         rows = [
             {
                 "name": folder.get("name", "Untitled"),
-                "emoji": folder.get("emoji", "folder"),
+                "emoji": folder.get("emoji", DEFAULT_FOLDER_EMOJI),
                 "color": folder.get("color", "#e8855a"),
                 "count": counts.get(folder.get("id"), 0),
             }
@@ -1009,14 +1037,18 @@ def api_change_password():
     data = request.get_json()
 
     current_pw = data.get('current_password', '').strip()
-    new_pw     = data.get('new_password', '').strip()
-    confirm_pw = data.get('confirm_password', '').strip()
+    new_pw     = data.get('new_password', '')
+    confirm_pw = data.get('confirm_password', '')
 
     if not current_pw or not new_pw or not confirm_pw:
         return jsonify({'success': False, 'message': 'Please fill in all fields.'})
 
     if new_pw != confirm_pw:
         return jsonify({'success': False, 'message': 'Passwords do not match.'})
+
+    password_message = password_validation_message(new_pw)
+    if password_message:
+        return jsonify({'success': False, 'message': password_message})
 
     uid = get_current_user_id()
     db = get_db()

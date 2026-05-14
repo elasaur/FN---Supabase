@@ -2,12 +2,9 @@
   <div class="page active" id="page-dashboard">
     <div class="section-header">
       <div>
-        <div class="section-title">
-            <span id="greetText">Good morning</span>,
-            <span id="greetName" style="color: var(--accent);">
-                {{user['name']}}
-            </span>
-            <span>!</span>
+        <div class="section-title dashboard-greeting">
+            <span id="greetText">Good morning</span><span>,</span>
+            <span id="greetName" class="dashboard-greeting-name">{{ user['name'] }}</span><span class="dashboard-greeting-punctuation">!</span>
         </div>
         <div class="section-sub">Here's an overview of your file system.</div>
       </div>

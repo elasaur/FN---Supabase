@@ -81,12 +81,48 @@ function escHtml(s) {
 }
 
 function isSystemIcon(value) {
-  return /^[a-z0-9_]+$/.test(String(value || ''));
+  return SYSTEM_FOLDER_ICONS.some(icon => icon.value === String(value || ''));
+}
+
+function isIconUrl(value) {
+  return /^https:\/\/img\.icons8\.com\/pulsar-color\/48\/[-a-z0-9]+\.png$/i.test(String(value || ''));
+}
+
+function folderIconUrlForName(name) {
+  const text = String(name || '').toLowerCase();
+  const picks = [
+    [['love', 'heart', 'family', 'personal'], 'hearts.png'],
+    [['flower', 'garden', 'art', 'design'], 'flower.png'],
+    [['star', 'favorite', 'important'], 'star.png'],
+    [['goal', 'target', 'plan'], 'goal.png'],
+    [['school', 'class', 'study', 'student'], 'graduation-cap.png'],
+    [['travel', 'trip', 'vacation'], 'trave-diary.png'],
+    [['code', 'dev', 'program', 'project'], 'code.png'],
+    [['nature', 'plant', 'eco'], 'leaf.png'],
+    [['science', 'lab', 'research'], 'acid-flask.png'],
+    [['shopping', 'shop', 'receipt', 'purchase'], 'shopaholic.png'],
+    [['work', 'business', 'office'], 'business.png'],
+    [['food', 'recipe', 'meal'], 'salmon-sushi.png'],
+    [['birthday', 'party', 'event'], 'birthday-cake.png'],
+    [['book', 'read', 'library'], 'book.png'],
+    [['note', 'journal'], 'moleskine.png'],
+    [['computer', 'tech'], 'my-computer.png'],
+  ];
+  const match = picks.find(([words]) => words.some(word => text.includes(word)));
+  const file = match ? match[1] : SYSTEM_FOLDER_ICONS[Math.abs(hashString(text)) % SYSTEM_FOLDER_ICONS.length].value.split('/').pop();
+  return `https://img.icons8.com/pulsar-color/48/${file}`;
+}
+
+function hashString(value) {
+  return String(value || '').split('').reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0);
 }
 
 function folderIconHtml(value, className) {
-  const icon = value || 'folder';
-  if (isSystemIcon(icon)) {
+  let icon = value || '📁';
+  if (isIconUrl(icon)) {
+    icon = '📁';
+  }
+  if (/^[a-z0-9_]+$/.test(String(icon))) {
     return `<span class="material-symbols-rounded ${className || ''}">${escHtml(icon)}</span>`;
   }
   return `<span class="${className || ''}">${escHtml(icon)}</span>`;
@@ -95,7 +131,7 @@ function folderIconHtml(value, className) {
 function buildSystemIconSelect(selectId, selected) {
   const select = document.getElementById(selectId);
   if (!select) return;
-  const current = isSystemIcon(selected) ? selected : 'folder';
+  const current = isSystemIcon(selected) ? selected : DEFAULT_FOLDER_ICON;
   select.innerHTML = SYSTEM_FOLDER_ICONS.map(icon => `
     <option value="${icon.value}" ${icon.value === current ? 'selected' : ''}>${icon.label}</option>
   `).join('');

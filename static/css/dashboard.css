@@ -1,4 +1,19 @@
 /* ── STAT CARDS ── */
+.dashboard-greeting {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 0;
+  row-gap: 2px;
+}
+.dashboard-greeting-name {
+  color: var(--accent);
+  margin-left: 0.25em;
+}
+.dashboard-greeting-punctuation {
+  color: var(--accent);
+}
+
 .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
 .stat-card {
   background: var(--surface); border-radius: var(--radius);

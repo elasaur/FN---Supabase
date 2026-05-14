@@ -4,6 +4,7 @@ let selectedFolderObj = null;
 
 let allFolders = [];
 let allFiles = [];
+let uploadFiles = [];
 
 let folderSortMode = 'name';
 let allFilesSortMode = 'name';
