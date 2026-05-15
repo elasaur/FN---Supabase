@@ -953,25 +953,35 @@ def api_delete_all_files():
 def api_delete_all_folders():
     """
     Delete every non-default folder for the current user.
-    Files are reassigned to Uncategorized; default folder is never deleted.
+    Files inside those folders are permanently removed from Storage and metadata.
+    The default folder and files already inside it are never deleted.
     """
     db  = get_db()
     uid = get_current_user_id()
 
-    uncategorized = db.execute(
+    default_folder = db.execute(
         'SELECT id FROM folders WHERE user_id=? AND is_default=1', (uid,)
     ).fetchone()
-    if not uncategorized:
+    if not default_folder:
         return jsonify({'success': False, 'message': 'Default folder not found.'})
 
-    unc_id = uncategorized['id']
-    db.execute(
-        'UPDATE files SET folder_id=? WHERE user_id=? AND folder_id != ?',
-        (unc_id, uid, unc_id)
-    )
+    default_folder_id = str(default_folder['id'])
+    user_files = db.select("files", {"user_id": f"eq.{uid}"}, "id,folder_id,stored_name")
+    files_to_delete = [
+        item for item in user_files
+        if str(item.get("folder_id")) != default_folder_id
+    ]
+
+    try:
+        delete_files([item.get("stored_name") for item in files_to_delete])
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
+
+    for item in files_to_delete:
+        db.execute('DELETE FROM files WHERE id=?', (item['id'],))
     db.execute('DELETE FROM folders WHERE user_id=? AND is_default=0', (uid,))
     db.commit()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'deleted_files': len(files_to_delete)})
 
 
 # ── API: User Settings ─────────────────────────────────────────────────────────

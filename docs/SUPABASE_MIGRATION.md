@@ -73,7 +73,6 @@ The Flask server uses signed URLs for downloads.
 
 - `make_storage_path(...)`
 - `upload_file(...)`
-- `upload_local_file(...)`
 - `create_signed_url(...)`
 - `delete_files(...)`
 
@@ -98,13 +97,14 @@ The app uses:
 ```text
 Flask
 Flask-Limiter
+Werkzeug
 python-dotenv
 requests
 Werkzeug
 google-genai
 TextBlob
-scikit-learn
 pdfplumber
+PyPDF2
 python-docx
 python-pptx
 openpyxl
@@ -142,7 +142,7 @@ GEMINI_API_KEY=your-gemini-key
 7. Run:
 
 ```bash
-python migrate_sqlite_to_supabase.py
+python scripts/migrate_sqlite_to_supabase.py
 ```
 
 8. Give users the temporary passwords from `supabase_migration_passwords.csv`.
@@ -157,10 +157,12 @@ FN - Supabase/
   storage.py
   supabase_auth.py
   supabase_schema.sql
-  migrate_sqlite_to_supabase.py
-  SUPABASE_MIGRATION.md
   requirements.txt
   .env.example
+  docs/
+    SUPABASE_MIGRATION.md
+  scripts/
+    migrate_sqlite_to_supabase.py
   static/
   templates/
   uploads/

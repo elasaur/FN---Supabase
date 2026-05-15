@@ -6,7 +6,6 @@ continues to live in public.files, with stored_name holding the object path.
 """
 
 import os
-from pathlib import Path
 
 import requests
 
@@ -57,20 +56,6 @@ def upload_file(file_storage, object_path, content_type=None):
         data=file_storage.stream,
         timeout=60,
     )
-    if response.status_code >= 400:
-        raise RuntimeError(f"Supabase Storage upload failed: {response.text}")
-    return response.json() if response.text else {}
-
-
-def upload_local_file(local_path, object_path, content_type="application/octet-stream"):
-    _require_config()
-    with Path(local_path).open("rb") as handle:
-        response = requests.post(
-            f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_STORAGE_BUCKET}/{object_path}",
-            headers={**_headers(content_type), "x-upsert": "false"},
-            data=handle,
-            timeout=60,
-        )
     if response.status_code >= 400:
         raise RuntimeError(f"Supabase Storage upload failed: {response.text}")
     return response.json() if response.text else {}

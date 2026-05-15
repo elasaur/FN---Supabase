@@ -15,6 +15,9 @@ async function loadDashboard() {
   document.getElementById('dashAiSorted').textContent = data.ai_sorted;
 
   allFolders = folders;
+  allFiles = files;
+  uploadFiles = files;
+  allFilesLoaded = true;
 
   const pinned = allFolders.filter(f => f.pinned);
   const pinnedEl = document.getElementById('dashPinnedFolders');
@@ -85,13 +88,11 @@ function renderDashboardRecentUploads() {
   }
 
 function makeRecentItem(f) {
-  const createdAt = parseAppDate(f.created_at);
-  const isNew = createdAt && (Date.now() - createdAt.getTime()) < 24 * 3600 * 1000;
   return `
     <div class="recent-item">
       <div class="recent-file-icon">${getExtIcon(f.original_name)}</div>
       <div class="recent-meta">
-        <div class="recent-name">${f.original_name}${isNew ? ' <span class="new-badge">NEW</span>' : ''}</div>
+        <div class="recent-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
         <div class="recent-info">${folderIconHtml(f.folder_emoji, 'recent-folder-icon')} ${escHtml(f.folder_name)} · ${getExt(f.original_name).toUpperCase()} · ${formatSize(f.file_size)}</div>
       </div>
       <div class="recent-date">${timeAgo(f.created_at)}</div>
@@ -104,7 +105,8 @@ async function deleteFileDashboard(id) {
   const res = await fetch(`/api/files/${id}`, { method:'DELETE' });
   const data = await res.json();
   if (data.success) {
-    await Promise.all([loadDashboard(), loadFolders()]);
+    await Promise.all([loadDashboard(), loadFolders(), loadAllFiles(), loadUploadFileList(), loadStats()]);
+    renderCurrentFolderFilesFromCache();
     showToast('File deleted.', 'warn');
   } else {
     showToast(data.message, 'error');

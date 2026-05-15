@@ -260,8 +260,29 @@
   gap: 8px;
 }
 .folder-files-modal {
-  width: 640px;
+  width: 760px;
   max-width: 95vw;
+}
+.folder-files-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.folder-files-modal-head .modal-title {
+  margin-bottom: 0;
+  min-width: 0;
+}
+.folder-files-counter {
+  flex: 0 0 auto;
+  background: var(--accent3);
+  color: var(--accent);
+  border: 1px solid var(--accent2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 900;
 }
 .folder-files-list-wrap {
   max-height: 390px;

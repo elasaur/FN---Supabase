@@ -197,29 +197,18 @@ async function deleteFolder(id) {
 async function openFolderFiles(folderId, folderName, emoji) {
   currentFolderFilesContext = { id: folderId, name: folderName, emoji };
   document.getElementById('folderFilesTitle').innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(folderName)}`;
+  if (allFilesLoaded) {
+    openModal('folderFiles');
+    renderCurrentFolderFilesFromCache();
+    return;
+  }
+  const countEl = document.getElementById('folderFilesCount');
+  if (countEl) countEl.textContent = 'Loading...';
   const listEl = document.getElementById('folderFilesList');
   listEl.innerHTML = '<div class="folder-files-loading"><div class="spinner"></div></div>';
   openModal('folderFiles');
-  const res   = await fetch(`/api/files?folder_id=${folderId}&sort=${folderFilesSortMode}`);
-  const files = await res.json();
-  if (!files.length) {
-    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">📂</div><div class="es-text">No files in this folder yet.</div></div>`;
-    return;
-  }
-  listEl.innerHTML = `
-      <div class="folder-files-list">
-        ${files.map(f => `
-    <div class="folder-file-row">
-      <div class="folder-file-icon">${getExtIcon(f.original_name)}</div>
-      <div class="folder-file-main">
-        <div class="folder-file-name">${escHtml(f.original_name)}</div>
-        <div class="fi-meta">${getExt(f.original_name).toUpperCase()} · ${formatSize(f.file_size)} · ${timeAgo(f.created_at)}</div>
-      </div>
-      <span class="folder-file-size">${formatSize(f.file_size)}</span>
-      ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileFromCurrentFolder(${f.id})`)}
-    </div>`).join('')}
-      </div>
-    `;
+  await loadAllFiles();
+  renderCurrentFolderFilesFromCache();
 }
 
 function openEditModalFromEncoded(id, name, emoji, color, bg) {
@@ -232,17 +221,43 @@ function openEditModalFromEncoded(id, name, emoji, color, bg) {
   );
 }
 
+function renderCurrentFolderFilesFromCache() {
+  if (!currentFolderFilesContext || !document.getElementById('modal-folderFiles')?.classList.contains('open')) return;
+  const listEl = document.getElementById('folderFilesList');
+  const countEl = document.getElementById('folderFilesCount');
+  if (!listEl) return;
+
+  const files = allFiles.filter(f => Number(f.folder_id) === Number(currentFolderFilesContext.id));
+  if (folderFilesSortMode === 'name') files.sort((a,b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
+  if (folderFilesSortMode === 'type') files.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
+  if (folderFilesSortMode === 'date') files.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+
+  if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
+  if (!files.length) {
+    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">--</div><div class="es-text">No files in this folder yet.</div></div>`;
+    return;
+  }
+  listEl.innerHTML = `
+      <div class="folder-files-list">
+        ${files.map(f => `
+    <div class="folder-file-row">
+      <div class="folder-file-icon">${getExtIcon(f.original_name)}</div>
+      <div class="folder-file-main">
+        <div class="folder-file-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
+        <div class="fi-meta">${getExt(f.original_name).toUpperCase()} · ${formatSize(f.file_size)} · ${timeAgo(f.created_at)}</div>
+      </div>
+      <span class="folder-file-size">${formatSize(f.file_size)}</span>
+      ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileFromCurrentFolder(${f.id})`)}
+    </div>`).join('')}
+      </div>
+    `;
+}
+
 function setFolderFilesSort(mode, el) {
   folderFilesSortMode = mode;
   document.querySelectorAll('.folder-files-sort .sort-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
-  if (currentFolderFilesContext) {
-    openFolderFiles(
-      currentFolderFilesContext.id,
-      currentFolderFilesContext.name,
-      currentFolderFilesContext.emoji
-    );
-  }
+  renderCurrentFolderFilesFromCache();
 }
 
 async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
@@ -250,7 +265,8 @@ async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
   const res  = await fetch(`/api/files/${fileId}`, { method:'DELETE' });
   const data = await res.json();
   if (data.success) {
-    await Promise.all([openFolderFiles(folderId, folderName, emoji), loadFolders()]);
+    await Promise.all([loadAllFiles(), loadFolders(), loadUploadFileList(), loadDashboard(), loadStats()]);
+    renderCurrentFolderFilesFromCache();
     showToast('File deleted.', 'warn');
   }
   else showToast(data.message, 'error');
@@ -396,6 +412,12 @@ async function submitEditFolder() {
       renderUploadFileList();
       renderDashboardPinnedFoldersFromCache();
       renderDashboardRecentUploads();
+      if (currentFolderFilesContext && Number(currentFolderFilesContext.id) === Number(id)) {
+        currentFolderFilesContext.name = name;
+        currentFolderFilesContext.emoji = emoji;
+        document.getElementById('folderFilesTitle').innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(name)}`;
+        renderCurrentFolderFilesFromCache();
+      }
       await Promise.all([loadFolders(), loadDashboard(), loadStats()]);
       toastMessage = 'Folder updated.';
     } else {

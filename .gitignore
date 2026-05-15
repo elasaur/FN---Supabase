@@ -24,6 +24,8 @@ ENV/
 # ===============================
 *.db
 *.sqlite3
+*.bak_*
+backups/
 
 # ===============================
 # Uploads / User Files
@@ -53,6 +55,8 @@ Thumbs.db
 # ===============================
 test_*.py
 *copy.py
+* copy *.py
+supabase_migration_passwords.csv
 
 # ===============================
 # Build / Cache

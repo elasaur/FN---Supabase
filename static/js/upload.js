@@ -62,12 +62,10 @@ async function handleFiles(files) {
     // ✅ SAFE: now always exists
     const engine = data.analysis.ai_status;
 
-    const banner = document.getElementById('aiLimitBanner');
     const engineLabel = document.getElementById('predEngineLabel');
     const engineTag = document.getElementById('predEngineTag');
 
     if (engine === 'textblob') {
-      banner.style.display = 'flex';
       if (engineTag) {
         engineTag.textContent = 'TextBlob';
         engineTag.classList.add('textblob');
@@ -77,8 +75,8 @@ async function handleFiles(files) {
           'Analyzed by TextBlob (Gemini limit reached) · Review and confirm below';
         engineLabel.style.color = '#a07b10';
       }
+      showToast('Gemini API limit reached — using TextBlob instead', 'warn');
     } else {
-      banner.style.display = 'none';
       if (engineTag) {
         engineTag.textContent = 'Gemini';
         engineTag.classList.remove('textblob');
@@ -224,12 +222,12 @@ async function confirmUpload() {
   const folderName = selectedFolderObj
     ? (selectedFolderObj.folder || selectedFolderObj.name)
     : 'Uncategorized';
+  showToast(`"${data.file?.original_name || 'File'}" saved to ${folderName}.`, 'success');
 
   currentFile = null; currentAnalysis = null; selectedFolderObj = null;
   document.getElementById('fileInput').value = '';
-  await Promise.all([loadUploadFileList(), loadFolders()]);
-  toastType = 'success';
-  toastMessage = `"${data.file?.original_name || 'File'}" saved to ${folderName}.`;
+  await Promise.all([loadUploadFileList(), loadAllFiles(), loadFolders(), loadDashboard(), loadStats()]);
+  toastMessage = '';
   } finally {
     resetUploadZone();
     document.getElementById('predictionCard').classList.remove('saving');
@@ -240,8 +238,6 @@ async function confirmUpload() {
 
 function cancelUpload() {
   document.getElementById('predictionCard').classList.remove('show');
-  const banner = document.getElementById('aiLimitBanner');
-  if (banner) banner.style.display = 'none';
   currentFile = null; currentAnalysis = null; selectedFolderObj = null;
   document.getElementById('fileInput').value = '';
   showToast('Upload cancelled.', 'warn');
@@ -279,7 +275,7 @@ function renderUploadFileList() {
     <div class="file-item" style="animation-delay:${idx*0.04}s;">
       <div class="fi-icon">${getExtIcon(f.original_name)}</div>
       <div class="fi-info">
-        <div class="fi-name">${escHtml(f.original_name)}</div>
+        <div class="fi-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
         <div class="fi-meta">${getExt(f.original_name).toUpperCase()} · ${timeAgo(f.created_at)}</div>
       </div>
       <span class="fi-folder" style="background:${f.folder_bg};color:${f.folder_color};">${folderIconHtml(f.folder_emoji, 'file-folder-icon')} ${escHtml(f.folder_name)}</span>
@@ -305,7 +301,8 @@ async function deleteFileUpload(id) {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
     const data = await res.json();
     if (data.success) {
-      await loadUploadFileList();
+      await Promise.all([loadUploadFileList(), loadAllFiles(), loadFolders(), loadDashboard(), loadStats()]);
+      renderCurrentFolderFilesFromCache();
       toastMessage = 'File removed.';
     } else {
       toastType = 'error';

@@ -276,7 +276,6 @@ def ask_gemini_suggestions(
     existing_folders: List[str],
 ) -> List[Dict]:
     """Query Gemini for folder suggestions, with TextBlob fallback on failure."""
-    client = _get_client()
     filename_context = clean_filename_text(filename)
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "unknown"
     existing_folders_str = "\n".join(f"- {f}" for f in existing_folders) or "None yet."
@@ -323,6 +322,10 @@ def ask_gemini_suggestions(
 Return ONLY a JSON array with exactly 3 objects. No extra text."""
 
     try:
+        if os.environ.get("DISABLE_GEMINI", "").lower() in {"1", "true", "yes", "on"}:
+            raise RuntimeError("Gemini temporarily disabled by DISABLE_GEMINI")
+
+        client = _get_client()
         time.sleep(0.5)
         response = client.models.generate_content(
             model="gemini-2.5-flash",

@@ -41,18 +41,48 @@ function playToastSound(type) {
   } catch (_) {}
 }
 
+const TOAST_TYPES = new Set(['success', 'error', 'warn', 'info']);
+const TOAST_TYPE_ALIASES = {
+  warning: 'warn',
+  danger: 'error',
+  fail: 'error',
+  failed: 'error',
+  failure: 'error',
+};
+
+function getToastMessage(msg) {
+  if (typeof msg === 'string') return msg.trim() || 'Something happened.';
+  if (msg && typeof msg.message === 'string') return msg.message.trim() || 'Something happened.';
+  if (msg == null) return 'Something happened.';
+  return String(msg).trim() || 'Something happened.';
+}
+
+function getToastType(type) {
+  const normalized = String(type || 'info').toLowerCase();
+  const aliased = TOAST_TYPE_ALIASES[normalized] || normalized;
+  return TOAST_TYPES.has(aliased) ? aliased : 'info';
+}
+
 function showToast(msg, type = 'info') {
   const wrap = document.getElementById('toastContainer');
   if (!wrap) return;
 
-  playToastSound(type);
+  const toastType = getToastType(type);
+  const message = getToastMessage(msg);
 
   const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
+  t.className = `toast ${toastType}`;
+  t.textContent = message;
+  t.setAttribute('role', toastType === 'error' ? 'alert' : 'status');
+  t.setAttribute('aria-live', toastType === 'error' ? 'assertive' : 'polite');
   wrap.appendChild(t);
-  setTimeout(() => {
+
+  if (wrap.children.length > 4) wrap.firstElementChild?.remove();
+
+  window.requestAnimationFrame(() => playToastSound(toastType));
+
+  window.setTimeout(() => {
     t.classList.add('out');
-    setTimeout(() => t.remove(), 300);
+    window.setTimeout(() => t.remove(), 220);
   }, 3200);
 }

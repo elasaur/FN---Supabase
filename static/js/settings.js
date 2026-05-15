@@ -89,7 +89,7 @@
 //   const res  = await fetch('/api/folders/delete-all', { method: 'DELETE' });
 //   const data = await res.json();
 //   if (data.success) {
-//     showToast('🗂️ All folders deleted. Files moved to Uncategorized.', 'warn');
+//     showToast('All folders deleted. Files inside those folders were deleted.', 'warn');
 //     if (typeof loadFolders === 'function') loadFolders();
 //     if (typeof loadStats   === 'function') loadStats();
 //   } else {
@@ -154,7 +154,17 @@ async function saveName() {
 
     const data = await res.json();
     if (data.success) {
-      window.location.reload();
+      window.FILE_NEST_USER = { ...(window.FILE_NEST_USER || {}), name: v };
+      const userName = document.getElementById('userName');
+      const userAvatar = document.getElementById('userAvatar');
+      const greetName = document.getElementById('greetName');
+      const settingsName = document.getElementById('settingsName');
+      if (userName) userName.textContent = v;
+      if (userAvatar) userAvatar.textContent = v.charAt(0).toUpperCase();
+      if (greetName) greetName.textContent = displayGivenNames(v);
+      if (settingsName) settingsName.textContent = v;
+      closeModal('editName');
+      showToast('Name updated.', 'success');
     } else {
       setButtonLoading(btn, false);
       showToast(data.message || 'Unable to update name.', 'error');
@@ -190,6 +200,7 @@ async function saveEmail() {
 
     const data = await res.json();
     if (data.success) {
+      window.FILE_NEST_USER = { ...(window.FILE_NEST_USER || {}), email: v };
       document.getElementById('userEmail').textContent     = v;
       document.getElementById('settingsEmail').textContent = v;
       closeModal('editEmail');
@@ -336,7 +347,7 @@ async function confirmDeleteAllFolders() {
   if (data.success) {
     closeModal('deleteAllFolders');
     await Promise.all([loadFolders(), loadAllFiles(), loadUploadFileList(), loadDashboard(), loadStats()]);
-    toastMessage = 'All folders deleted. Files moved to Uncategorized.';
+    toastMessage = `All folders deleted. ${data.deleted_files || 0} file${Number(data.deleted_files || 0) === 1 ? '' : 's'} deleted.`;
   } else {
     toastType = 'error';
     toastMessage = data.message || 'Something went wrong.';

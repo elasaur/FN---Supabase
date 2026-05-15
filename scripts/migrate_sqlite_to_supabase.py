@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "filenest.db"
 UPLOADS_DIR = ROOT / "uploads"
 PASSWORD_REPORT = ROOT / "supabase_migration_passwords.csv"

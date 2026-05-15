@@ -6,6 +6,7 @@ async function loadAllFiles(search) {
   if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr>`;
   const res = await fetch(url);
   allFiles = await res.json();
+  allFilesLoaded = true;
   sortAllFilesCache();
   renderAllFilesTable();
 }
@@ -34,7 +35,7 @@ function renderAllFilesTable() {
   }
   tbody.innerHTML = allFiles.map(f => `
     <tr data-file-id="${f.id}">
-      <td><span class="file-name-cell">${getExtIcon(f.original_name)} <span class="file-name-text" style="font-weight:700;">${escHtml(f.original_name)}</span>${f.ai_sorted?' <span style="font-size:0.65rem;background:var(--lavender2);color:var(--lavender);padding:1px 6px;border-radius:8px;font-weight:800;">AI</span>':''}</span></td>
+      <td><span class="file-name-cell">${getExtIcon(f.original_name)} <span class="file-name-text" style="font-weight:700;">${escHtml(f.original_name)}</span>${newFileBadge(f.created_at)}${f.ai_sorted?' <span style="font-size:0.65rem;background:var(--lavender2);color:var(--lavender);padding:1px 6px;border-radius:8px;font-weight:800;">AI</span>':''}</span></td>
       <td><span style="font-size:0.72rem;background:var(--bg);padding:2px 8px;border-radius:6px;font-weight:700;color:var(--text2);">${getExt(f.original_name).toUpperCase()||'—'}</span></td>
       <td><span class="file-folder-tag" style="background:${f.folder_bg};color:${f.folder_color};">${folderIconHtml(f.folder_emoji, 'file-folder-icon')} ${escHtml(f.folder_name)}</span></td>
       <td style="color:var(--text3);font-size:0.82rem;">${formatSize(f.file_size)}</td>
@@ -151,13 +152,7 @@ async function submitRenameFile() {
     renderUploadFileList();
     renderDashboardRecentUploads();
     fileToRenameId = null;
-    if (currentFolderFilesContext && document.getElementById('modal-folderFiles')?.classList.contains('open')) {
-      await openFolderFiles(
-        currentFolderFilesContext.id,
-        currentFolderFilesContext.name,
-        currentFolderFilesContext.emoji
-      );
-    }
+    renderCurrentFolderFilesFromCache();
     toastMessage = 'File renamed.';
   } finally {
     setButtonLoading(btn, false);
@@ -203,14 +198,8 @@ async function submitMoveFile() {
     }
     closeModal('moveFile');
     fileToMoveId = null;
-    await Promise.all([loadAllFiles(), loadFolders(), loadUploadFileList()]);
-    if (currentFolderFilesContext && document.getElementById('modal-folderFiles')?.classList.contains('open')) {
-      openFolderFiles(
-        currentFolderFilesContext.id,
-        currentFolderFilesContext.name,
-        currentFolderFilesContext.emoji
-      );
-    }
+    await Promise.all([loadAllFiles(), loadFolders(), loadUploadFileList(), loadDashboard(), loadStats()]);
+    renderCurrentFolderFilesFromCache();
     toastMessage = 'File moved.';
   } finally {
     setButtonLoading(btn, false);
@@ -228,7 +217,8 @@ async function deleteFileById(id) {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
     const data = await res.json();
     if (data.success) {
-      await Promise.all([loadAllFiles(), loadFolders()]);
+      await Promise.all([loadAllFiles(), loadFolders(), loadUploadFileList(), loadDashboard(), loadStats()]);
+      renderCurrentFolderFilesFromCache();
       toastMessage = 'File deleted.';
     } else {
       toastType = 'error';

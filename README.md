@@ -9,7 +9,8 @@ File Nest uses Supabase for authentication, PostgreSQL metadata, and private fil
 - `storage.py` - Supabase Storage upload, delete, and signed URL helper.
 - `supabase_auth.py` - Supabase Auth REST helper.
 - `supabase_schema.sql` - Complete SQL schema, RLS policies, bucket setup, and Storage policies.
-- `migrate_sqlite_to_supabase.py` - One-time migration from `filenest.db` and local `uploads/`.
+- `scripts/migrate_sqlite_to_supabase.py` - One-time migration from `filenest.db` and local `uploads/`.
+- `docs/SUPABASE_MIGRATION.md` - Supabase migration notes and setup details.
 - `templates/` - Flask templates.
 - `static/` - Frontend CSS and JS.
 - `uploads/` - Temporary analysis workspace only. Permanent files are stored in Supabase Storage.
@@ -46,7 +47,7 @@ Copy `.env.example` to `.env` and set:
 After the schema exists and `.env` is configured, run:
 
 ```bash
-python migrate_sqlite_to_supabase.py
+python scripts/migrate_sqlite_to_supabase.py
 ```
 
 The migration script:

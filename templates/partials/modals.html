@@ -102,7 +102,10 @@
 <!-- Folder contents modal -->
 <div class="modal-bg" id="modal-folderFiles" onclick="if(event.target===this)closeModal('folderFiles')">
   <div class="modal folder-files-modal">
-    <div class="modal-title" id="folderFilesTitle"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt=""> Folder Files</div>
+    <div class="folder-files-modal-head">
+      <div class="modal-title" id="folderFilesTitle"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt=""> Folder Files</div>
+      <span class="folder-files-counter" id="folderFilesCount">0 files</span>
+    </div>
     <div class="sort-bar folder-files-sort">
       <span style="font-size:0.78rem;font-weight:800;color:var(--text3);">Sort by:</span>
       <button class="sort-chip active" onclick="setFolderFilesSort('name',this)">Name</button>
@@ -213,9 +216,9 @@
     <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
     <div class="modal-title danger-title">Delete All Folders?</div>
     <p style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;">
-      Deleting all folders will move files from those folders to
-      <strong>Uncategorized</strong>. Make sure to move important files to
-      <strong>Uncategorized</strong> before deletion. This action cannot be undone.
+      This will permanently delete every non-default folder and
+      <strong>all files inside those folders</strong>. Move your important files to
+      <strong>Uncategorized</strong> before confirming. This action cannot be undone.
       Do you want to proceed?
     </p>
     <div class="modal-actions">

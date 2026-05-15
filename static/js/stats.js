@@ -7,6 +7,9 @@ async function loadStats() {
   const stats     = await statsRes.json();
   const chartData = await chartRes.json();
   const files     = await filesRes.json();
+  allFiles = files;
+  uploadFiles = files;
+  allFilesLoaded = true;
 
   document.getElementById('statTotal').textContent  = stats.total_files;
   document.getElementById('statAI').textContent     = stats.ai_sorted;

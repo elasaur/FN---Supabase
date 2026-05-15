@@ -33,9 +33,9 @@
         <div class="upload-loading-title">Analyzing your file...</div>
         <div class="upload-loading-sub">AI is working with your files.</div>
         <div class="upload-loading-steps">
-          <div class="upload-step done"    id="step1"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/upload.png" alt=""> File received</div>
-          <div class="upload-step active"  id="step2"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/learning.png" alt=""> Extracting content</div>
-          <div class="upload-step pending" id="step3"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/ai-generated-text.png" alt=""> Predicting folder</div>
+          <div class="upload-step done"    id="step1">File received</div>
+          <div class="upload-step active"  id="step2">Extracting content</div>
+          <div class="upload-step pending" id="step3">Predicting folder</div>
         </div>
       </div>
 
@@ -47,31 +47,6 @@
       <div class="pred-header">
         <span class="pred-header-icon"><img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/gemini-ai.png" alt=""></span>
         <div class="pred-header-copy"><div><div class="pred-header-title">AI Folder Prediction</div><div class="pred-header-sub" id="predEngineLabel">Analyzed by Gemini 2.5 Flash · Review and confirm below</div></div><span class="engine-tag" id="predEngineTag">Gemini</span></div>
-        <!-- AI FALLBACK NOTICE — shown only when Gemini limit is hit -->
-        <div id="aiLimitBanner" style="display:none;
-          background: linear-gradient(135deg, var(--yellow2), #fff8e6);
-          border: 1.5px solid var(--yellow);
-          border-radius: var(--radius-sm);
-          padding: 12px 16px;
-          margin-bottom: 16px;
-          display: none;
-          align-items: center;
-          gap: 12px;">
-          <span style="font-size:1.5rem; flex-shrink:0;">⚠️</span>
-          <div style="flex:1;">
-            <div style="font-weight:800; font-size:0.85rem; color:#a07b10;">
-              Gemini API limit reached — using TextBlob instead
-            </div>
-            <div style="font-size:0.75rem; color:var(--text2); margin-top:3px; line-height:1.5;">
-              Suggestions are based on <strong>keyword frequency analysis</strong> (TextBlob NLP) rather than Gemini AI. Results may be less precise. The Gemini limit resets periodically.
-            </div>
-          </div>
-          <span style="flex-shrink:0; font-size:0.68rem; font-weight:800;
-            background:var(--yellow); color:#fff;
-            padding:3px 10px; border-radius:20px; white-space:nowrap;">
-            TextBlob Mode
-          </span>
-        </div>
       </div>
 
       <!-- File info -->

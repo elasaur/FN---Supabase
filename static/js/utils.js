@@ -71,6 +71,15 @@ function timeAgo(dateStr) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+function isNewFile(dateStr) {
+  const createdAt = parseAppDate(dateStr);
+  return Boolean(createdAt && (Date.now() - createdAt.getTime()) < 24 * 3600 * 1000);
+}
+
+function newFileBadge(dateStr) {
+  return isNewFile(dateStr) ? ' <span class="new-badge">NEW</span>' : '';
+}
+
 function escHtml(s) {
   return String(s)
     .replace(/&/g,'&amp;')
