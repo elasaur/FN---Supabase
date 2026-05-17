@@ -17,6 +17,49 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/landing_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/informational.css') }}">
+  <style>
+    .landing-redesign{display:grid;gap:22px;margin-left:30px;margin-right:30px;max-width:none;padding-left:0;padding-right:0;width:auto}
+    .landing-section-panel{background:rgba(255,255,255,.78);border:1.5px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;padding:0}
+    .landing-section-head{align-items:flex-end;display:flex;gap:18px;justify-content:space-between;padding:26px 28px 18px}
+    .landing-section-kicker{color:var(--accent);font-size:.72rem;font-weight:900;letter-spacing:.12em;margin-bottom:9px;text-transform:uppercase}
+    .landing-section-title{color:var(--text);font-family:'Fraunces',serif;font-size:clamp(1.55rem,2.6vw,2.18rem);font-weight:850;line-height:1.08}
+    .landing-section-copy{color:var(--text2);font-size:.87rem;font-weight:600;line-height:1.55;margin-top:9px;max-width:620px}
+    .section-action{align-items:center;background:var(--surface2);border:1.5px solid var(--border);border-radius:999px;color:var(--text2);display:inline-flex;font-size:.74rem;font-weight:900;gap:7px;padding:7px 11px;white-space:nowrap}
+    .section-action img{height:16px;width:16px}
+    .interactive-layout{display:grid;gap:18px;grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr);padding:0 28px 28px}
+    .interactive-grid{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .interactive-card{align-items:flex-start;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;box-shadow:0 1px 8px rgba(45,33,24,.05);color:inherit;cursor:pointer;display:grid;gap:12px;grid-template-columns:42px minmax(0,1fr);padding:16px;text-align:left;transition:background .18s,border-color .18s,box-shadow .18s,transform .18s;width:100%}
+    .interactive-card:hover,.interactive-card:focus-visible{border-color:var(--tone);box-shadow:0 10px 26px rgba(45,33,24,.11);outline:none;transform:translateY(-2px)}
+    .interactive-card.is-active{background:linear-gradient(135deg,var(--tone-soft),#fff);border-color:var(--tone);box-shadow:0 12px 30px rgba(45,33,24,.12)}
+    .icon-shell{align-items:center;background:var(--tone-soft);border:1.5px solid var(--tone);border-radius:12px;display:flex;height:42px;justify-content:center;width:42px}
+    .icon-shell img{height:23px;object-fit:contain;width:23px}
+    .tone-accent{--tone:#e8855a;--tone-soft:#fde8de}
+    .tone-mint{--tone:#54b997;--tone-soft:#d9f5ec}
+    .tone-lavender{--tone:#9b87d4;--tone-soft:#ede8f8}
+    .tone-sky{--tone:#5aafcf;--tone-soft:#e1f5fb}
+    .tone-yellow{--tone:#d5a02f;--tone-soft:#fef7dd}
+    .tone-pink{--tone:#dd78a8;--tone-soft:#fce8f3}
+    .card-text h3{color:var(--text);font-size:.93rem;font-weight:900;margin-bottom:4px}
+    .card-text p{color:var(--text2);font-size:.8rem;line-height:1.46}
+    .detail-panel{align-self:stretch;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;display:flex;flex-direction:column;justify-content:space-between;min-height:240px;padding:20px;position:relative}
+    .detail-panel::before{background:var(--active-soft,var(--accent3));border-radius:0 0 0 34px;content:'';height:62px;position:absolute;right:0;top:0;width:78px}
+    .detail-content{position:relative;z-index:1}
+    .detail-icon{align-items:center;background:var(--active-soft,var(--accent3));border:1.5px solid var(--active,var(--accent));border-radius:13px;display:flex;height:46px;justify-content:center;margin-bottom:16px;width:46px}
+    .detail-icon img{height:26px;width:26px}
+    .detail-label{color:var(--active,var(--accent));font-size:.68rem;font-weight:900;letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase}
+    .detail-title{color:var(--text);font-family:'Fraunces',serif;font-size:1.28rem;font-weight:850;line-height:1.12;margin-bottom:8px}
+    .detail-copy{color:var(--text2);font-size:.85rem;line-height:1.55}
+    .detail-meter{background:var(--surface);border:1.5px solid var(--border);border-radius:999px;height:10px;margin-top:18px;overflow:hidden}
+    .detail-meter span{background:linear-gradient(90deg,var(--active,var(--accent)),var(--active-soft,var(--accent3)));display:block;height:100%;transition:width .25s ease;width:64%}
+    .feature-actions{margin-top:16px}
+    .flow-row{display:grid;gap:11px;grid-template-columns:repeat(5,minmax(0,1fr));padding:0 28px 28px}
+    .flow-node{align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text2);cursor:pointer;display:flex;font-size:.76rem;font-weight:900;gap:9px;justify-content:center;min-height:60px;padding:10px;text-align:center;transition:border-color .18s,box-shadow .18s,transform .18s}
+    .flow-node:hover,.flow-node.is-active{border-color:var(--tone);box-shadow:0 8px 20px rgba(45,33,24,.09);transform:translateY(-2px)}
+    .flow-node img{background:var(--tone-soft);border:1.5px solid var(--tone);border-radius:9px;height:26px;padding:4px;width:26px}
+    @media (max-width:920px){.landing-redesign{margin-left:30px;margin-right:30px}.landing-section-head,.interactive-layout{grid-template-columns:1fr}.interactive-layout{padding:0 22px 24px}.landing-section-head{align-items:flex-start;flex-direction:column;padding:22px 22px 16px}.flow-row{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 22px 24px}}
+    @media (max-width:640px){.landing-redesign{margin-left:30px;margin-right:30px}.interactive-grid{grid-template-columns:1fr}.interactive-card{grid-template-columns:40px minmax(0,1fr);padding:14px}.icon-shell{height:40px;width:40px}.flow-row{grid-template-columns:1fr}.section-action{white-space:normal}}
+  </style>
 </head>
 <body>
 
@@ -36,16 +79,15 @@
            alt="File Nest Logo" 
            class="logo-img">
     </div>
-
     <div>
       <div class="nav-logo-text" style="color: #e8855a;">File Nest</div>
     </div>
   </a>
 
   <div class="nav-links">
+    <a class="nav-link" href="#about">About</a>
     <a class="nav-link" href="#features">Features</a>
     <a class="nav-link" href="#instructions">Instructions</a>
-    <a class="nav-link" href="#about">About</a>
   </div>
 </nav>
 
@@ -86,91 +128,171 @@
     <span>Project by Angela V. Raquedan</span>
   </div>
 </section>
-
-<main class="landing-sections">
-  <section class="landing-section" id="features">
-    <div class="feature-section-heading">
-      <div class="feature-eyebrow">Features</div>
-      <h2>Everything for a cleaner file workspace.</h2>
+<main class="landing-sections landing-redesign">
+  <section class="landing-section landing-section-panel" id="about" data-section="about">
+    <div class="landing-section-head">
+      <div>
+        <div class="landing-section-kicker">About File Nest</div>
+        <h2 class="landing-section-title">A guided system for storing files with confidence.</h2>
+        <p class="landing-section-copy">File Nest combines account security, private storage, and AI-assisted decisions in a workspace that keeps the user in control.</p>
+      </div>
+      <div class="section-action"><img src="/icons-pack/icons8-info-50.png" alt="">System view</div>
     </div>
-    <div class="feature-list-grid">
-      <article class="feature-list-card">
-        <div class="feature-icon feature-icon-lavender"><img class="landing-icon" src="/icons-pack/icons8-gemini-ai-48.png" alt=""></div>
-        <h3>AI-assisted organization</h3>
-        <p>Analyze file names and supported document content to suggest folders while keeping final confirmation in your hands.</p>
-      </article>
-      <article class="feature-list-card">
-        <div class="feature-icon feature-icon-mint"><img class="landing-icon" src="/icons-pack/icons8-folder-50.png" alt=""></div>
-        <h3>Custom folders</h3>
-        <p>Create folders with clear labels, colors, and icons, then pin important folders to keep them easy to reach.</p>
-      </article>
-      <article class="feature-list-card">
-        <div class="feature-icon feature-icon-accent"><img class="landing-icon" src="/icons-pack/icons8-upload-50.png" alt=""></div>
-        <h3>Guided uploads</h3>
-        <p>Upload directly into a selected folder or ask the system to analyze and recommend the best destination.</p>
-      </article>
-      <article class="feature-list-card">
-        <div class="feature-icon feature-icon-sky"><img class="landing-icon" src="/icons-pack/icons8-search-48.png" alt=""></div>
-        <h3>Search and file actions</h3>
-        <p>Find files quickly, preview them, rename them, move them between folders, download copies, or delete old items.</p>
-      </article>
-      <article class="feature-list-card">
-        <div class="feature-icon feature-icon-yellow"><img class="landing-icon" src="/icons-pack/icons8-bar-chart-50.png" alt=""></div>
-        <h3>Statistics</h3>
-        <p>See file type breakdowns, folder distribution, recent upload activity, and AI sorting summaries.</p>
-      </article>
-      <article class="feature-list-card">
-        <div class="feature-icon feature-icon-pink"><img class="landing-icon" src="/icons-pack/icons8-security-shield-48.png" alt=""></div>
-        <h3>Private storage model</h3>
-        <p>Accounts, file metadata, and stored files are backed by Supabase services with private storage access.</p>
-      </article>
+    <div class="interactive-layout">
+      <div class="interactive-grid">
+        <button class="interactive-card tone-accent is-active" type="button" data-target="about-detail" data-label="System overview" data-title="Built around clear folder decisions." data-copy="Upload, classify, retrieve, and manage files through one dashboard built around folders, recent activity, search, and storage statistics." data-icon="/icons-pack/icons8-about-48.png" data-tone="#e8855a" data-soft="#fde8de" data-meter="76">
+          <span class="icon-shell"><img src="/icons-pack/icons8-about-48.png" alt=""></span>
+          <span class="card-text"><h3>System overview</h3><p>A complete workspace for organizing uploaded files.</p></span>
+        </button>
+        <button class="interactive-card tone-pink" type="button" data-target="about-detail" data-label="Authentication" data-title="Accounts and credentials stay protected." data-copy="Supabase Auth handles user identity, sign in, password reset, and account-level credential changes." data-icon="/icons-pack/icons8-cyber-security-50.png" data-tone="#dd78a8" data-soft="#fce8f3" data-meter="88">
+          <span class="icon-shell"><img src="/icons-pack/icons8-cyber-security-50.png" alt=""></span>
+          <span class="card-text"><h3>Authentication</h3><p>Secure access for accounts and password changes.</p></span>
+        </button>
+        <button class="interactive-card tone-sky" type="button" data-target="about-detail" data-label="Data and storage" data-title="Metadata and files have clear homes." data-copy="Supabase PostgreSQL stores users, folders, and file metadata. File bytes live in private Supabase Storage." data-icon="/icons-pack/icons8-database-50.png" data-tone="#5aafcf" data-soft="#e1f5fb" data-meter="82">
+          <span class="icon-shell"><img src="/icons-pack/icons8-database-50.png" alt=""></span>
+          <span class="card-text"><h3>Data and storage</h3><p>PostgreSQL metadata with private file storage.</p></span>
+        </button>
+        <button class="interactive-card tone-lavender" type="button" data-target="about-detail" data-label="AI analysis" data-title="Suggestions help, but users decide." data-copy="Gemini-based analysis can inspect supported file content, with TextBlob and keyword fallback logic available when needed." data-icon="/icons-pack/icons8-gemini-ai-48.png" data-tone="#9b87d4" data-soft="#ede8f8" data-meter="70">
+          <span class="icon-shell"><img src="/icons-pack/icons8-gemini-ai-48.png" alt=""></span>
+          <span class="card-text"><h3>AI analysis</h3><p>Smart recommendations with final confirmation.</p></span>
+        </button>
+      </div>
+      <aside class="detail-panel" id="about-detail" style="--active:#e8855a;--active-soft:#fde8de">
+        <div class="detail-content">
+          <div class="detail-icon"><img src="/icons-pack/icons8-about-48.png" alt=""></div>
+          <div class="detail-label">System overview</div>
+          <h3 class="detail-title">Built around clear folder decisions.</h3>
+          <p class="detail-copy">Upload, classify, retrieve, and manage files through one dashboard built around folders, recent activity, search, and storage statistics.</p>
+        </div>
+        <div class="detail-meter"><span style="width:76%"></span></div>
+      </aside>
     </div>
   </section>
-
-  <section class="landing-section" id="instructions">
-    <div class="feature-section-heading">
-      <div class="feature-eyebrow">Instructions</div>
-      <h2>How to use File Nest.</h2>
-    </div>
-    <div class="instruction-layout">
-      <article class="instruction-intro">
-        <div class="feature-eyebrow">How to use</div>
-        <h3>Start with folders, upload files, then let the system keep things easy to scan.</h3>
-        <p>Use these steps when setting up a workspace for the first time or when adding a new batch of files.</p>
-      </article>
-      <div class="instruction-steps">
-        <article class="landing-step"><span>1</span><div><h3>Create folders</h3><p>Name your folders clearly, choose a color and icon, and pin the folders you use often.</p></div></article>
-        <article class="landing-step"><span>2</span><div><h3>Upload files</h3><p>Choose a file, then save it directly or run AI analysis for a folder recommendation.</p></div></article>
-        <article class="landing-step"><span>3</span><div><h3>Review suggestions</h3><p>Check the AI result, confirm the suggested folder, or choose another destination.</p></div></article>
-        <article class="landing-step"><span>4</span><div><h3>Manage files</h3><p>Preview, rename, move, download, sort, or delete files from All Files and folder views.</p></div></article>
-        <article class="landing-step"><span>5</span><div><h3>Track activity</h3><p>Use Home and Statistics to review recent uploads, file types, folder counts, and AI activity.</p></div></article>
+  <section class="landing-section landing-section-panel" id="features" data-section="features">
+    <div class="landing-section-head">
+      <div>
+        <div class="landing-section-kicker">File Nest features</div>
+        <h2 class="landing-section-title">Everything for a cleaner file workspace.</h2>
+        <p class="landing-section-copy">Upload, organize, search, and manage files through one system that combines practical folder controls with AI-assisted sorting.</p>
+        <div class="feature-actions">
+          <a class="cta-btn" href="/login">Open File Nest</a>
+          <a class="cta-ghost" href="#about">Review system</a>
+        </div>
       </div>
+      <div class="section-action"><img src="/icons-pack/icons8-rocket-48.png" alt="">Core tools</div>
+    </div>
+    <div class="interactive-layout">
+      <div class="interactive-grid">
+        <button class="interactive-card tone-lavender is-active" type="button" data-target="features-detail" data-label="AI sorting" data-title="AI-assisted organization with review." data-copy="Analyze file names and supported document content to suggest folders while keeping final confirmation in your hands." data-icon="/icons-pack/icons8-gemini-ai-48.png" data-tone="#9b87d4" data-soft="#ede8f8" data-meter="78">
+          <span class="icon-shell"><img src="/icons-pack/icons8-gemini-ai-48.png" alt=""></span>
+          <span class="card-text"><h3>AI-assisted organization</h3><p>Suggest folders from names and supported content.</p></span>
+        </button>
+        <button class="interactive-card tone-mint" type="button" data-target="features-detail" data-label="Folders" data-title="Custom folders that stay easy to scan." data-copy="Create folders with clear labels, colors, and icons, then pin important folders to keep them easy to reach." data-icon="/icons-pack/icons8-folder-50.png" data-tone="#54b997" data-soft="#d9f5ec" data-meter="84">
+          <span class="icon-shell"><img src="/icons-pack/icons8-folder-50.png" alt=""></span>
+          <span class="card-text"><h3>Custom folders</h3><p>Label, color, icon, and pin your folder system.</p></span>
+        </button>
+        <button class="interactive-card tone-accent" type="button" data-target="features-detail" data-label="Uploads" data-title="Guided uploads for direct or AI-assisted saves." data-copy="Upload directly into a selected folder or ask the system to analyze and recommend the best destination." data-icon="/icons-pack/icons8-upload-50.png" data-tone="#e8855a" data-soft="#fde8de" data-meter="72">
+          <span class="icon-shell"><img src="/icons-pack/icons8-upload-50.png" alt=""></span>
+          <span class="card-text"><h3>Guided uploads</h3><p>Choose the destination or request a recommendation.</p></span>
+        </button>
+        <button class="interactive-card tone-sky" type="button" data-target="features-detail" data-label="Search" data-title="Find files and act on them quickly." data-copy="Find files quickly, preview them, rename them, move them between folders, download copies, or delete old items." data-icon="/icons-pack/icons8-search-48.png" data-tone="#5aafcf" data-soft="#e1f5fb" data-meter="80">
+          <span class="icon-shell"><img src="/icons-pack/icons8-search-48.png" alt=""></span>
+          <span class="card-text"><h3>Search and file actions</h3><p>Preview, rename, move, download, or delete.</p></span>
+        </button>
+        <button class="interactive-card tone-yellow" type="button" data-target="features-detail" data-label="Statistics" data-title="Storage patterns become visible." data-copy="See file type breakdowns, folder distribution, recent upload activity, and AI sorting summaries." data-icon="/icons-pack/icons8-bar-chart-50.png" data-tone="#d5a02f" data-soft="#fef7dd" data-meter="66">
+          <span class="icon-shell"><img src="/icons-pack/icons8-bar-chart-50.png" alt=""></span>
+          <span class="card-text"><h3>Statistics</h3><p>Track file types, folder counts, and activity.</p></span>
+        </button>
+        <button class="interactive-card tone-pink" type="button" data-target="features-detail" data-label="Privacy" data-title="Private storage stays part of the workflow." data-copy="Accounts, file metadata, and stored files are backed by Supabase services with private storage access." data-icon="/icons-pack/icons8-security-shield-48.png" data-tone="#dd78a8" data-soft="#fce8f3" data-meter="90">
+          <span class="icon-shell"><img src="/icons-pack/icons8-security-shield-48.png" alt=""></span>
+          <span class="card-text"><h3>Private storage model</h3><p>Account-backed metadata and private file access.</p></span>
+        </button>
+      </div>
+      <aside class="detail-panel" id="features-detail" style="--active:#9b87d4;--active-soft:#ede8f8">
+        <div class="detail-content">
+          <div class="detail-icon"><img src="/icons-pack/icons8-gemini-ai-48.png" alt=""></div>
+          <div class="detail-label">AI sorting</div>
+          <h3 class="detail-title">AI-assisted organization with review.</h3>
+          <p class="detail-copy">Analyze file names and supported document content to suggest folders while keeping final confirmation in your hands.</p>
+        </div>
+        <div class="detail-meter"><span style="width:78%"></span></div>
+      </aside>
     </div>
   </section>
-
-  <section class="landing-section" id="about">
-    <div class="feature-section-heading">
-      <div class="feature-eyebrow">About the system</div>
-      <h2>An AI-assisted file organization system.</h2>
-    </div>
-    <div class="about-system-grid">
-      <article class="about-system-main">
-        <h3>What File Nest does</h3>
-        <p>File Nest helps users upload, classify, store, retrieve, and manage files through a dashboard built around folders, recent activity, search, and storage statistics.</p>
-        <p>The system keeps the user in control. AI can recommend where a file belongs, but the user confirms the destination before the upload is saved.</p>
-      </article>
-      <div class="about-system-stack">
-        <article class="about-system-card"><img class="landing-icon" src="/icons-pack/icons8-cyber-security-50.png" alt=""><div><h3>Authentication</h3><p>Supabase Auth handles accounts, sign in, reset password, and credential changes.</p></div></article>
-        <article class="about-system-card"><img class="landing-icon" src="/icons-pack/icons8-database-50.png" alt=""><div><h3>Data and storage</h3><p>Supabase PostgreSQL stores metadata while private Supabase Storage keeps uploaded files.</p></div></article>
-        <article class="about-system-card"><img class="landing-icon" src="/icons-pack/icons8-gemini-ai-48.png" alt=""><div><h3>AI analysis</h3><p>Gemini-based analysis can inspect supported content, with TextBlob and keyword fallback logic.</p></div></article>
+  <section class="landing-section landing-section-panel" id="instructions" data-section="instructions">
+    <div class="landing-section-head">
+      <div>
+        <div class="landing-section-kicker">Instructions</div>
+        <h2 class="landing-section-title">A simple path from upload to organized storage.</h2>
+        <p class="landing-section-copy">A compact workflow for creating folders, uploading files, reviewing recommendations, and keeping saved files manageable.</p>
       </div>
+      <div class="section-action"><img src="/icons-pack/icons8-manual-48.png" alt="">5-step flow</div>
+    </div>
+    <div class="interactive-layout">
+      <div class="interactive-grid">
+        <button class="interactive-card tone-mint is-active" type="button" data-target="instructions-detail" data-label="Step 1" data-title="Create folders first." data-copy="Name folders clearly, choose a color and icon, and pin the folders you use often so AI suggestions have strong labels to match against." data-icon="/icons-pack/icons8-folder-50.png" data-tone="#54b997" data-soft="#d9f5ec" data-meter="20">
+          <span class="icon-shell"><img src="/icons-pack/icons8-folder-50.png" alt=""></span>
+          <span class="card-text"><h3>Create folders</h3><p>Set up clear names, colors, icons, and pins.</p></span>
+        </button>
+        <button class="interactive-card tone-accent" type="button" data-target="instructions-detail" data-label="Step 2" data-title="Upload files with intent." data-copy="Choose a file, then save it directly or run AI analysis when you want a folder recommendation." data-icon="/icons-pack/icons8-upload-50.png" data-tone="#e8855a" data-soft="#fde8de" data-meter="40">
+          <span class="icon-shell"><img src="/icons-pack/icons8-upload-50.png" alt=""></span>
+          <span class="card-text"><h3>Upload files</h3><p>Save directly or request AI analysis first.</p></span>
+        </button>
+        <button class="interactive-card tone-lavender" type="button" data-target="instructions-detail" data-label="Step 3" data-title="Review suggestions before saving." data-copy="AI recommendations are not final until you confirm the upload destination or choose a different folder." data-icon="/icons-pack/icons8-gemini-ai-48.png" data-tone="#9b87d4" data-soft="#ede8f8" data-meter="60">
+          <span class="icon-shell"><img src="/icons-pack/icons8-gemini-ai-48.png" alt=""></span>
+          <span class="card-text"><h3>Review suggestions</h3><p>Confirm the result or choose another folder.</p></span>
+        </button>
+        <button class="interactive-card tone-sky" type="button" data-target="instructions-detail" data-label="Step 4" data-title="Manage files after upload." data-copy="Preview, rename, move, download, sort, or delete files from All Files and folder views." data-icon="/icons-pack/icons8-document-50.png" data-tone="#5aafcf" data-soft="#e1f5fb" data-meter="80">
+          <span class="icon-shell"><img src="/icons-pack/icons8-document-50.png" alt=""></span>
+          <span class="card-text"><h3>Manage files</h3><p>Preview, rename, move, download, or delete.</p></span>
+        </button>
+        <button class="interactive-card tone-yellow" type="button" data-target="instructions-detail" data-label="Step 5" data-title="Track activity over time." data-copy="Use Home and Statistics to review recent uploads, file types, folder counts, and AI activity." data-icon="/icons-pack/icons8-bar-chart-50.png" data-tone="#d5a02f" data-soft="#fef7dd" data-meter="100">
+          <span class="icon-shell"><img src="/icons-pack/icons8-bar-chart-50.png" alt=""></span>
+          <span class="card-text"><h3>Track activity</h3><p>Review uploads, file types, folders, and AI use.</p></span>
+        </button>
+        <button class="interactive-card tone-pink" type="button" data-target="instructions-detail" data-label="Account" data-title="Manage account access when needed." data-copy="Sign in to update account details, change your password, or manage saved files." data-icon="/icons-pack/icons8-profile-48.png" data-tone="#dd78a8" data-soft="#fce8f3" data-meter="100">
+          <span class="icon-shell"><img src="/icons-pack/icons8-profile-48.png" alt=""></span>
+          <span class="card-text"><h3>Account access</h3><p>Update details, change passwords, and manage files.</p></span>
+        </button>
+      </div>
+      <aside class="detail-panel" id="instructions-detail" style="--active:#54b997;--active-soft:#d9f5ec">
+        <div class="detail-content">
+          <div class="detail-icon"><img src="/icons-pack/icons8-folder-50.png" alt=""></div>
+          <div class="detail-label">Step 1</div>
+          <h3 class="detail-title">Create folders first.</h3>
+          <p class="detail-copy">Name folders clearly, choose a color and icon, and pin the folders you use often so AI suggestions have strong labels to match against.</p>
+        </div>
+        <div class="detail-meter"><span style="width:20%"></span></div>
+      </aside>
+    </div>
+    <div class="flow-row">
+      <button class="flow-node tone-mint is-active" type="button" data-target="instructions-detail" data-label="Select file" data-title="Start with the file you want to store." data-copy="Pick the upload from your device and decide whether it already has an obvious folder destination." data-icon="/icons-pack/icons8-document-50.png" data-tone="#54b997" data-soft="#d9f5ec" data-meter="20"><img src="/icons-pack/icons8-document-50.png" alt="">Select file</button>
+      <button class="flow-node tone-lavender" type="button" data-target="instructions-detail" data-label="Analyze" data-title="Analyze or choose the folder." data-copy="Use AI analysis for a recommendation, or choose a known folder directly when you already know where it belongs." data-icon="/icons-pack/icons8-gemini-ai-48.png" data-tone="#9b87d4" data-soft="#ede8f8" data-meter="40"><img src="/icons-pack/icons8-gemini-ai-48.png" alt="">Analyze</button>
+      <button class="flow-node tone-accent" type="button" data-target="instructions-detail" data-label="Confirm" data-title="Confirm the upload destination." data-copy="Review the destination before saving so every file lands where you expect." data-icon="/icons-pack/icons8-medal-48.png" data-tone="#e8855a" data-soft="#fde8de" data-meter="60"><img src="/icons-pack/icons8-medal-48.png" alt="">Confirm</button>
+      <button class="flow-node tone-pink" type="button" data-target="instructions-detail" data-label="Store" data-title="Store the file privately." data-copy="After confirmation, the file is saved with metadata and private storage access." data-icon="/icons-pack/icons8-security-shield-48.png" data-tone="#dd78a8" data-soft="#fce8f3" data-meter="80"><img src="/icons-pack/icons8-security-shield-48.png" alt="">Store</button>
+      <button class="flow-node tone-sky" type="button" data-target="instructions-detail" data-label="Manage" data-title="Search and manage later." data-copy="Use search, folder views, and file actions to keep the workspace easy to maintain." data-icon="/icons-pack/icons8-search-48.png" data-tone="#5aafcf" data-soft="#e1f5fb" data-meter="100"><img src="/icons-pack/icons8-search-48.png" alt="">Manage</button>
     </div>
   </section>
 </main>
-
 <footer>
   File Nest - Smart File Sorter
 </footer>
-
+<script>
+  document.querySelectorAll('.interactive-card,.flow-node').forEach((trigger) => {
+    trigger.addEventListener('click', () => {
+      const panel = document.getElementById(trigger.dataset.target);
+      if (!panel) return;
+      document.querySelectorAll(`[data-target="${trigger.dataset.target}"]`).forEach((item) => item.classList.remove('is-active'));
+      trigger.classList.add('is-active');
+      panel.style.setProperty('--active', trigger.dataset.tone);
+      panel.style.setProperty('--active-soft', trigger.dataset.soft);
+      panel.querySelector('.detail-icon img').src = trigger.dataset.icon;
+      panel.querySelector('.detail-label').textContent = trigger.dataset.label;
+      panel.querySelector('.detail-title').textContent = trigger.dataset.title;
+      panel.querySelector('.detail-copy').textContent = trigger.dataset.copy;
+      panel.querySelector('.detail-meter span').style.width = `${trigger.dataset.meter}%`;
+    });
+  });
+</script>
 </body>
 </html>
