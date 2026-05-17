@@ -1,31 +1,28 @@
-  <!-- ══ PAGE: STATISTICS ══ -->
+  <!-- PAGE: STATISTICS -->
   <div class="page" id="page-stats">
     <div class="section-header">
       <div>
         <div class="section-title">Statistics</div>
-        <div class="section-sub">Visual breakdown of your files by folder and type.</div>
+        <div class="section-sub">Track uploads, activity, and storage insights.</div>
       </div>
     </div>
-    <div class="stats-stack">
+    <div class="stats-grid">
+      <div class="stats-col">
+        <div class="card stats-card-panel stats-donut-card">
+          <div class="stats-card-title">File Types Breakdown</div>
+          <div id="typeDonutChart" class="stats-donut-wrap"></div>
+        </div>
+      </div>
+      <div class="stats-col stats-col-stack">
         <div class="card stats-card-panel">
           <div class="stats-card-title">Files per Folder</div>
           <div id="folderChartBars"></div>
         </div>
         <div class="card stats-card-panel">
-          <div class="stats-card-title">File Types Breakdown</div>
-          <div id="typeChartBars"></div>
-        </div>
-        <div class="card stats-card-panel">
           <div class="stats-card-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/gemini-ai.png" alt=""> AI Sorting Summary</div>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:0.85rem;font-weight:600;">Total Files Sorted</span><span style="font-weight:800;color:var(--accent)" id="statTotal">—</span></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:0.85rem;font-weight:600;">AI Auto-Sorted</span><span style="font-weight:800;color:var(--mint)" id="statAI">—</span></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:0.85rem;font-weight:600;">Manually Sorted</span><span style="font-weight:800;color:var(--yellow)" id="statManual">—</span></div>
-            <div style="height:1px;background:var(--border);margin:2px 0;"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:0.85rem;font-weight:600;">NLP Library</span><span class="tag" style="background:var(--lavender2);color:var(--lavender);"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/gemini-ai.png" alt=""> Gemini + TextBlob</span></div>
-          </div>
+          <div id="aiSortingSummary" class="ai-summary"></div>
         </div>
+      </div>
     </div>
   </div>
 
-  

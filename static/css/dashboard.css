@@ -5,13 +5,16 @@
   flex-wrap: wrap;
   column-gap: 0;
   row-gap: 2px;
+  font-weight: 700;
 }
 .dashboard-greeting-name {
   color: var(--accent);
   margin-left: 0.25em;
+  font-weight: 900;
 }
 .dashboard-greeting-punctuation {
   color: var(--accent);
+  font-weight: 700;
 }
 
 .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
@@ -25,20 +28,6 @@
 .stat-val { font-family: 'Fraunces', sans-serif; font-weight: 700; font-size: 1.8rem; line-height: 1; }
 .stat-label { font-size: 0.78rem; color: var(--text3); font-weight: 600; margin-top: 4px; }
 
-/* ── AI BANNER ── */
-.ai-banner {
-  background: linear-gradient(135deg, var(--lavender2), var(--pink2));
-  border: 1.5px solid var(--lavender); border-radius: var(--radius);
-  padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 24px;
-}
-.ai-banner .ai-icon { font-size: 1.6rem; flex-shrink: 0; }
-.ai-banner-title { font-weight: 800; font-size: 0.9rem; color: var(--lavender); }
-.ai-banner-text { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
-.ai-tag {
-  margin-left: auto; flex-shrink: 0; background: var(--lavender); color: #fff;
-  font-size: 0.72rem; font-weight: 800; padding: 3px 12px; border-radius: 20px;
-  display: inline-flex; align-items: center; gap: 5px;
-}
 .section-loading {
   grid-column: 1 / -1;
   min-height: 96px;

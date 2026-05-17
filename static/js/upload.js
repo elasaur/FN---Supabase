@@ -72,7 +72,7 @@ async function handleFiles(files) {
       }
       if (engineLabel) {
         engineLabel.textContent =
-          'Analyzed by TextBlob (Gemini limit reached) · Review and confirm below';
+          'Analyzed by TextBlob - Review and confirm below';
         engineLabel.style.color = '#a07b10';
       }
       showToast('Gemini API limit reached — using TextBlob instead', 'warn');
