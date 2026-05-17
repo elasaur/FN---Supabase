@@ -2,7 +2,7 @@
 <!-- Create Folder -->
 <div class="modal-bg" id="modal-createFolder" onclick="if(event.target===this)closeModal('createFolder')">
   <div class="modal">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt=""> Create New Folder</div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-folder-50.png" alt=""> Create New Folder</div>
     <div class="modal-form">
       <div><label class="form-label">Folder Name</label><input class="form-input" id="cf-name" placeholder="e.g. Tax Documents"/></div>
       <div><label class="form-label">Folder Emoji</label><input class="form-input" id="cf-emoji" placeholder="e.g. 📁" maxlength="8" value="📁"/></div>
@@ -21,7 +21,7 @@
 <!-- Edit Folder -->
 <div class="modal-bg" id="modal-editFolder" onclick="if(event.target===this)closeModal('editFolder')">
   <div class="modal">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/pencil.png" alt=""> Edit Folder</div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-edit-48.png" alt=""> Edit Folder</div>
     <div class="modal-form">
       <div><label class="form-label">Folder Name</label><input class="form-input" id="rf-name"/></div>
       <div><label class="form-label">Folder Emoji</label><input class="form-input" id="rf-emoji" placeholder="e.g. 📁" maxlength="8"/></div>
@@ -41,7 +41,7 @@
 <!-- Change Name -->
 <div class="modal-bg" id="modal-editName" onclick="if(event.target===this)closeModal('editName')">
   <div class="modal">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/edit-user.png" alt=""> Edit Name</div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-edit-user-48.png" alt=""> Edit Name</div>
     <div class="modal-form">
       <div><label class="form-label">Full Name</label><input class="form-input" id="editNameInput" value="{{ user['name'] }}"/></div>
       <div class="modal-actions">
@@ -55,7 +55,7 @@
 <!-- Email Address -->
 <div class="modal-bg" id="modal-editEmail" onclick="if(event.target===this)closeModal('editEmail')">
   <div class="modal">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/new-post.png" alt=""> Edit Email</div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-mail-account-48.png" alt=""> Edit Email</div>
     <div class="modal-form">
       <div><label class="form-label">Email Address</label><input class="form-input" id="editEmailInput" value="{{ user['email'] }}"/></div>
       <div class="modal-actions">
@@ -66,18 +66,27 @@
   </div>
 </div>
 
-<!-- Change Password: Email Step -->
+<!-- Change Password -->
 <div class="modal-bg" id="modal-editPassword" onclick="if(event.target===this)closeModal('editPassword')">
   <div class="modal">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/re-enter-pincode.png" alt=""> Change Password</div>
-    <form class="modal-form" onsubmit="event.preventDefault();sendSettingsPasswordReset(this.querySelector('[type=submit]'));">
-      <p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin:0;">
-        Send a secure reset link to your account email.
-      </p>
-      <div><label class="form-label">Account Email</label><input class="form-input" id="editPasswordEmail" type="email" value="{{ user['email'] }}" readonly required></div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-change%20password-48.png" alt=""> Change Password</div>
+    <form class="modal-form" onsubmit="event.preventDefault();savePassword(this.querySelector('[type=submit]'));">
+      <div><label class="form-label">Current Password</label><input class="form-input" id="editPasswordCurrent" type="password" placeholder="••••••••" autocomplete="current-password" required oninput="updateSettingsPasswordFormState()"></div>
+      <div>
+        <label class="form-label">New Password</label>
+        <input class="form-input" id="editPasswordNew" type="password" placeholder="••••••••" autocomplete="new-password" required oninput="updateSettingsPasswordStrength(this)">
+        <div class="pw-strength" style="margin-top:6px;">
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+        </div>
+      </div>
+      <div><label class="form-label">Confirm Password</label><input class="form-input" id="editPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password" required oninput="updateSettingsPasswordFormState()"></div>
+      <div class="auth-error" id="editPasswordMessage" style="display:none;" role="status" aria-live="polite"></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal('editPassword')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Send Reset Link</button>
+        <button type="submit" class="btn btn-primary" id="editPasswordSubmit" disabled>Save Password</button>
       </div>
     </form>
   </div>
@@ -86,7 +95,7 @@
 <!-- Change Password: Sent Step -->
 <div class="modal-bg" id="modal-passwordResetSent" onclick="if(event.target===this)closeModal('passwordResetSent')">
   <div class="modal">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/new-post.png" alt=""> Check Your Email</div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-mail-account-48.png" alt=""> Check Your Email</div>
     <div class="modal-form">
       <p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin:0;">
         We sent a password reset link to <strong id="passwordResetSentEmail">{{ user['email'] }}</strong>. Open the link to set your new password.
@@ -103,7 +112,7 @@
 <div class="modal-bg" id="modal-folderFiles" onclick="if(event.target===this)closeModal('folderFiles')">
   <div class="modal folder-files-modal">
     <div class="folder-files-modal-head">
-      <div class="modal-title" id="folderFilesTitle"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt=""> Folder Files</div>
+      <div class="modal-title" id="folderFilesTitle"><img class="ui-icon" src="/icons-pack/icons8-folder-50.png" alt=""> Folder Files</div>
       <span class="folder-files-counter" id="folderFilesCount">0 files</span>
     </div>
     <div class="sort-bar folder-files-sort">
@@ -120,7 +129,7 @@
 <!-- Rename File -->
 <div class="modal-bg" id="modal-renameFile" onclick="if(event.target===this)closeModal('renameFile')">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/rename.png" alt=""> Rename File</div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-rename-50.png" alt=""> Rename File</div>
     <div class="modal-form">
       <div>
         <label class="form-label">File Name</label>
@@ -137,7 +146,7 @@
 <!-- Move File -->
 <div class="modal-bg" id="modal-moveFile" onclick="if(event.target===this)closeModal('moveFile')">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-title"><img class="ui-icon" src="https://img.icons8.com/pulsar-color/48/right.png" alt=""> Move File</div>
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-move-50.png" alt=""> Move File</div>
     <div class="modal-form">
       <div>
         <label class="form-label">Destination Folder</label>
@@ -238,9 +247,11 @@
 <div class="modal-bg" id="modal-sessionExpired">
   <div class="modal" style="max-width: 400px;">
     
-    <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⏳</div>
+    <div style="text-align:center; margin-bottom: 8px;">
+      <img class="ui-icon ui-icon-xl" src="/icons-pack/icons8-session-timeout-48.png" alt="">
+    </div>
     
-    <div class="modal-title" style="text-align:center;">
+    <div class="modal-title" style="justify-content:center;text-align:center;">
       Session Expired
     </div>
 

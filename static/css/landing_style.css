@@ -2,7 +2,7 @@
     --bg: #f7f4f0;
     --surface: #fff;
     --border: #ecddd3;
-    --text: #2d2118;
+    --text: #3D1808;
     --text2: #7a6558;
     --text3: #b09e94;
     --accent: #e8855a;
@@ -76,7 +76,7 @@ nav {
   object-fit: contain;
   border-radius: 8px; /* optional: matches your soft UI style */
 }
-.nav-logo-text { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.1rem; color: var(--text); }
+.nav-logo-text { font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px; color: var(--text); }
 .nav-logo-sub { font-size: 0.65rem; color: var(--text3); font-weight: 500; letter-spacing: .04em; }
 
 .nav-links { display: flex; align-items: center; gap: 8px; }
@@ -147,7 +147,8 @@ nav {
 .hero-tagline {
     font-size: clamp(1rem, 2.5vw, 1.2rem);
     color: var(--text2); font-weight: 500;
-    max-width: 520px; line-height: 1.65;
+    max-width: 520px; line-height: 1.5;
+    margin-top: 12px;
     margin-bottom: 44px;
     animation: fadeUp 0.7s 0.35s ease both;
 }
@@ -293,6 +294,24 @@ footer span { color: var(--accent); }
 }
 
 .material-symbols-rounded { user-select: none; font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+.landing-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
+
+.landing-icon-sm {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
 
 @media (max-width: 600px) {
     nav { padding: 16px 20px; }

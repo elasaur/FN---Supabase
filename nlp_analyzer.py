@@ -400,7 +400,7 @@ Return ONLY a JSON array with exactly 3 objects. No extra text."""
         return suggestions[:3]
 
     except Exception as e:
-        print(f"❌ GEMINI ERROR: {e}\nSwitching to TextBlob fallback...")
+        print(f"GEMINI ERROR: {e}\nSwitching to TextBlob fallback...")
         suggestions = _textblob_fallback_suggestions(filename, text, existing_folders)
 
         for s in suggestions:

@@ -25,7 +25,7 @@ async function loadDashboard() {
     ? pinned.map(f => makeFolderCard(f, true)).join('')
     : `<div class="empty-state" style="grid-column:1/-1;padding:20px;">
     <div class="es-icon">
-        <img src="https://img.icons8.com/pulsar-color/48/pin.png" alt="Pin Icon">
+        <img src="${localIcon('icons8-pin-48.png')}" alt="Pin Icon">
     </div>
     <div class="es-text">
         No pinned folders — pin one from the Folders page!
@@ -79,7 +79,7 @@ function renderDashboardRecentUploads() {
     ? sorted.slice(0,5).map(f => makeRecentItem(f)).join('')
     : `<div class="empty-state">
       <div class="es-icon">
-          <img src="https://img.icons8.com/pulsar-color/48/google-docs.png" alt="Files Icon">
+          <img src="${localIcon('icons8-document-50.png')}" alt="Files Icon">
       </div>
       <div class="es-text">
           No files yet — upload one to get started!

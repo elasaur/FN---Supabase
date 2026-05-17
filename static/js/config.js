@@ -1,5 +1,10 @@
 // static/js/config.js
 
+function iconPackPath(file) {
+  const iconName = String(file).split('/').pop();
+  return `/icons-pack/${encodeURIComponent(iconName)}`;
+}
+
 const EXT_ICONS = {
   pdf:'📄', doc:'📝', docx:'📝', xls:'📊', xlsx:'📊',
   ppt:'📊', pptx:'📊', jpg:'🖼️', jpeg:'🖼️', png:'🖼️',
@@ -27,37 +32,26 @@ const FOLDER_EMOJIS = [
   '🚗','🍽️','💪','🐾','🎓','🏆','🔑','🛡️','⭐','🌿',
 ];
 
-const DEFAULT_FOLDER_ICON = 'https://img.icons8.com/pulsar-color/48/bookmark.png';
+const DEFAULT_FOLDER_ICON = iconPackPath('icons8-folder-50.png');
 
 const SYSTEM_FOLDER_ICONS = [
-  { value:'https://img.icons8.com/pulsar-color/48/hearts.png', label:'Hearts' },
-  { value:'https://img.icons8.com/pulsar-color/48/flower.png', label:'Flower' },
-  { value:'https://img.icons8.com/pulsar-color/48/star.png', label:'Star' },
-  { value:'https://img.icons8.com/pulsar-color/48/goal.png', label:'Goal' },
-  { value:'https://img.icons8.com/pulsar-color/48/backpack.png', label:'Backpack' },
-  { value:'https://img.icons8.com/pulsar-color/48/shopaholic.png', label:'Shopping' },
-  { value:'https://img.icons8.com/pulsar-color/48/tag.png', label:'Tag' },
-  { value:'https://img.icons8.com/pulsar-color/48/read.png', label:'Read' },
-  { value:'https://img.icons8.com/pulsar-color/48/book.png', label:'Book' },
-  { value:'https://img.icons8.com/pulsar-color/48/trave-diary.png', label:'Travel Diary' },
-  { value:'https://img.icons8.com/pulsar-color/48/code.png', label:'Code' },
-  { value:'https://img.icons8.com/pulsar-color/48/leaf.png', label:'Leaf' },
-  { value:'https://img.icons8.com/pulsar-color/48/acid-flask.png', label:'Science' },
-  { value:'https://img.icons8.com/pulsar-color/48/black-cat.png', label:'Cat' },
-  { value:'https://img.icons8.com/pulsar-color/48/year-of-dog.png', label:'Dog' },
-  { value:'https://img.icons8.com/pulsar-color/48/test-passed.png', label:'Done' },
-  { value:'https://img.icons8.com/pulsar-color/48/my-computer.png', label:'Computer' },
-  { value:'https://img.icons8.com/pulsar-color/48/graduation-cap.png', label:'School' },
-  { value:'https://img.icons8.com/pulsar-color/48/salmon-sushi.png', label:'Food' },
-  { value:'https://img.icons8.com/pulsar-color/48/birthday-cake.png', label:'Birthday' },
-  { value:'https://img.icons8.com/pulsar-color/48/business.png', label:'Business' },
-  { value:'https://img.icons8.com/pulsar-color/48/globe.png', label:'Globe' },
-  { value:'https://img.icons8.com/pulsar-color/48/moleskine.png', label:'Notes' },
+  { value:iconPackPath('icons8-folder-50.png'), label:'Folder' },
+  { value:iconPackPath('icons8-document-50.png'), label:'Document' },
+  { value:iconPackPath('icons8-bar-chart-50.png'), label:'Chart' },
+  { value:iconPackPath('icons8-spreadsheet-file-48.png'), label:'Spreadsheet' },
+  { value:iconPackPath('icons8-image-48.png'), label:'Image' },
+  { value:iconPackPath('icons8-audio-file-48.png'), label:'Audio' },
+  { value:iconPackPath('icons8-video-file-48.png'), label:'Video' },
+  { value:iconPackPath('icons8-archive-folder-48.png'), label:'Archive' },
+  { value:iconPackPath('icons8-database-50.png'), label:'Database' },
+  { value:iconPackPath('icons8-cyber-security-50.png'), label:'Security' },
+  { value:iconPackPath('icons8-rocket-50.png'), label:'Rocket' },
+  { value:iconPackPath('icons8-profile-48.png'), label:'Profile' },
   { value:DEFAULT_FOLDER_ICON, label:'Bookmark' },
 ];
 
 const pageTitles = {
-  dashboard:'Dashboard',
+  dashboard:'Home',
   upload:'Upload Files',
   folders:'All Folders',
   files:'All Files',

@@ -4,38 +4,45 @@ function getExt(name) {
   return (name.split('.').pop() || '').toLowerCase();
 }
 
+function localIcon(file) {
+  const iconName = String(file).split('/').pop();
+  return typeof iconPackPath === 'function'
+    ? iconPackPath(iconName)
+    : `/icons-pack/${encodeURIComponent(iconName)}`;
+}
+
 function getExtIcon(name) {
   const icons = {
-    xml: ['https://img.icons8.com/fluency/48/xml-file.png', 'xml-file'],
-    css: ['https://img.icons8.com/fluency/48/css-filetype.png', 'css-filetype'],
-    json: ['https://img.icons8.com/fluency/48/json.png', 'json'],
-    html: ['https://img.icons8.com/fluency/48/html-filetype.png', 'html-filetype'],
-    htm: ['https://img.icons8.com/fluency/48/html-filetype.png', 'html-filetype'],
-    csv: ['https://img.icons8.com/fluency/48/csv.png', 'csv'],
-    xls: ['https://img.icons8.com/pulsar-color/48/xls.png', 'xls'],
-    xlsx: ['https://img.icons8.com/pulsar-color/48/xls.png', 'xls'],
-    doc: ['https://img.icons8.com/pulsar-color/48/doc.png', 'doc'],
-    docx: ['https://img.icons8.com/pulsar-color/48/doc.png', 'doc'],
-    pdf: ['https://img.icons8.com/pulsar-color/48/pdf--v2.png', 'pdf'],
-    ppt: ['https://img.icons8.com/pulsar-color/48/ppt.png', 'ppt'],
-    pptx: ['https://img.icons8.com/pulsar-color/48/ppt.png', 'ppt'],
-    txt: ['https://img.icons8.com/pulsar-color/48/txt.png', 'txt'],
-    jpg: ['https://img.icons8.com/pulsar-color/48/jpg.png', 'jpg'],
-    jpeg: ['https://img.icons8.com/pulsar-color/48/jpg.png', 'jpg'],
-    heic: ['https://img.icons8.com/pulsar-color/48/heic.png', 'heic'],
-    mkv: ['https://img.icons8.com/pulsar-color/48/mkv.png', 'mkv'],
-    mp4: ['https://img.icons8.com/pulsar-color/48/mkv.png', 'mkv'],
-    avi: ['https://img.icons8.com/pulsar-color/48/mkv.png', 'mkv'],
-    png: ['https://img.icons8.com/pulsar-color/48/png.png', 'png'],
-    gif: ['https://img.icons8.com/fluency/48/image-file.png', 'image-file'],
-    wav: ['https://img.icons8.com/fluency/48/wav.png', 'wav'],
-    mp3: ['https://img.icons8.com/pulsar-color/48/mp3.png', 'mp3'],
-    ttf: ['https://img.icons8.com/pulsar-color/48/ttf.png', 'ttf'],
-    rar: ['https://img.icons8.com/pulsar-color/48/rar.png', 'rar'],
-    zip: ['https://img.icons8.com/pulsar-color/48/zip.png', 'zip'],
+    xml: [localIcon('icons8-docs-48.png'), 'xml-file'],
+    css: [localIcon('icons8-docs-48.png'), 'css-file'],
+    json: [localIcon('icons8-docs-48.png'), 'json-file'],
+    html: [localIcon('icons8-docs-48.png'), 'html-file'],
+    htm: [localIcon('icons8-docs-48.png'), 'html-file'],
+    csv: [localIcon('icons8-csv-48.png'), 'csv'],
+    xls: [localIcon('icons8-spreadsheet-file-48.png'), 'spreadsheet'],
+    xlsx: [localIcon('icons8-spreadsheet-file-48.png'), 'spreadsheet'],
+    doc: [localIcon('icons8-docs-48.png'), 'document'],
+    docx: [localIcon('icons8-docs-48.png'), 'document'],
+    pdf: [localIcon('icons8-pdf-48.png'), 'pdf'],
+    ppt: [localIcon('icons8-ppt-48.png'), 'presentation'],
+    pptx: [localIcon('icons8-ppt-48.png'), 'presentation'],
+    txt: [localIcon('icons8-txt-48.png'), 'text-file'],
+    jpg: [localIcon('icons8-image-48.png'), 'image'],
+    jpeg: [localIcon('icons8-image-48.png'), 'image'],
+    heic: [localIcon('icons8-image-48.png'), 'image'],
+    mkv: [localIcon('icons8-video-file-48.png'), 'video'],
+    mp4: [localIcon('icons8-video-file-48.png'), 'video'],
+    avi: [localIcon('icons8-video-file-48.png'), 'video'],
+    png: [localIcon('icons8-image-48.png'), 'image'],
+    gif: [localIcon('icons8-image-48.png'), 'image'],
+    wav: [localIcon('icons8-audio-file-48.png'), 'audio'],
+    mp3: [localIcon('icons8-audio-file-48.png'), 'audio'],
+    ttf: [localIcon('icons8-docs-48.png'), 'font-file'],
+    rar: [localIcon('icons8-archive-folder-48.png'), 'archive'],
+    zip: [localIcon('icons8-archive-folder-48.png'), 'archive'],
   };
-  const [src, alt] = icons[getExt(name)] || ['https://img.icons8.com/fluency/48/image-file.png', 'image-file'];
-  return `<img class="file-type-icon" width="48" height="48" src="${src}" alt="${alt}" loading="lazy" referrerpolicy="no-referrer">`;
+  const [src, alt] = icons[getExt(name)] || [localIcon('icons8-docs-48.png'), 'file'];
+  return `<img class="file-type-icon" width="48" height="48" src="${src}" alt="${alt}" loading="lazy">`;
 }
 
 function formatSize(bytes) {
@@ -94,32 +101,25 @@ function isSystemIcon(value) {
 }
 
 function isIconUrl(value) {
-  return /^https:\/\/img\.icons8\.com\/pulsar-color\/48\/[-a-z0-9]+\.png$/i.test(String(value || ''));
+  return /^(?:https:\/\/img\.icons8\.com\/|\/icons-pack\/).+\.png$/i.test(String(value || ''));
 }
 
 function folderIconUrlForName(name) {
   const text = String(name || '').toLowerCase();
   const picks = [
-    [['love', 'heart', 'family', 'personal'], 'hearts.png'],
-    [['flower', 'garden', 'art', 'design'], 'flower.png'],
-    [['star', 'favorite', 'important'], 'star.png'],
-    [['goal', 'target', 'plan'], 'goal.png'],
-    [['school', 'class', 'study', 'student'], 'graduation-cap.png'],
-    [['travel', 'trip', 'vacation'], 'trave-diary.png'],
-    [['code', 'dev', 'program', 'project'], 'code.png'],
-    [['nature', 'plant', 'eco'], 'leaf.png'],
-    [['science', 'lab', 'research'], 'acid-flask.png'],
-    [['shopping', 'shop', 'receipt', 'purchase'], 'shopaholic.png'],
-    [['work', 'business', 'office'], 'business.png'],
-    [['food', 'recipe', 'meal'], 'salmon-sushi.png'],
-    [['birthday', 'party', 'event'], 'birthday-cake.png'],
-    [['book', 'read', 'library'], 'book.png'],
-    [['note', 'journal'], 'moleskine.png'],
-    [['computer', 'tech'], 'my-computer.png'],
+    [['image', 'photo', 'design'], 'icons8-image-48.png'],
+    [['sheet', 'budget', 'invoice', 'finance'], 'icons8-spreadsheet-file-48.png'],
+    [['audio', 'music'], 'icons8-audio-file-48.png'],
+    [['video', 'movie'], 'icons8-video-file-48.png'],
+    [['archive', 'zip', 'backup'], 'icons8-archive-folder-48.png'],
+    [['security', 'private'], 'icons8-cyber-security-50.png'],
+    [['profile', 'person', 'account'], 'icons8-profile-48.png'],
+    [['database', 'data'], 'icons8-database-50.png'],
+    [['report', 'chart', 'stats'], 'icons8-bar-chart-50.png'],
+    [['document', 'book', 'read', 'note'], 'icons8-document-50.png'],
   ];
   const match = picks.find(([words]) => words.some(word => text.includes(word)));
-  const file = match ? match[1] : SYSTEM_FOLDER_ICONS[Math.abs(hashString(text)) % SYSTEM_FOLDER_ICONS.length].value.split('/').pop();
-  return `https://img.icons8.com/pulsar-color/48/${file}`;
+  return match ? localIcon(match[1]) : SYSTEM_FOLDER_ICONS[Math.abs(hashString(text)) % SYSTEM_FOLDER_ICONS.length].value;
 }
 
 function hashString(value) {
@@ -129,7 +129,7 @@ function hashString(value) {
 function folderIconHtml(value, className) {
   let icon = value || '📁';
   if (isIconUrl(icon)) {
-    icon = '📁';
+    return `<img class="ui-icon ${className || ''}" src="${escHtml(icon)}" alt="" loading="lazy">`;
   }
   if (/^[a-z0-9_]+$/.test(String(icon))) {
     return `<span class="material-symbols-rounded ${className || ''}">${escHtml(icon)}</span>`;

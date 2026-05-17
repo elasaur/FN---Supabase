@@ -220,68 +220,150 @@ async function saveEmail() {
 
 // ── Password ──────────────────────────────────────────────────────────────────
 function openChangePasswordModal() {
-  const emailInput = document.getElementById('editPasswordEmail');
-  const email = (
-    document.getElementById('settingsEmail')?.textContent ||
-    window.FILE_NEST_USER?.email ||
-    ''
-  ).trim();
-  if (emailInput) emailInput.value = email;
+  const currentInput = document.getElementById('editPasswordCurrent');
+  const newInput = document.getElementById('editPasswordNew');
+  const confirmInput = document.getElementById('editPasswordConfirm');
+  const submitButton = document.getElementById('editPasswordSubmit');
+  [currentInput, newInput, confirmInput].forEach(input => {
+    if (input) input.value = '';
+  });
+  if (submitButton) submitButton.disabled = true;
+  setSettingsPasswordMessage('');
+  if (newInput && typeof updatePasswordStrength === 'function') {
+    updatePasswordStrength(newInput, 'editPasswordSubmit');
+  }
+  updateSettingsPasswordFormState();
   openModal('editPassword');
 }
 
-async function sendSettingsPasswordReset(button) {
-  const btn = button || window.event?.currentTarget;
-  const email = (
-    document.getElementById('editPasswordEmail')?.value ||
-    document.getElementById('settingsEmail')?.textContent ||
-    window.FILE_NEST_USER?.email ||
-    ''
-  ).trim();
+function updateSettingsPasswordStrength(inputEl) {
+  if (typeof updatePasswordStrength === 'function') {
+    updatePasswordStrength(inputEl, 'editPasswordSubmit');
+  }
+  updateSettingsPasswordFormState();
+}
 
-  if (!email) {
-    showToast('Account email is missing.', 'warn');
+function setSettingsPasswordMessage(message, type = 'error') {
+  const messageEl = document.getElementById('editPasswordMessage');
+  if (!messageEl) return;
+  messageEl.textContent = message || '';
+  messageEl.style.display = message ? 'block' : 'none';
+  messageEl.classList.toggle('success', Boolean(message && type === 'success'));
+}
+
+function getSettingsPasswordValidationMessage(showEmpty = false) {
+  const current = document.getElementById('editPasswordCurrent')?.value || '';
+  const newPw = document.getElementById('editPasswordNew')?.value || '';
+  const confirm = document.getElementById('editPasswordConfirm')?.value || '';
+
+  if (!current && showEmpty) return 'Current password is required.';
+  if (!newPw && showEmpty) return 'New password is required.';
+  if (!confirm && showEmpty) return 'Confirm password is required.';
+
+  if (current && newPw && current === newPw) {
+    return 'New password cannot be the same as your current password.';
+  }
+
+  if (newPw && typeof passwordValidationMessage === 'function') {
+    const passwordMessage = passwordValidationMessage(newPw);
+    if (passwordMessage) return passwordMessage;
+  }
+
+  if (newPw && confirm && newPw !== confirm) {
+    return 'Passwords do not match.';
+  }
+
+  return '';
+}
+
+function updateSettingsPasswordFormState(showMessage = true) {
+  const current = document.getElementById('editPasswordCurrent')?.value || '';
+  const newPw = document.getElementById('editPasswordNew')?.value || '';
+  const confirm = document.getElementById('editPasswordConfirm')?.value || '';
+  const submitButton = document.getElementById('editPasswordSubmit');
+  if (!submitButton) return;
+
+  const passwordIsStrong = typeof passwordValidationErrors === 'function'
+    ? passwordValidationErrors(newPw).length === 0
+    : Boolean(newPw);
+  const passwordsMatch = Boolean(newPw && confirm && newPw === confirm);
+  const passwordIsNew = Boolean(current && newPw && current !== newPw);
+  submitButton.disabled = !current || !passwordIsStrong || !passwordsMatch || !passwordIsNew;
+
+  if (showMessage) {
+    setSettingsPasswordMessage(getSettingsPasswordValidationMessage(false));
+  }
+}
+
+async function savePassword(button) {
+  const btn = button || window.event?.currentTarget;
+  const current = document.getElementById('editPasswordCurrent')?.value || '';
+  const newPw = document.getElementById('editPasswordNew')?.value || '';
+  const confirm = document.getElementById('editPasswordConfirm')?.value || '';
+
+  const validationMessage = getSettingsPasswordValidationMessage(true);
+  if (validationMessage) {
+    setSettingsPasswordMessage(validationMessage);
+    updateSettingsPasswordFormState(false);
     return;
   }
 
-  setButtonLoading(btn, true, 'Sending...');
+  setSettingsPasswordMessage('');
+  setButtonLoading(btn, true, 'Updating...');
   try {
-    localStorage.setItem('passwordRecoveryTarget', 'change');
-    const res = await fetch('/change-password-email', {
-      method:  'POST',
+    const res = await fetch('/api/user/password', {
+      method:  'PUT',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email }),
+      headers: authHeaders(),
+      body:    JSON.stringify({
+        current_password: current,
+        new_password: newPw,
+        confirm_password: confirm,
+      }),
     });
 
     if (!res.ok) {
+      let message = 'Server error while updating password.';
       const text = await res.text();
-      showToast(text || 'Server error while sending reset link.', 'error');
+      try {
+        const errorData = text ? JSON.parse(text) : {};
+        message = errorData.message || text || message;
+      } catch (parseErr) {
+        message = text || message;
+      }
+      setSettingsPasswordMessage(message);
       return;
     }
 
     const data = await res.json();
     if (data.success) {
+      if (data.access_token) {
+        if (typeof TokenStore !== 'undefined') {
+          TokenStore.set(data.access_token, data.refresh_token || '');
+        } else {
+          sessionStorage.setItem('fn_access', data.access_token);
+          sessionStorage.setItem('fn_refresh', data.refresh_token || '');
+        }
+      }
+      ['editPasswordCurrent', 'editPasswordNew', 'editPasswordConfirm'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+      });
+      setSettingsPasswordMessage('Password updated successfully.', 'success');
       closeModal('editPassword');
-      const sentEmail = document.getElementById('passwordResetSentEmail');
-      if (sentEmail) sentEmail.textContent = email;
-      openModal('passwordResetSent');
       setButtonLoading(btn, false);
-      showToast('Password reset link sent. Check your email.', 'success');
+      showToast('Password updated.', 'success');
     } else {
       setButtonLoading(btn, false);
-      showToast(data.message || 'Unable to send reset link.', 'error');
+      setSettingsPasswordMessage(data.message || 'Unable to update password.');
     }
   } catch (err) {
     setButtonLoading(btn, false);
-    showToast('Network error while sending reset link.', 'error');
+    setSettingsPasswordMessage('Network error while updating password.');
   } finally {
     setButtonLoading(btn, false);
+    updateSettingsPasswordFormState(false);
   }
-}
-
-async function savePassword() {
-  return sendSettingsPasswordReset();
 }
 
 // ── Member Since ──────────────────────────────────────────────────────────────

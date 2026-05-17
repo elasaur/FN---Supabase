@@ -60,7 +60,7 @@
 
 .folder-menu-btn:hover {
   background: rgba(0,0,0,.08);
-  color: var(--text, #333);
+  color: var(--text, #3D1808);
 }
 
 .folder-menu-dropdown {
@@ -96,7 +96,7 @@
   background: transparent;
   font-family: 'DM Sans', sans-serif;
   font-size: 1rem;
-  color: var(--text, #333);
+  color: var(--text, #3D1808);
   cursor: pointer;
   text-align: left;
   white-space: nowrap;

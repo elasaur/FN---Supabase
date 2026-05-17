@@ -9,9 +9,9 @@ function showPredictionCard(file, analysis) {
   const kwRow   = document.getElementById('keywordsRow');
   kwRow.innerHTML = `
     <span class="kw-label">
-      <img src="https://img.icons8.com/pulsar-color/48/key.png"
-          alt="Key Icon"
-          class="kw-icon">
+      <img src="${localIcon('icons8-keyword-48.png')}"
+          alt=""
+          class="ui-icon ui-icon-sm">
       Keywords detected:
     </span>
   `;
@@ -48,11 +48,12 @@ function showPredictionCard(file, analysis) {
     recList.appendChild(notice);
   } else {
     const rankLabels  = [
-      '<img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/medal2.png" alt=""> Best Match',
-      '<img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/medal-second-place.png" alt=""> 2nd Match',
-      '<img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/medal2-third-place.png" alt=""> 3rd Match'
+      `<img class="ui-icon ui-icon-sm" src="${localIcon('icons8-medal-48.png')}" alt=""> Best Match`,
+      `<img class="ui-icon ui-icon-sm" src="${localIcon('icons8-medal-second-place-48.png')}" alt=""> 2nd Match`,
+      `<img class="ui-icon ui-icon-sm" src="${localIcon('icons8-medal-third-place-48.png')}" alt=""> 3rd Match`
     ];
     const rankClasses = ['rank-1', 'rank-2', 'rank-3', 'rank-other'];
+    const rankColors = ['var(--yellow)', 'var(--sky)', 'var(--mint)'];
 
     ranked.slice(0, 3).forEach((r, idx) => {
       const isSelected = idx === 0;
@@ -60,6 +61,7 @@ function showPredictionCard(file, analysis) {
       card.className = 'rec-card' + (isSelected ? ' selected' : '');
       card.style.setProperty('--rc-color', r.color);
       card.style.setProperty('--rc-bg',    r.bg);
+      card.style.setProperty('--rank-color', rankColors[idx] || 'var(--accent)');
 
       const newBadge = r.is_new
         ? `<span style="background:var(--mint);color:#fff;font-size:0.62rem;font-weight:900;padding:2px 7px;border-radius:10px;margin-left:4px;">NEW</span>`

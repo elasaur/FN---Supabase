@@ -120,9 +120,9 @@ function showFloatingFolderMenu(e, button) {
     document.body.appendChild(menu);
   }
   menu.innerHTML = `
-    <button onclick=\"openEditModalFromEncoded(${id},'${encodeURIComponent(name)}','${encodeURIComponent(emoji)}','${encodeURIComponent(color)}','${encodeURIComponent(bg)}');closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/pencil.png" alt=""> Edit</button>
-    <button onclick=\"togglePin(${id},${pinned});closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/pin.png" alt=""> ${pinned ? 'Unpin' : 'Pin'}</button>
-    ${!isDefault ? `<button class='danger' onclick=\"showDeleteFolderModal(${id},decodeURIComponent('${encodeURIComponent(name)}'));closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/delete-folder.png" alt=""> Delete</button>` : ''}
+    <button onclick=\"openEditModalFromEncoded(${id},'${encodeURIComponent(name)}','${encodeURIComponent(emoji)}','${encodeURIComponent(color)}','${encodeURIComponent(bg)}');closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-edit-48.png')}" alt=""> Edit</button>
+    <button onclick=\"togglePin(${id},${pinned});closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-pin-48.png')}" alt=""> ${pinned ? 'Unpin' : 'Pin'}</button>
+    ${!isDefault ? `<button class='danger' onclick=\"showDeleteFolderModal(${id},decodeURIComponent('${encodeURIComponent(name)}'));closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-delete-folder-50.png')}" alt=""> Delete</button>` : ''}
   `;
 
   menu.style.width = '168px';
@@ -180,7 +180,7 @@ function renderDashboardPinnedFoldersFromCache() {
   const pinned = allFolders.filter(f => Number(f.pinned) === 1 || f.pinned === true);
   pinnedEl.innerHTML = pinned.length
     ? pinned.map(f => makeFolderCard(f, true)).join('')
-    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="https://img.icons8.com/pulsar-color/48/folder-invoices--v2.png" alt=""></div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
+    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-folder-50.png')}" alt=""></div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
 }
 async function deleteFolder(id) {
   const res  = await fetch(`/api/folders/${id}`, { method:'DELETE' });

@@ -17,7 +17,7 @@ load_dotenv()
 
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, session, jsonify
+    url_for, session, jsonify, send_from_directory
 )
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -31,6 +31,7 @@ from supabase_auth import (
     sign_out,
     update_user_email,
     update_user_password,
+    admin_update_user_password,
     update_user_metadata,
     admin_delete_user,
     reset_password_for_email,
@@ -45,13 +46,14 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'filenest-secret-key-change-in-pr
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+ICONS_FOLDER = os.path.join(os.path.dirname(__file__), 'icons-pack')
 
 ALLOWED_EXTENSIONS = {
     'pdf', 'docx', 'doc', 'xlsx', 'xls',
     'pptx', 'ppt', 'txt',
-    'jpg', 'jpeg', 'png', 'gif',
-    'mp3', 'mp4', 'wav', 'avi', 'mkv',
-    'zip', 'rar', 'csv',
+    'jpg', 'jpeg', 'png',
+    'mp3', 'mp4',
+    'zip', 'csv',
 }
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -67,6 +69,15 @@ limiter = Limiter(
     default_limits=["2000 per day", "300 per hour"],
 )
 app.teardown_appcontext(close_db)
+
+
+@app.route('/icons-pack/<path:filename>')
+@limiter.exempt
+def icons_pack(filename):
+    icon_path = os.path.join(ICONS_FOLDER, filename)
+    if not os.path.isfile(icon_path):
+        filename = os.path.basename(filename)
+    return send_from_directory(ICONS_FOLDER, filename)
 
 
 @app.errorhandler(RequestEntityTooLarge)
@@ -197,7 +208,7 @@ def index():
 
         auth = sign_in(email, password)
         if not auth.get('access_token') or not auth.get('user'):
-            return jsonify({'success': False, 'message': auth.get('msg') or auth.get('error_description') or 'Invalid email or password.'})
+            return jsonify({'success': False, 'message': 'Incorrect email or password.'})
 
         auth_user = auth['user']
         user_id = auth_user['id']
@@ -1056,6 +1067,9 @@ def api_change_password():
     if new_pw != confirm_pw:
         return jsonify({'success': False, 'message': 'Passwords do not match.'})
 
+    if current_pw == new_pw:
+        return jsonify({'success': False, 'message': 'New password cannot be the same as your current password.'})
+
     password_message = password_validation_message(new_pw)
     if password_message:
         return jsonify({'success': False, 'message': password_message})
@@ -1064,18 +1078,26 @@ def api_change_password():
     db = get_db()
     user = db.execute('SELECT * FROM users WHERE id=?', (uid,)).fetchone()
 
-    if not user or not sign_in(user['email'], current_pw).get('access_token'):
+    current_auth = sign_in(user['email'], current_pw) if user else {}
+    if not user or not current_auth.get('access_token'):
         return jsonify({'success': False, 'message': 'Current password is incorrect.'})
 
-    access_token = session.get('access_token')
-    if not access_token:
-        return jsonify({'success': False, 'message': 'Session token missing. Please log in again.'}), 401
-
-    result = update_user_password(access_token, new_pw)
+    result = admin_update_user_password(uid, new_pw)
     if result.get('error') or result.get('msg'):
         return jsonify({'success': False, 'message': result.get('msg') or result.get('error_description') or 'Unable to update password.'})
 
-    return jsonify({'success': True})
+    refreshed_auth = sign_in(user['email'], new_pw)
+    if refreshed_auth.get('access_token'):
+        session['access_token'] = refreshed_auth['access_token']
+        session['refresh_token'] = refreshed_auth.get('refresh_token', '')
+        session['last_activity'] = now_utc().isoformat()
+        session.modified = True
+
+    return jsonify({
+        'success': True,
+        'access_token': refreshed_auth.get('access_token', ''),
+        'refresh_token': refreshed_auth.get('refresh_token', ''),
+    })
 
 
 @app.route('/api/user/delete', methods=['DELETE'])

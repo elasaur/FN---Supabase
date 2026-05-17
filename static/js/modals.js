@@ -22,11 +22,11 @@ function handleSessionExpired() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const modalIcons = {
-    deleteAllFiles: 'https://img.icons8.com/pulsar-color/48/high-importance.png',
-    deleteAccount: 'https://img.icons8.com/pulsar-color/48/high-importance.png',
-    deleteFolder: 'https://img.icons8.com/pulsar-color/48/high-importance.png',
-    deleteAllFolders: 'https://img.icons8.com/pulsar-color/48/high-importance.png',
-    sessionExpired: 'https://img.icons8.com/pulsar-color/48/session-timeout.png',
+    deleteAllFiles: localIcon('icons8-danger-48.png'),
+    deleteAccount: localIcon('icons8-danger-48.png'),
+    deleteFolder: localIcon('icons8-danger-48.png'),
+    deleteAllFolders: localIcon('icons8-danger-48.png'),
+    sessionExpired: localIcon('icons8-session-timeout-48.png'),
   };
 
   Object.entries(modalIcons).forEach(([id, src]) => {

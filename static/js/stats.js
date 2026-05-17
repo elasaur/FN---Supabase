@@ -36,7 +36,7 @@ function renderFolderBars(chartData) {
 function renderTypeDonut(files) {
   const extCount = {};
   const extColors = {
-    pdf: '#e8855a',
+    pdf: '#e87a7a',
     docx: '#7ec8e3',
     xlsx: '#7ecfb3',
     jpg: '#9b87d4',
@@ -45,7 +45,8 @@ function renderTypeDonut(files) {
     mp3: '#f5a7c7',
     mp4: '#6fb4d6',
     txt: '#b09e94',
-    pptx: '#e8b84b',
+    pptx: '#e8855a',
+    zip: '#e8b84b',
     csv: '#52b788',
     other: '#9b928c',
   };
@@ -88,8 +89,8 @@ function renderTypeDonut(files) {
     <div class="donut-layout">
       <button class="donut-chart" type="button" style="--donut-gradient:conic-gradient(${gradientStops});" aria-label="File type breakdown">
         <span class="donut-center">
-          <span class="donut-center-value">${total}</span>
-          <span class="donut-center-label">total files</span>
+          <span class="donut-center-value" style="color: var(--accent);">${total}</span>
+          <span class="donut-center-label">Total files</span>
         </span>
       </button>
       <div class="donut-legend">
@@ -140,7 +141,7 @@ function renderAiSortingSummary(stats) {
         <div class="ai-summary-kicker">AI auto-sorted</div>
         <div class="ai-summary-value">${aiPct}%</div>
       </div>
-      <span class="ai-summary-tag"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/gemini-ai.png" alt=""> Gemini + TextBlob</span>
+      <span class="ai-summary-tag"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-gemini-ai-48.png')}" alt=""> Gemini + TextBlob</span>
     </div>
     <div class="ai-summary-track" title="${aiSorted} of ${total} files sorted by AI">
       <div class="ai-summary-fill" style="width:${aiPct}%;"></div>

@@ -70,11 +70,11 @@ function showFloatingFileMenu(e, fileId, folderId, encodedName, deleteAction) {
   }
 
   menu.innerHTML = `
-    <button onclick="openFile(${fileId});closeFileMenus()"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/preview-file.png" alt=""> Preview</button>
-    <button onclick="openRenameFileModal(${fileId}, '${encodedName}');closeFileMenus()"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/rename.png" alt=""> Rename</button>
-    <button onclick="openMoveFileModal(${fileId},${folderId});closeFileMenus()"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/right.png" alt=""> Move</button>
-    <button onclick="downloadFile(${fileId},'');closeFileMenus()"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/downloading-updates.png" alt=""> Download</button>
-    <button class="danger" onclick="${deleteAction};closeFileMenus()"><img class="ui-icon ui-icon-sm" src="https://img.icons8.com/pulsar-color/48/delete-file.png" alt=""> Delete</button>
+    <button onclick="openFile(${fileId});closeFileMenus()"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-eye-50.png')}" alt=""> Preview</button>
+    <button onclick="openRenameFileModal(${fileId}, '${encodedName}');closeFileMenus()"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-rename-50.png')}" alt=""> Rename</button>
+    <button onclick="openMoveFileModal(${fileId},${folderId});closeFileMenus()"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-move-50.png')}" alt=""> Move</button>
+    <button onclick="downloadFile(${fileId},'');closeFileMenus()"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-downloading-updates-50.png')}" alt=""> Download</button>
+    <button class="danger" onclick="${deleteAction};closeFileMenus()"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-delete-file-50.png')}" alt=""> Delete</button>
   `;
 
   const rect = e.currentTarget.getBoundingClientRect();

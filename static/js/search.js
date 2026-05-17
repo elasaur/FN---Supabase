@@ -1,7 +1,7 @@
 
 // --- Global Search Modal ---
-var searchDebounce;
 let lastSearchVal = '';
+let searchRequestId = 0;
 
 function closeSearchModal() {
   const modal = document.getElementById('searchModalDropdown');
@@ -69,6 +69,38 @@ function showSearchModal(files, folders, searchVal) {
   });
 }
 
+function showSearchLoading(searchVal) {
+  closeSearchModal();
+  const bar = document.querySelector('.search-bar');
+  if (!bar || !searchVal) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'search-modal';
+  modal.id = 'searchModalDropdown';
+  modal.innerHTML = '<div class="search-modal-list"><div class="search-modal-empty">Searching...</div></div>';
+
+  modal.style.position = 'absolute';
+  modal.style.left = bar.offsetLeft + 'px';
+  modal.style.top = (bar.offsetTop + bar.offsetHeight + 4) + 'px';
+  modal.style.width = bar.offsetWidth + 'px';
+  modal.style.minWidth = bar.offsetWidth + 'px';
+  modal.style.maxWidth = bar.offsetWidth + 'px';
+  modal.style.transform = 'none';
+  modal.style.marginTop = '0';
+  bar.parentElement.appendChild(modal);
+}
+
+function getLocalSearchResults(searchVal) {
+  const term = String(searchVal || '').toLowerCase();
+  const files = Array.isArray(allFiles)
+    ? allFiles.filter(file => String(file.original_name || '').toLowerCase().includes(term))
+    : [];
+  const folders = Array.isArray(allFolders)
+    ? allFolders.filter(folder => String(folder.name || '').toLowerCase().includes(term))
+    : [];
+  return { files, folders };
+}
+
 // Highlight file row after navigation
 function highlightFileRow(fileId) {
   const row = document.querySelector(`#allFilesTbody tr[data-file-id="${fileId}"]`);
@@ -80,18 +112,38 @@ function highlightFileRow(fileId) {
 }
 
 async function onGlobalSearch(val, forceModal) {
-  lastSearchVal = val;
-  clearTimeout(searchDebounce);
-  searchDebounce = setTimeout(async () => {
-    if (!val) { closeSearchModal(); return; }
+  const searchVal = String(val || '').trim();
+  lastSearchVal = searchVal;
+  const requestId = ++searchRequestId;
+
+  if (!searchVal) {
+    closeSearchModal();
+    return;
+  }
+
+  const localResults = getLocalSearchResults(searchVal);
+  const hasLocalCache = (Array.isArray(allFiles) && allFiles.length) || (Array.isArray(allFolders) && allFolders.length);
+  if (hasLocalCache) {
+    showSearchModal(localResults.files, localResults.folders, searchVal);
+    return;
+  }
+
+  showSearchLoading(searchVal);
+
+  try {
     const [filesRes, foldersRes] = await Promise.all([
-      fetch(`/api/files?sort=${window.allFilesSortMode||'date'}&search=${encodeURIComponent(val)}`),
-      fetch(`/api/folders?search=${encodeURIComponent(val)}`)
+      fetch(`/api/files?sort=${window.allFilesSortMode || 'date'}&search=${encodeURIComponent(searchVal)}`),
+      fetch(`/api/folders?search=${encodeURIComponent(searchVal)}`)
     ]);
     const files = await filesRes.json();
     const folders = await foldersRes.json();
-    showSearchModal(files, folders, val);
-  }, forceModal ? 0 : 80);
+    if (requestId !== searchRequestId || searchVal !== lastSearchVal) return;
+    showSearchModal(files, folders, searchVal);
+  } catch (err) {
+    if (requestId === searchRequestId) {
+      showSearchModal([], [], searchVal);
+    }
+  }
 }
 
 // Register input and keydown handlers for global search bar

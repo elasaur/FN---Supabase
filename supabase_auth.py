@@ -134,6 +134,32 @@ def update_user_password(access_token: str, new_password: str) -> dict:
     return _json_or_empty(resp)
 
 
+def admin_update_user_password(user_id: str, new_password: str) -> dict:
+    """Update a user's password after the app verifies their current password."""
+    require_supabase_auth_config()
+    if not SUPABASE_SERVICE_ROLE_KEY:
+        return {
+            "error": "missing_service_role_key",
+            "msg": "Server is missing SUPABASE_SERVICE_ROLE_KEY.",
+        }
+
+    resp = http_requests.put(
+        f"{AUTH_URL}/admin/users/{user_id}",
+        headers={
+            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+            "apikey": SUPABASE_SERVICE_ROLE_KEY,
+            "Content-Type": "application/json",
+        },
+        json={"password": new_password},
+        timeout=10,
+    )
+    data = _json_or_empty(resp)
+    if resp.status_code >= 400:
+        data.setdefault("error", f"supabase_admin_update_failed_{resp.status_code}")
+        data.setdefault("msg", data.get("message") or "Unable to update password.")
+    return data
+
+
 def update_user_metadata(access_token: str, metadata: dict) -> dict:
     """Update user_metadata for the authenticated user."""
     require_supabase_auth_config()
