@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Nest - Instructions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/informational.css') }}">
+</head>
+<body class="feature-page">
+<nav>
+  <a class="nav-logo" href="{{ url_for('landing') }}">
+    <div class="nav-logo-icon">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="File Nest Logo" class="logo-img">
+    </div>
+    <div>
+      <div class="nav-logo-text">File Nest</div>
+      <div class="nav-logo-sub">AI-Assisted File Organization</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="{{ url_for('landing') }}">Home</a>
+    <a class="nav-link" href="{{ url_for('features') }}">Features</a>
+    <a class="nav-link" href="{{ url_for('instructions') }}">How it works</a>
+    <a class="nav-btn" href="{{ url_for('login') }}">Sign in</a>
+  </div>
+</nav>
+
+<main class="feature-shell">
+  <section class="feature-section-heading">
+    <div class="feature-eyebrow">Instructions</div>
+    <h2>How to use File Nest</h2>
+  </section>
+
+  <section class="info-guide-layout">
+    <div class="info-guide-aside">
+      <div class="card info-guide-card">
+        <div class="info-kicker">How to use</div>
+        <h2>Start with folders, upload files, then let the system keep things easy to scan.</h2>
+        <p>Use these steps when setting up a workspace for the first time or when adding a new batch of files.</p>
+      </div>
+
+      <div class="info-tip-grid">
+        <div class="info-tip">
+          <span>Tip</span>
+          <p>Name folders clearly so AI suggestions have better labels to match against.</p>
+        </div>
+        <div class="info-tip">
+          <span>Review</span>
+          <p>AI recommendations are not final until you confirm the upload destination.</p>
+        </div>
+        <div class="info-tip">
+          <span>Access</span>
+          <p>Sign in to update account details, change your password, or manage saved files.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-steps">
+      <article class="info-step card">
+        <div class="info-step-number">1</div>
+        <div>
+          <h3>Create your folders</h3>
+          <p>Open All Folders, create a folder, choose a color and icon, then pin the folders you use most often.</p>
+        </div>
+      </article>
+      <article class="info-step card">
+        <div class="info-step-number">2</div>
+        <div>
+          <h3>Upload a file</h3>
+          <p>Open Upload Files, choose or drag in a file, then decide whether to save it directly or run AI analysis first.</p>
+        </div>
+      </article>
+      <article class="info-step card">
+        <div class="info-step-number">3</div>
+        <div>
+          <h3>Review AI suggestions</h3>
+          <p>When analysis is enabled, review the suggested folder and confidence result. Confirm it or choose a different folder.</p>
+        </div>
+      </article>
+      <article class="info-step card">
+        <div class="info-step-number">4</div>
+        <div>
+          <h3>Manage saved files</h3>
+          <p>Use All Files or a folder view to preview, rename, move, download, or delete files.</p>
+        </div>
+      </article>
+      <article class="info-step card">
+        <div class="info-step-number">5</div>
+        <div>
+          <h3>Search and monitor activity</h3>
+          <p>Use search to find files quickly. Check Home and Statistics for recent uploads, file types, folder counts, and AI activity.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer>
+  File Nest - Smart File Sorter
+</footer>
+</body>
+</html>

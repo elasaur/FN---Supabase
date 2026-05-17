@@ -34,7 +34,7 @@
       </div>
     </div>
     <div class="section-header" style="margin-top:8px; align-items:center;">
-      <div class="section-title" style="font-size:1.1rem;">Pinned Folders</div>
+      <div class="section-title" style="font-size:1.1rem; color: #8D3813;;">Pinned Folders</div>
       <button class="btn btn-ghost" onclick="navigate('folders', document.getElementById('nav-folders'))">View All Folders</button>
     </div>
     <div class="folders-grid" id="dashPinnedFolders" style="margin-bottom:32px;">
@@ -44,12 +44,14 @@
       </div>
     </div>
     <div class="section-header dashboard-recent-header">
-      <div class="section-title dashboard-recent-title">Recent Uploads</div>
+      <div class="dashboard-recent-heading">
+        <div class="section-title dashboard-recent-title">Recent Uploads</div>
+      </div>
       <div class="sort-bar dashboard-recent-sort">
-        <button class="sort-chip active" onclick="setDashboardRecentSort('date',this)">Date</button>
-        <button class="sort-chip" onclick="setDashboardRecentSort('name',this)">Name</button>
-        <button class="sort-chip" onclick="setDashboardRecentSort('folder',this)">Folder</button>
-        <button class="sort-chip" onclick="setDashboardRecentSort('type',this)">Type</button>
+        <button class="dashboard-recent-chip active" onclick="setDashboardRecentSort('date',this)">Date</button>
+        <button class="dashboard-recent-chip" onclick="setDashboardRecentSort('name',this)">Name</button>
+        <button class="dashboard-recent-chip" onclick="setDashboardRecentSort('folder',this)">Folder</button>
+        <button class="dashboard-recent-chip" onclick="setDashboardRecentSort('type',this)">Type</button>
       </div>
     </div>
     <div class="recent-timeline" id="dashRecentList">

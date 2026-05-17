@@ -269,6 +269,10 @@ def landing():
 def features():
     return render_template('features.html')
 
+@app.route('/instructions')
+def instructions():
+    return render_template('instructions.html')
+
 #signup
 @app.route('/signup', methods=['POST'])
 def signup():

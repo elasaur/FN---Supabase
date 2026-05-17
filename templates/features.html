@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>File Nest — Features</title>
+  <title>File Nest - Features</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/landing_style.css') }}">
 </head>
-<body>
+<body class="feature-page">
 <nav>
   <a class="nav-logo" href="{{ url_for('landing') }}">
     <div class="nav-logo-icon">
@@ -20,111 +23,80 @@
   <div class="nav-links">
     <a class="nav-link" href="{{ url_for('landing') }}">Home</a>
     <a class="nav-link" href="{{ url_for('features') }}">Features</a>
+    <a class="nav-btn" href="{{ url_for('login') }}">Sign in</a>
   </div>
 </nav>
 
-<!-- Background blobs -->
-<div class="blob-wrap">
-  <div class="blob blob1"></div>
-  <div class="blob blob2"></div>
-  <div class="blob blob3"></div>
-  <div class="blob blob4"></div>
-</div>
-<!-- Floating feature cards -->
-<div class="floating-cards">
-
-  <div class="float-card">
-    <div class="fc-icon" style="background:var(--lavender2)">
-      <img class="landing-icon" src="/icons-pack/icons8-gemini-ai-48.png" alt="">
-    </div>
-    <div>
-      <div class="fc-label">AI Reads Content</div>
-      <div class="fc-sub">NLP via TextBlob</div>
-    </div>
-  </div>
-
-  <div class="float-card">
-    <div class="fc-icon" style="background:var(--accent3)">
-      <img class="landing-icon" src="/icons-pack/icons8-folder-50.png" alt="">
-    </div>
-    <div>
-      <div class="fc-label">Auto-Sorted</div>
-      <div class="fc-sub">Right folder, instantly</div>
-    </div>
-  </div>
-
-  <div class="float-card">
-    <div class="fc-icon" style="background:var(--mint2)">
-      <img class="landing-icon" src="/icons-pack/icons8-rocket-50.png" alt="">
-    </div>
-    <div>
-      <div class="fc-label">You're in Control</div>
-      <div class="fc-sub">Review before saving</div>
-    </div>
-  </div>
-
-</div>
-
-<!-- Features section -->
-<section class="features">
-  <div class="features-eyebrow">Why File Nest?</div>
-  <h2 class="features-title">Everything you need to stay organized 🗂️</h2>
-  <div class="features-grid">
-
-    <div class="feat-card">
-      <div class="feat-icon" style="background:var(--lavender2)">
-        <img class="landing-icon" src="/icons-pack/icons8-gemini-ai-48.png" alt="">
+<main class="feature-shell">
+  <section class="feature-hero">
+    <div class="feature-hero-copy">
+      <div class="feature-eyebrow">File Nest features</div>
+      <h1>Everything for a cleaner file workspace.</h1>
+      <p>Upload, organize, search, and manage files through one system that combines practical folder controls with AI-assisted sorting.</p>
+      <div class="feature-actions">
+        <a class="cta-btn" href="{{ url_for('login') }}">Open File Nest</a>
+        <a class="cta-ghost" href="{{ url_for('landing') }}">Back to home</a>
       </div>
-      <div class="feat-name">Smart AI Sorting</div>
-      <div class="feat-desc">NLP reads your file's actual content and filename to predict the most fitting folder with confidence scoring.</div>
     </div>
-
-    <div class="feat-card">
-      <div class="feat-icon" style="background:var(--accent3)">
-        <img class="landing-icon" src="/icons-pack/icons8-folder-50.png" alt="">
+    <div class="feature-dashboard-card">
+      <div class="feature-dashboard-title">Workspace snapshot</div>
+      <div class="feature-metric-row">
+        <span><img class="landing-icon-sm" src="/icons-pack/icons8-folder-50.png" alt="">Folders</span>
+        <strong>Custom and pinned</strong>
       </div>
-      <div class="feat-name">Custom Folders</div>
-      <div class="feat-desc">Create folders with custom icons, colors, and names. Pin your favorites for quick access on the dashboard.</div>
-    </div>
-
-    <div class="feat-card">
-      <div class="feat-icon" style="background:var(--mint2)">
-        <img class="landing-icon" src="/icons-pack/icons8-upload-50.png" alt="">
+      <div class="feature-metric-row">
+        <span><img class="landing-icon-sm" src="/icons-pack/icons8-document-50.png" alt="">Files</span>
+        <strong>Preview, move, rename</strong>
       </div>
-      <div class="feat-name">Drag & Drop Upload</div>
-      <div class="feat-desc">Drop any file — PDF, DOCX, PPTX, images, audio — and let the AI handle the rest. Up to 50 MB per file.</div>
-    </div>
-
-    <div class="feat-card">
-      <div class="feat-icon" style="background:var(--yellow2)">
-        <img class="landing-icon" src="/icons-pack/icons8-bar-chart-50.png" alt="">
+      <div class="feature-metric-row">
+        <span><img class="landing-icon-sm" src="/icons-pack/icons8-gemini-ai-48.png" alt="">AI</span>
+        <strong>Review before saving</strong>
       </div>
-      <div class="feat-name">Visual Statistics</div>
-      <div class="feat-desc">See how your files are distributed across folders and track how much the AI is doing for you.</div>
     </div>
+  </section>
 
-    <div class="feat-card">
-      <div class="feat-icon" style="background:var(--sky2)">
-        <img class="landing-icon" src="/icons-pack/icons8-search-48.png" alt="">
-      </div>
-      <div class="feat-name">Instant Search</div>
-      <div class="feat-desc">Find any file across all your folders in a second with the global search bar.</div>
+  <section class="feature-section">
+    <div class="feature-section-heading">
+      <div class="feature-eyebrow">Core tools</div>
+      <h2>Designed around everyday file work</h2>
     </div>
-
-    <div class="feat-card">
-      <div class="feat-icon" style="background:var(--pink2)">
-        <img class="landing-icon" src="/icons-pack/icons8-edit-48.png" alt="">
-      </div>
-      <div class="feat-name">Always Overridable</div>
-      <div class="feat-desc">AI suggestions are just that — suggestions. You review and confirm before anything gets saved.</div>
+    <div class="feature-list-grid">
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-lavender"><img class="landing-icon" src="/icons-pack/icons8-gemini-ai-48.png" alt=""></div>
+        <h3>AI-assisted organization</h3>
+        <p>Analyze file names and supported document content to suggest folders with user confirmation before storage.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-mint"><img class="landing-icon" src="/icons-pack/icons8-folder-50.png" alt=""></div>
+        <h3>Custom folders</h3>
+        <p>Create folders with clear labels, colors, and icons, then pin important folders to the Home page.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-accent"><img class="landing-icon" src="/icons-pack/icons8-upload-50.png" alt=""></div>
+        <h3>Guided uploads</h3>
+        <p>Choose direct upload when you know the destination or use AI analysis when you want a recommendation.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-sky"><img class="landing-icon" src="/icons-pack/icons8-search-48.png" alt=""></div>
+        <h3>Search and file actions</h3>
+        <p>Find files quickly, preview them, rename them, move them between folders, download copies, or delete old items.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-yellow"><img class="landing-icon" src="/icons-pack/icons8-bar-chart-50.png" alt=""></div>
+        <h3>Statistics</h3>
+        <p>See file type breakdowns, folder distribution, recent upload activity, and AI sorting summaries.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-pink"><img class="landing-icon" src="/icons-pack/icons8-security-shield-48.png" alt=""></div>
+        <h3>Private storage</h3>
+        <p>Accounts, metadata, and files are backed by Supabase services, with uploaded files stored privately.</p>
+      </article>
     </div>
+  </section>
+</main>
 
-  </div>
-</section>
-
-<!-- Footer -->
 <footer>
-  Made with <span>♥</span> · File Nest · Smart File Sorter
+  File Nest - Smart File Sorter
 </footer>
 </body>
 </html>

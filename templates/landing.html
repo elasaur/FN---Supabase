@@ -29,7 +29,7 @@
 </div>
 
 <nav>
-  <a class="nav-logo" href="#">
+  <a class="nav-logo" href="{{ url_for('landing') }}">
 
     <div class="nav-logo-icon">
       <img src="{{ url_for('static', filename='images/logo.png') }}" 
@@ -43,8 +43,9 @@
   </a>
 
   <div class="nav-links">
-    <a class="nav-link" href="/features">Features</a>
-    <a class="nav-link" href="#">How it works</a>
+    <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#instructions">Instructions</a>
+    <a class="nav-link" href="#about">About</a>
   </div>
 </nav>
 
@@ -70,7 +71,7 @@
     <a class="cta-btn" href="/login">
       Get started
     </a>
-    <a class="cta-ghost" href="#">
+    <a class="cta-ghost" href="#instructions">
       See how it works
     </a>
   </div>
@@ -84,6 +85,92 @@
     </div>
     <span>Project by Angela V. Raquedan</span>
   </div>
+</section>
+
+<main class="landing-sections">
+  <section class="landing-section" id="features">
+    <div class="feature-section-heading">
+      <div class="feature-eyebrow">Features</div>
+      <h2>Everything for a cleaner file workspace.</h2>
+    </div>
+    <div class="feature-list-grid">
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-lavender"><img class="landing-icon" src="/icons-pack/icons8-gemini-ai-48.png" alt=""></div>
+        <h3>AI-assisted organization</h3>
+        <p>Analyze file names and supported document content to suggest folders while keeping final confirmation in your hands.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-mint"><img class="landing-icon" src="/icons-pack/icons8-folder-50.png" alt=""></div>
+        <h3>Custom folders</h3>
+        <p>Create folders with clear labels, colors, and icons, then pin important folders to keep them easy to reach.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-accent"><img class="landing-icon" src="/icons-pack/icons8-upload-50.png" alt=""></div>
+        <h3>Guided uploads</h3>
+        <p>Upload directly into a selected folder or ask the system to analyze and recommend the best destination.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-sky"><img class="landing-icon" src="/icons-pack/icons8-search-48.png" alt=""></div>
+        <h3>Search and file actions</h3>
+        <p>Find files quickly, preview them, rename them, move them between folders, download copies, or delete old items.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-yellow"><img class="landing-icon" src="/icons-pack/icons8-bar-chart-50.png" alt=""></div>
+        <h3>Statistics</h3>
+        <p>See file type breakdowns, folder distribution, recent upload activity, and AI sorting summaries.</p>
+      </article>
+      <article class="feature-list-card">
+        <div class="feature-icon feature-icon-pink"><img class="landing-icon" src="/icons-pack/icons8-security-shield-48.png" alt=""></div>
+        <h3>Private storage model</h3>
+        <p>Accounts, file metadata, and stored files are backed by Supabase services with private storage access.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="landing-section" id="instructions">
+    <div class="feature-section-heading">
+      <div class="feature-eyebrow">Instructions</div>
+      <h2>How to use File Nest.</h2>
+    </div>
+    <div class="instruction-layout">
+      <article class="instruction-intro">
+        <div class="feature-eyebrow">How to use</div>
+        <h3>Start with folders, upload files, then let the system keep things easy to scan.</h3>
+        <p>Use these steps when setting up a workspace for the first time or when adding a new batch of files.</p>
+      </article>
+      <div class="instruction-steps">
+        <article class="landing-step"><span>1</span><div><h3>Create folders</h3><p>Name your folders clearly, choose a color and icon, and pin the folders you use often.</p></div></article>
+        <article class="landing-step"><span>2</span><div><h3>Upload files</h3><p>Choose a file, then save it directly or run AI analysis for a folder recommendation.</p></div></article>
+        <article class="landing-step"><span>3</span><div><h3>Review suggestions</h3><p>Check the AI result, confirm the suggested folder, or choose another destination.</p></div></article>
+        <article class="landing-step"><span>4</span><div><h3>Manage files</h3><p>Preview, rename, move, download, sort, or delete files from All Files and folder views.</p></div></article>
+        <article class="landing-step"><span>5</span><div><h3>Track activity</h3><p>Use Home and Statistics to review recent uploads, file types, folder counts, and AI activity.</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="about">
+    <div class="feature-section-heading">
+      <div class="feature-eyebrow">About the system</div>
+      <h2>An AI-assisted file organization system.</h2>
+    </div>
+    <div class="about-system-grid">
+      <article class="about-system-main">
+        <h3>What File Nest does</h3>
+        <p>File Nest helps users upload, classify, store, retrieve, and manage files through a dashboard built around folders, recent activity, search, and storage statistics.</p>
+        <p>The system keeps the user in control. AI can recommend where a file belongs, but the user confirms the destination before the upload is saved.</p>
+      </article>
+      <div class="about-system-stack">
+        <article class="about-system-card"><img class="landing-icon" src="/icons-pack/icons8-cyber-security-50.png" alt=""><div><h3>Authentication</h3><p>Supabase Auth handles accounts, sign in, reset password, and credential changes.</p></div></article>
+        <article class="about-system-card"><img class="landing-icon" src="/icons-pack/icons8-database-50.png" alt=""><div><h3>Data and storage</h3><p>Supabase PostgreSQL stores metadata while private Supabase Storage keeps uploaded files.</p></div></article>
+        <article class="about-system-card"><img class="landing-icon" src="/icons-pack/icons8-gemini-ai-48.png" alt=""><div><h3>AI analysis</h3><p>Gemini-based analysis can inspect supported content, with TextBlob and keyword fallback logic.</p></div></article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  File Nest - Smart File Sorter
+</footer>
 
 </body>
 </html>

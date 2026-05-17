@@ -62,7 +62,7 @@ function updateDashboardGreeting(name) {
 
 function setDashboardRecentSort(mode, el) {
   dashRecentSortMode = mode;
-  document.querySelectorAll('.dashboard-recent-sort .sort-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.dashboard-recent-sort .dashboard-recent-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
   renderDashboardRecentUploads();
 }

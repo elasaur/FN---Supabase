@@ -56,5 +56,8 @@ const pageTitles = {
   folders:'All Folders',
   files:'All Files',
   stats:'Statistics',
+  features:'Features',
+  instructions:'Instructions',
+  about:'About the System',
   settings:'Settings',
 };
