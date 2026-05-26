@@ -349,7 +349,8 @@ Return ONLY a JSON array with exactly 3 objects. No extra text."""
                 pass
 
         raw = (raw or "").strip()
-        print(f"\n===== GEMINI RAW RESPONSE =====\n{raw}\n================================\n")
+        if os.environ.get("DEBUG_NLP", "").lower() in {"1", "true", "yes", "on"}:
+            print(f"\n===== GEMINI RAW RESPONSE =====\n{raw}\n================================\n")
 
         if not raw:
             raise ValueError("Empty response from Gemini")

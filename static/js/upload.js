@@ -1,14 +1,27 @@
 // ── Upload / Analyze ───────────────────────────────────────────────────────────
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1024 * 1024);
+let activeAnalyzeRequestId = 0;
+let activeAnalyzeController = null;
+let uploadSaveInFlight = false;
+
+function clearPendingUploadState() {
+  activeAnalyzeRequestId += 1;
+  currentFile = null;
+  currentAnalysis = null;
+  selectedFolderObj = null;
+  activeAnalyzeController?.abort();
+  activeAnalyzeController = null;
+  document.getElementById('predictionCard')?.classList.remove('show', 'saving');
+  resetUploadZone();
+  const input = document.getElementById('fileInput');
+  if (input) input.value = '';
+}
 
 function validateUploadSize(file) {
   if (!file || file.size <= MAX_UPLOAD_BYTES) return true;
   showToast(`File exceeded the maximum upload size of ${MAX_UPLOAD_MB} MB.`, 'error');
-  resetUploadZone();
-  const input = document.getElementById('fileInput');
-  if (input) input.value = '';
-  currentFile = null;
+  clearPendingUploadState();
   return false;
 }
 
@@ -25,7 +38,12 @@ async function handleFiles(files) {
 
   const file = files[0];
   if (!validateUploadSize(file)) return;
+  activeAnalyzeController?.abort();
+  activeAnalyzeController = new AbortController();
+  const requestId = ++activeAnalyzeRequestId;
   currentFile = file;
+  currentAnalysis = null;
+  selectedFolderObj = null;
 
   showUploadLoading('Analyzing your file...', 'Reading the file and preparing folder suggestions.');
   document.getElementById('uploadZoneTitle').textContent =
@@ -41,18 +59,21 @@ async function handleFiles(files) {
 
     const res = await fetch('/api/analyze', {
       method: 'POST',
-      body: formData
+      body: formData,
+      signal: activeAnalyzeController.signal,
     });
 
     const data = await res.json().catch(() => ({
       success: false,
       message: res.status === 413
         ? `File exceeded the maximum upload size of ${MAX_UPLOAD_MB} MB.`
-        : 'Analysis failed. Please try again.',
+        : (res.status === 429 ? 'Too many requests. Try again later.' : 'Analysis failed. Please try again.'),
     }));
 
+    if (requestId !== activeAnalyzeRequestId) return;
+
     if (!data.success) {
-      resetUploadZone();
+      clearPendingUploadState();
       showToast(data.message, 'error');
       return;
     }
@@ -92,10 +113,15 @@ async function handleFiles(files) {
     showPredictionCard(file, data.analysis);
 
   } catch (err) {
+    if (err.name === 'AbortError' || requestId !== activeAnalyzeRequestId) return;
+    clearPendingUploadState();
     resetUploadZone();
     showToast('Analysis failed. Please try again.', 'error');
   } finally {
-    resetUploadZone();
+    if (requestId === activeAnalyzeRequestId) {
+      activeAnalyzeController = null;
+      resetUploadZone();
+    }
   }
 }
 
@@ -133,8 +159,11 @@ function resetUploadZone() {
 // ── Confirm Upload ─────────────────────────────────────────────────────────────
 async function confirmUpload() {
   const btn = window.event?.currentTarget;
+  if (uploadSaveInFlight) return;
   if (!currentFile) { showToast('No file selected.', 'warn'); return; }
+  if (!currentAnalysis) { showToast('Please analyze the file before saving.', 'warn'); return; }
   if (!validateUploadSize(currentFile)) return;
+  uploadSaveInFlight = true;
   resetUploadZone();
   setButtonLoading(btn, true, 'Saving...');
   document.getElementById('predictionCard').classList.add('saving');
@@ -230,6 +259,7 @@ async function confirmUpload() {
   syncCachesSilently();
   toastMessage = '';
   } finally {
+    uploadSaveInFlight = false;
     resetUploadZone();
     document.getElementById('predictionCard').classList.remove('saving');
     setButtonLoading(btn, false);

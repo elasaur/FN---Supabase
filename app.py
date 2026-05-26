@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import json
 import os
+import threading
 import uuid
 from functools import wraps
 from datetime import datetime, timezone, timedelta
@@ -69,6 +70,8 @@ DEFAULT_FOLDER_EMOJI = '📁'
 LOGIN_MAX_FAILED_ATTEMPTS = 3
 LOGIN_LOCKOUT_DURATION = timedelta(hours=24)
 LOGIN_ATTEMPTS_FILE = os.path.join(os.path.dirname(__file__), 'login_attempts.json')
+ANALYZE_REQUEST_LOCK = threading.Lock()
+ANALYZE_REQUEST_TOKENS = {}
 
 # Rate limiting configuration
 limiter = Limiter(
@@ -102,6 +105,10 @@ def handle_rate_limit(error):
     message = 'Too many requests. Try again later.'
     if request.endpoint == 'index' and request.method == 'POST':
         message = 'Too many login attempts. Try again in 5 minutes.'
+    if request.endpoint in {'forgot_password', 'change_password_email'}:
+        message = 'Too many reset email requests. Try again later.'
+    if request.endpoint == 'api_analyze':
+        cancel_analyze_request(session.get('user_id'))
     return jsonify({
         'success': False,
         'message': message,
@@ -213,6 +220,31 @@ def login_required(f):
 
 def get_current_user_id():
     return session.get('user_id')
+
+
+def begin_analyze_request(user_id):
+    token = uuid.uuid4().hex
+    with ANALYZE_REQUEST_LOCK:
+        ANALYZE_REQUEST_TOKENS[str(user_id)] = token
+    return token
+
+
+def cancel_analyze_request(user_id):
+    if not user_id:
+        return
+    with ANALYZE_REQUEST_LOCK:
+        ANALYZE_REQUEST_TOKENS[str(user_id)] = uuid.uuid4().hex
+
+
+def analyze_request_is_current(user_id, token):
+    with ANALYZE_REQUEST_LOCK:
+        return ANALYZE_REQUEST_TOKENS.get(str(user_id)) == token
+
+
+def finish_analyze_request(user_id, token):
+    with ANALYZE_REQUEST_LOCK:
+        if ANALYZE_REQUEST_TOKENS.get(str(user_id)) == token:
+            ANALYZE_REQUEST_TOKENS.pop(str(user_id), None)
 
 
 def normalize_login_email(email):
@@ -832,14 +864,19 @@ def api_analyze():
 
     # keep session alive during AI processing
     session['last_activity'] = now_utc().isoformat()
+    uid = get_current_user_id()
+    analyze_token = begin_analyze_request(uid)
 
     if 'file' not in request.files:
+        finish_analyze_request(uid, analyze_token)
         return jsonify({'success': False, 'message': 'No file provided.'})
 
     file = request.files['file']
     if not file or file.filename == '':
+        finish_analyze_request(uid, analyze_token)
         return jsonify({'success': False, 'message': 'No file selected.'})
     if not allowed_file(file.filename):
+        finish_analyze_request(uid, analyze_token)
         return jsonify({'success': False, 'message': 'File type not supported.'})
 
     filename  = secure_filename(file.filename)
@@ -848,7 +885,6 @@ def api_analyze():
     file.save(temp_path)
 
     db  = get_db()
-    uid = get_current_user_id()
 
     folder_rows = db.execute(
         'SELECT * FROM folders WHERE user_id=?', (uid,)
@@ -859,11 +895,16 @@ def api_analyze():
     ]
 
     try:
+        if not analyze_request_is_current(uid, analyze_token):
+            return jsonify({'success': False, 'message': 'Analysis cancelled.'}), 409
         result = analyze_file(temp_path, filename, folder_list)
+        if not analyze_request_is_current(uid, analyze_token):
+            return jsonify({'success': False, 'message': 'Analysis cancelled.'}), 409
         ai_status = result.get("ai_status", "gemini")
     except Exception as e:
         return jsonify({'success': False, 'message': f'Analysis error: {str(e)}'})
     finally:
+        finish_analyze_request(uid, analyze_token)
         if os.path.exists(temp_path):
             os.remove(temp_path)
 

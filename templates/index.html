@@ -387,6 +387,12 @@ async function doForgot() {
     const data = await res.json();
 
     // 👇 SHOW MODAL IF LINK EXISTS (dev/demo mode)
+    if (!res.ok || !data.success) {
+      errEl.textContent = data.message || 'Too many requests. Try again later.';
+      errEl.style.display = 'block';
+      return;
+    }
+
     if (data.link) {
       document.getElementById('resetLinkInput').value = data.link;
       document.getElementById('linkModal').classList.add('open');
