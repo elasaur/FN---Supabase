@@ -164,8 +164,8 @@ async function togglePin(id, currentPinned) {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message || 'Could not update pin.');
-    await Promise.all([loadFolders(), loadDashboard()]);
     showToast(nextPinned ? 'Folder pinned.' : 'Folder unpinned.', 'success');
+    syncCachesSilently();
   } catch (err) {
     if (folder) folder.pinned = previousPinned;
     renderFolderGrid();
@@ -187,8 +187,9 @@ async function deleteFolder(id) {
   const data = await res.json();
 
   if (data.success) {
-    await Promise.all([loadFolders(), loadAllFiles(), loadUploadFileList(), loadDashboard(), loadStats()]);
+    removeCachedFolder(id);
     showToast('Folder deleted.', 'warn');
+    syncCachesSilently();
   } else {
     showToast(data.message, 'error');
   }
@@ -265,9 +266,9 @@ async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
   const res  = await fetch(`/api/files/${fileId}`, { method:'DELETE' });
   const data = await res.json();
   if (data.success) {
-    await Promise.all([loadAllFiles(), loadFolders(), loadUploadFileList(), loadDashboard(), loadStats()]);
-    renderCurrentFolderFilesFromCache();
+    removeCachedFile(fileId);
     showToast('File deleted.', 'warn');
+    syncCachesSilently();
   }
   else showToast(data.message, 'error');
 }
@@ -311,7 +312,12 @@ async function submitCreateFolder() {
 
     if (data.success) {
       closeModal('createFolder');
-      await loadFolders();
+      if (data.folder) {
+        allFolders.push(data.folder);
+        renderEverywhereFromCache();
+      } else {
+        syncCachesSilently();
+      }
       toastMessage = 'Folder created!';
     } else {
       toastType = 'error';
@@ -378,48 +384,14 @@ async function submitEditFolder() {
 
     if (data.success) {
       closeModal('editFolder');
-      const updated = allFolders.find(f => Number(f.id) === Number(id));
-      if (updated) {
-        updated.name = name;
-        updated.emoji = emoji;
-        updated.color = rfModalColor.val;
-        updated.bg = rfModalColor.bg;
-      }
-      allFiles.forEach(f => {
-        if (Number(f.folder_id) === Number(id)) {
-          f.folder_name = name;
-          f.folder_emoji = emoji;
-          f.folder_color = rfModalColor.val;
-          f.folder_bg = rfModalColor.bg;
-        }
+      updateCachedFolder(id, {
+        name,
+        emoji,
+        color: rfModalColor.val,
+        bg: rfModalColor.bg,
       });
-      dashRecentFiles.forEach(f => {
-        if (Number(f.folder_id) === Number(id)) {
-          f.folder_name = name;
-          f.folder_emoji = emoji;
-        }
-      });
-      uploadFiles.forEach(f => {
-        if (Number(f.folder_id) === Number(id)) {
-          f.folder_name = name;
-          f.folder_emoji = emoji;
-          f.folder_color = rfModalColor.val;
-          f.folder_bg = rfModalColor.bg;
-        }
-      });
-      renderFolderGrid();
-      renderAllFilesTable();
-      renderUploadFileList();
-      renderDashboardPinnedFoldersFromCache();
-      renderDashboardRecentUploads();
-      if (currentFolderFilesContext && Number(currentFolderFilesContext.id) === Number(id)) {
-        currentFolderFilesContext.name = name;
-        currentFolderFilesContext.emoji = emoji;
-        document.getElementById('folderFilesTitle').innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(name)}`;
-        renderCurrentFolderFilesFromCache();
-      }
-      await Promise.all([loadFolders(), loadDashboard(), loadStats()]);
       toastMessage = 'Folder updated.';
+      syncCachesSilently();
     } else {
       toastType = 'error';
       toastMessage = data.message;

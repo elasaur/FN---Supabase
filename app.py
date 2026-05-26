@@ -693,7 +693,7 @@ def api_rename_file(file_id):
 @limiter.limit("1 per 5 seconds")
 def api_analyze():
 
-    # 🔥 keep session alive during AI processing
+    # keep session alive during AI processing
     session['last_activity'] = now_utc().isoformat()
 
     if 'file' not in request.files:

@@ -105,9 +105,9 @@ async function deleteFileDashboard(id) {
   const res = await fetch(`/api/files/${id}`, { method:'DELETE' });
   const data = await res.json();
   if (data.success) {
-    await Promise.all([loadDashboard(), loadFolders(), loadAllFiles(), loadUploadFileList(), loadStats()]);
-    renderCurrentFolderFilesFromCache();
+    removeCachedFile(id);
     showToast('File deleted.', 'warn');
+    syncCachesSilently();
   } else {
     showToast(data.message, 'error');
   }

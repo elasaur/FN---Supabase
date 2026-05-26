@@ -226,7 +226,8 @@ async function confirmUpload() {
 
   currentFile = null; currentAnalysis = null; selectedFolderObj = null;
   document.getElementById('fileInput').value = '';
-  await Promise.all([loadUploadFileList(), loadAllFiles(), loadFolders(), loadDashboard(), loadStats()]);
+  addCachedFile(data.file, folderId);
+  syncCachesSilently();
   toastMessage = '';
   } finally {
     resetUploadZone();
@@ -301,9 +302,9 @@ async function deleteFileUpload(id) {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
     const data = await res.json();
     if (data.success) {
-      await Promise.all([loadUploadFileList(), loadAllFiles(), loadFolders(), loadDashboard(), loadStats()]);
-      renderCurrentFolderFilesFromCache();
+      removeCachedFile(id);
       toastMessage = 'File removed.';
+      syncCachesSilently();
     } else {
       toastType = 'error';
       toastMessage = data.message;

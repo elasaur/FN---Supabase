@@ -32,3 +32,215 @@ async function apiDelete(url) {
   const res = await fetch(url, { method: 'DELETE' });
   return await res.json();
 }
+
+function sameId(a, b) {
+  return Number(a) === Number(b);
+}
+
+function getCachedFile(fileId) {
+  return [...allFiles, ...uploadFiles, ...dashRecentFiles]
+    .find(file => sameId(file.id, fileId)) || null;
+}
+
+function getCachedFolder(folderId) {
+  return allFolders.find(folder => sameId(folder.id, folderId)) || null;
+}
+
+function currentStatsFromCache() {
+  const now = Date.now();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  return {
+    total_folders: allFolders.length,
+    total_files: allFiles.length,
+    recent_count: allFiles.filter(file => {
+      const created = parseAppDate(file.created_at)?.getTime();
+      return created && now - created <= weekMs;
+    }).length,
+    ai_sorted: allFiles.filter(file => Number(file.ai_sorted) === 1 || file.ai_sorted === true).length,
+  };
+}
+
+function refreshFolderCountsFromCache() {
+  allFolders.forEach(folder => {
+    folder.file_count = allFiles.filter(file => sameId(file.folder_id, folder.id)).length;
+  });
+}
+
+function chartDataFromCache() {
+  refreshFolderCountsFromCache();
+  return allFolders
+    .map(folder => ({
+      name: folder.name,
+      emoji: folder.emoji,
+      color: folder.color,
+      count: Number(folder.file_count || 0),
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function renderDashboardFromCache() {
+  const stats = currentStatsFromCache();
+  const totalFolders = document.getElementById('dashTotalFolders');
+  const totalFiles = document.getElementById('dashTotalFiles');
+  const recentCount = document.getElementById('dashRecentCount');
+  const aiSorted = document.getElementById('dashAiSorted');
+
+  if (totalFolders) totalFolders.textContent = stats.total_folders;
+  if (totalFiles) totalFiles.textContent = stats.total_files;
+  if (recentCount) recentCount.textContent = stats.recent_count;
+  if (aiSorted) aiSorted.textContent = stats.ai_sorted;
+
+  if (typeof renderDashboardPinnedFoldersFromCache === 'function') renderDashboardPinnedFoldersFromCache();
+  if (typeof renderDashboardRecentUploads === 'function') renderDashboardRecentUploads();
+}
+
+function renderStatsFromCache() {
+  if (typeof renderAiSortingSummary === 'function') renderAiSortingSummary(currentStatsFromCache());
+  if (typeof renderFolderBars === 'function') renderFolderBars(chartDataFromCache());
+  if (typeof renderTypeDonut === 'function') renderTypeDonut(allFiles);
+}
+
+function renderEverywhereFromCache() {
+  refreshFolderCountsFromCache();
+  if (typeof sortAllFilesCache === 'function') sortAllFilesCache();
+  if (typeof sortUploadFilesCache === 'function') sortUploadFilesCache();
+  if (typeof renderAllFilesTable === 'function') renderAllFilesTable();
+  if (typeof renderUploadFileList === 'function') renderUploadFileList();
+  if (typeof renderFolderGrid === 'function') renderFolderGrid();
+  if (typeof renderCurrentFolderFilesFromCache === 'function') renderCurrentFolderFilesFromCache();
+  renderDashboardFromCache();
+  renderStatsFromCache();
+}
+
+function updateCachedFile(fileId, updater) {
+  [allFiles, uploadFiles, dashRecentFiles].forEach(list => {
+    list.forEach(file => {
+      if (sameId(file.id, fileId)) updater(file);
+    });
+  });
+}
+
+function removeCachedFile(fileId) {
+  allFiles = allFiles.filter(file => !sameId(file.id, fileId));
+  uploadFiles = uploadFiles.filter(file => !sameId(file.id, fileId));
+  dashRecentFiles = dashRecentFiles.filter(file => !sameId(file.id, fileId));
+  renderEverywhereFromCache();
+}
+
+function renameCachedFile(fileId, name) {
+  updateCachedFile(fileId, file => {
+    file.original_name = name;
+    file.extension = getExt(name);
+  });
+  renderEverywhereFromCache();
+}
+
+function moveCachedFile(fileId, folderId) {
+  const folder = getCachedFolder(folderId);
+  updateCachedFile(fileId, file => {
+    file.folder_id = Number(folderId);
+    if (folder) {
+      file.folder_name = folder.name;
+      file.folder_emoji = folder.emoji;
+      file.folder_color = folder.color;
+      file.folder_bg = folder.bg;
+    }
+  });
+  renderEverywhereFromCache();
+}
+
+function addCachedFile(file, folderId) {
+  if (!file) return;
+  const folder = getCachedFolder(folderId || file.folder_id);
+  const cached = { ...file };
+  if (folder) {
+    cached.folder_id = Number(folder.id);
+    cached.folder_name = folder.name;
+    cached.folder_emoji = folder.emoji;
+    cached.folder_color = folder.color;
+    cached.folder_bg = folder.bg;
+  }
+
+  allFiles = [cached, ...allFiles.filter(item => !sameId(item.id, cached.id))];
+  uploadFiles = [cached, ...uploadFiles.filter(item => !sameId(item.id, cached.id))];
+  dashRecentFiles = [cached, ...dashRecentFiles.filter(item => !sameId(item.id, cached.id))];
+  allFilesLoaded = true;
+  renderEverywhereFromCache();
+}
+
+function updateCachedFolder(folderId, changes) {
+  const folder = getCachedFolder(folderId);
+  if (folder) Object.assign(folder, changes);
+
+  [allFiles, uploadFiles, dashRecentFiles].forEach(list => {
+    list.forEach(file => {
+      if (sameId(file.folder_id, folderId)) {
+        if (Object.hasOwn(changes, 'name')) file.folder_name = changes.name;
+        if (Object.hasOwn(changes, 'emoji')) file.folder_emoji = changes.emoji;
+        if (Object.hasOwn(changes, 'color')) file.folder_color = changes.color;
+        if (Object.hasOwn(changes, 'bg')) file.folder_bg = changes.bg;
+      }
+    });
+  });
+
+  if (currentFolderFilesContext && sameId(currentFolderFilesContext.id, folderId)) {
+    if (Object.hasOwn(changes, 'name')) currentFolderFilesContext.name = changes.name;
+    if (Object.hasOwn(changes, 'emoji')) currentFolderFilesContext.emoji = changes.emoji;
+    const title = document.getElementById('folderFilesTitle');
+    if (title) {
+      title.innerHTML = `${folderIconHtml(currentFolderFilesContext.emoji, 'modal-title-icon')} ${escHtml(currentFolderFilesContext.name)}`;
+    }
+  }
+
+  renderEverywhereFromCache();
+}
+
+function removeCachedFolder(folderId) {
+  allFolders = allFolders.filter(folder => !sameId(folder.id, folderId));
+  allFiles = allFiles.filter(file => !sameId(file.folder_id, folderId));
+  uploadFiles = uploadFiles.filter(file => !sameId(file.folder_id, folderId));
+  dashRecentFiles = dashRecentFiles.filter(file => !sameId(file.folder_id, folderId));
+
+  if (currentFolderFilesContext && sameId(currentFolderFilesContext.id, folderId)) {
+    closeModal?.('folderFiles');
+    currentFolderFilesContext = null;
+  }
+
+  renderEverywhereFromCache();
+}
+
+function clearCachedFiles() {
+  allFiles = [];
+  uploadFiles = [];
+  dashRecentFiles = [];
+  renderEverywhereFromCache();
+}
+
+function removeCachedNonDefaultFolders() {
+  const deletedIds = new Set(allFolders.filter(folder => !folder.is_default).map(folder => Number(folder.id)));
+  allFolders = allFolders.filter(folder => folder.is_default);
+  allFiles = allFiles.filter(file => !deletedIds.has(Number(file.folder_id)));
+  uploadFiles = uploadFiles.filter(file => !deletedIds.has(Number(file.folder_id)));
+  dashRecentFiles = dashRecentFiles.filter(file => !deletedIds.has(Number(file.folder_id)));
+
+  if (currentFolderFilesContext && deletedIds.has(Number(currentFolderFilesContext.id))) {
+    closeModal?.('folderFiles');
+    currentFolderFilesContext = null;
+  }
+
+  renderEverywhereFromCache();
+}
+
+function syncCachesSilently() {
+  Promise.all([
+    fetch('/api/folders').then(res => res.json()),
+    fetch('/api/files?sort=date').then(res => res.json()),
+  ]).then(([folders, files]) => {
+    allFolders = folders;
+    allFiles = files;
+    uploadFiles = [...files];
+    dashRecentFiles = [...files];
+    allFilesLoaded = true;
+    renderEverywhereFromCache();
+  }).catch(() => {});
+}

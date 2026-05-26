@@ -401,8 +401,9 @@ async function confirmDeleteAllFiles() {
   const data = await res.json();
   if (data.success) {
     closeModal('deleteAllFiles');
-    await Promise.all([loadAllFiles(), loadUploadFileList(), loadDashboard(), loadStats(), loadFolders()]);
+    clearCachedFiles();
     toastMessage = 'All files deleted.';
+    syncCachesSilently();
   } else {
     toastType = 'error';
     toastMessage = data.message || 'Something went wrong.';
@@ -428,8 +429,9 @@ async function confirmDeleteAllFolders() {
   const data = await res.json();
   if (data.success) {
     closeModal('deleteAllFolders');
-    await Promise.all([loadFolders(), loadAllFiles(), loadUploadFileList(), loadDashboard(), loadStats()]);
+    removeCachedNonDefaultFolders();
     toastMessage = `All folders deleted. ${data.deleted_files || 0} file${Number(data.deleted_files || 0) === 1 ? '' : 's'} deleted.`;
+    syncCachesSilently();
   } else {
     toastType = 'error';
     toastMessage = data.message || 'Something went wrong.';

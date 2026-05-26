@@ -128,32 +128,10 @@ async function submitRenameFile() {
     }
 
     closeModal('renameFile');
-    allFiles.forEach(f => {
-      if (Number(f.id) === Number(fileToRenameId)) {
-        f.original_name = data.name || name;
-        f.extension = getExt(data.name || name);
-      }
-    });
-    dashRecentFiles.forEach(f => {
-      if (Number(f.id) === Number(fileToRenameId)) {
-        f.original_name = data.name || name;
-        f.extension = getExt(data.name || name);
-      }
-    });
-    uploadFiles.forEach(f => {
-      if (Number(f.id) === Number(fileToRenameId)) {
-        f.original_name = data.name || name;
-        f.extension = getExt(data.name || name);
-      }
-    });
-    sortAllFilesCache();
-    sortUploadFilesCache();
-    renderAllFilesTable();
-    renderUploadFileList();
-    renderDashboardRecentUploads();
+    renameCachedFile(fileToRenameId, data.name || name);
     fileToRenameId = null;
-    renderCurrentFolderFilesFromCache();
     toastMessage = 'File renamed.';
+    syncCachesSilently();
   } finally {
     setButtonLoading(btn, false);
     if (toastMessage) showToast(toastMessage, toastType);
@@ -197,10 +175,10 @@ async function submitMoveFile() {
       return;
     }
     closeModal('moveFile');
+    moveCachedFile(fileToMoveId, folderId);
     fileToMoveId = null;
-    await Promise.all([loadAllFiles(), loadFolders(), loadUploadFileList(), loadDashboard(), loadStats()]);
-    renderCurrentFolderFilesFromCache();
     toastMessage = 'File moved.';
+    syncCachesSilently();
   } finally {
     setButtonLoading(btn, false);
     if (toastMessage) showToast(toastMessage, toastType);
@@ -217,9 +195,9 @@ async function deleteFileById(id) {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
     const data = await res.json();
     if (data.success) {
-      await Promise.all([loadAllFiles(), loadFolders(), loadUploadFileList(), loadDashboard(), loadStats()]);
-      renderCurrentFolderFilesFromCache();
+      removeCachedFile(id);
       toastMessage = 'File deleted.';
+      syncCachesSilently();
     } else {
       toastType = 'error';
       toastMessage = data.message;

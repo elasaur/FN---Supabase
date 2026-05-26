@@ -83,12 +83,19 @@ def delete_files(object_paths):
     paths = [path for path in object_paths if path]
     if not paths:
         return {}
-    response = requests.post(
-        f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_STORAGE_BUCKET}/remove",
-        headers=_headers("application/json"),
-        json={"prefixes": paths},
-        timeout=30,
-    )
-    if response.status_code >= 400:
-        raise RuntimeError(f"Supabase Storage delete failed: {response.text}")
-    return response.json() if response.text else {}
+
+    deleted = []
+    for start in range(0, len(paths), 1000):
+        batch = paths[start:start + 1000]
+        response = requests.delete(
+            f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_STORAGE_BUCKET}",
+            headers=_headers("application/json"),
+            json={"prefixes": batch},
+            timeout=30,
+        )
+        if response.status_code >= 400:
+            raise RuntimeError(f"Supabase Storage delete failed: {response.text}")
+        if response.text:
+            deleted.extend(response.json())
+
+    return deleted
