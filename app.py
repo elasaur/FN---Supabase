@@ -7,6 +7,9 @@ Database - Supabase (users, folders, files)
 Authentication - Supabase Auth
 """
 
+import hashlib
+import hmac
+import json
 import os
 import uuid
 from functools import wraps
@@ -21,6 +24,7 @@ from flask import (
 )
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_limiter.errors import RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
@@ -62,6 +66,10 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 SESSION_TIMEOUT = timedelta(minutes=30)
 DEFAULT_FOLDER_EMOJI = '📁'
 
+LOGIN_MAX_FAILED_ATTEMPTS = 3
+LOGIN_LOCKOUT_DURATION = timedelta(hours=24)
+LOGIN_ATTEMPTS_FILE = os.path.join(os.path.dirname(__file__), 'login_attempts.json')
+
 # Rate limiting configuration
 limiter = Limiter(
     key_func=lambda: session.get("user_id") or get_remote_address(),
@@ -87,6 +95,17 @@ def handle_file_too_large(error):
         'success': False,
         'message': f'File exceeded the maximum upload size of {max_mb} MB.',
     }), 413
+
+
+@app.errorhandler(RateLimitExceeded)
+def handle_rate_limit(error):
+    message = 'Too many requests. Try again later.'
+    if request.endpoint == 'index' and request.method == 'POST':
+        message = 'Too many login attempts. Try again in 5 minutes.'
+    return jsonify({
+        'success': False,
+        'message': message,
+    }), 429
 
 
 @app.after_request
@@ -195,24 +214,142 @@ def login_required(f):
 def get_current_user_id():
     return session.get('user_id')
 
+
+def normalize_login_email(email):
+    return str(email or '').strip().lower()
+
+
+def login_attempt_key(email):
+    digest = hmac.new(
+        app.secret_key.encode('utf-8'),
+        normalize_login_email(email).encode('utf-8'),
+        hashlib.sha256,
+    ).hexdigest()
+    return digest
+
+
+def login_rate_limit_key():
+    data = request.get_json(silent=True) or {}
+    email = normalize_login_email(data.get('email'))
+    return f"login:{login_attempt_key(email) if email else get_remote_address()}"
+
+
+def load_login_attempts():
+    try:
+        with open(LOGIN_ATTEMPTS_FILE, 'r', encoding='utf-8') as fh:
+            data = json.load(fh)
+            return data if isinstance(data, dict) else {}
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_login_attempts(attempts):
+    tmp_path = f"{LOGIN_ATTEMPTS_FILE}.tmp"
+    with open(tmp_path, 'w', encoding='utf-8') as fh:
+        json.dump(attempts, fh)
+    os.replace(tmp_path, LOGIN_ATTEMPTS_FILE)
+
+
+def parse_lockout_time(value):
+    if not value:
+        return None
+    try:
+        locked_until = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+    if locked_until.tzinfo is None:
+        locked_until = locked_until.replace(tzinfo=timezone.utc)
+    return locked_until
+
+
+def format_lockout_remaining(locked_until):
+    seconds = max(0, int((locked_until - now_utc()).total_seconds()))
+    minutes = max(0, (seconds - 1) // 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours}h {minutes}m"
+
+
+def get_login_lockout_message(email):
+    attempts = load_login_attempts()
+    key = login_attempt_key(email)
+    entry = attempts.get(key) or {}
+    locked_until = parse_lockout_time(entry.get('locked_until'))
+
+    if not locked_until:
+        return ''
+    if locked_until <= now_utc():
+        attempts.pop(key, None)
+        save_login_attempts(attempts)
+        return ''
+
+    return f"Account locked. Try again in {format_lockout_remaining(locked_until)}."
+
+
+def record_failed_login(email):
+    attempts = load_login_attempts()
+    key = login_attempt_key(email)
+    entry = attempts.get(key) or {}
+
+    locked_until = parse_lockout_time(entry.get('locked_until'))
+    if locked_until and locked_until > now_utc():
+        attempts[key] = entry
+        save_login_attempts(attempts)
+        return f"Account locked. Try again in {format_lockout_remaining(locked_until)}.", 423
+
+    failed_attempts = int(entry.get('failed_attempts') or 0) + 1
+    if failed_attempts >= LOGIN_MAX_FAILED_ATTEMPTS:
+        locked_until = now_utc() + LOGIN_LOCKOUT_DURATION
+        attempts[key] = {
+            'failed_attempts': LOGIN_MAX_FAILED_ATTEMPTS,
+            'locked_until': locked_until.isoformat(),
+        }
+        save_login_attempts(attempts)
+        return f"Account locked. Try again in {format_lockout_remaining(locked_until)}.", 423
+
+    attempts[key] = {'failed_attempts': failed_attempts}
+    save_login_attempts(attempts)
+    remaining = LOGIN_MAX_FAILED_ATTEMPTS - failed_attempts
+    return f"Incorrect email or password. {remaining} attempt(s) remaining before lockout.", 401
+
+
+def clear_failed_logins(email):
+    attempts = load_login_attempts()
+    key = login_attempt_key(email)
+    if key in attempts:
+        attempts.pop(key, None)
+        save_login_attempts(attempts)
+
+
 #login
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit(
+    "5 per 5 minutes",
+    key_func=login_rate_limit_key,
+    methods=["POST"],
+    deduct_when=lambda response: response.status_code != 423,
+)
 def index():
     if request.method == 'POST':
-        data = request.get_json()
-        email = data.get('email', '').strip()
+        data = request.get_json(silent=True) or {}
+        email = normalize_login_email(data.get('email', ''))
         password = data.get('password', '').strip()
 
         if not email or not password:
             return jsonify({'success': False, 'message': 'Please fill in all fields.'})
 
+        lockout_message = get_login_lockout_message(email)
+        if lockout_message:
+            return jsonify({'success': False, 'message': lockout_message}), 423
+
         auth = sign_in(email, password)
         if not auth.get('access_token') or not auth.get('user'):
-            return jsonify({'success': False, 'message': 'Incorrect email or password.'})
+            message, status = record_failed_login(email)
+            return jsonify({'success': False, 'message': message}), status
 
         auth_user = auth['user']
         user_id = auth_user['id']
         name = (auth_user.get('user_metadata') or {}).get('name') or email.split('@')[0]
+        clear_failed_logins(email)
 
         db = get_db()
         user = db.execute(

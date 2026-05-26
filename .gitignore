@@ -36,6 +36,8 @@ uploads/
 # Logs
 # ===============================
 *.log
+login_attempts.json
+login_attempts.json.tmp
 
 # ===============================
 # OS Files
