@@ -2,14 +2,14 @@
 File Nest - NLP Analyzer Module
 
 Uses Gemini 2.5 Flash to suggest folders based on file content.
-Falls back to TextBlob analysis, then keyword frequency if unavailable.
+Falls back to TextBlob analysis when Gemini is unavailable.
 
 Flow:
     1. Upload file → detect type → extract text
     2. Clean and limit text (~1000 words)
     3. Send filename + text to Gemini 2.5 Flash
     4. Return 3 ranked folder suggestions
-       └─ Gemini fail → TextBlob → keyword frequency
+       └─ Gemini fail → TextBlob
 
 Requirements:
     pip install google-genai pdfplumber python-docx openpyxl python-pptx python-dotenv textblob
@@ -52,6 +52,22 @@ def _load_api_key() -> str:
 
 def _get_client() -> genai.Client:
     return genai.Client(api_key=_load_api_key())
+
+
+def _runtime_env_value(name: str) -> str:
+    try:
+        from dotenv import dotenv_values
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+        env_value = dotenv_values(env_path if os.path.exists(env_path) else None).get(name)
+        if env_value is not None:
+            return str(env_value)
+    except Exception:
+        pass
+    return os.environ.get(name, "")
+
+
+def _runtime_env_flag(name: str) -> bool:
+    return _runtime_env_value(name).strip().lower() in {"1", "true", "yes", "on"}
 
 
 # ── Extension → Category Map ───────────────────────────────────────────────────
@@ -322,7 +338,7 @@ def ask_gemini_suggestions(
 Return ONLY a JSON array with exactly 3 objects. No extra text."""
 
     try:
-        if os.environ.get("DISABLE_GEMINI", "").lower() in {"1", "true", "yes", "on"}:
+        if _runtime_env_flag("DISABLE_GEMINI"):
             raise RuntimeError("Gemini temporarily disabled by DISABLE_GEMINI")
 
         client = _get_client()
@@ -349,7 +365,7 @@ Return ONLY a JSON array with exactly 3 objects. No extra text."""
                 pass
 
         raw = (raw or "").strip()
-        if os.environ.get("DEBUG_NLP", "").lower() in {"1", "true", "yes", "on"}:
+        if _runtime_env_flag("DEBUG_NLP"):
             print(f"\n===== GEMINI RAW RESPONSE =====\n{raw}\n================================\n")
 
         if not raw:
@@ -405,7 +421,7 @@ Return ONLY a JSON array with exactly 3 objects. No extra text."""
         suggestions = _textblob_fallback_suggestions(filename, text, existing_folders)
 
         for s in suggestions:
-            s["ai_source"] = "textblob"   # ← change "fallback" to "textblob"
+            s["ai_source"] = "textblob"
 
         return suggestions
 
@@ -481,7 +497,8 @@ def _textblob_fallback_suggestions(
         ]
 
         if not processed:
-            raise ValueError("TextBlob produced no usable tokens")
+            print("   TextBlob found no usable terms; using default TextBlob suggestions.")
+            return _textblob_default_suggestions(existing_folders)
 
         freq = Counter(processed)
         top_words = [
@@ -505,7 +522,7 @@ def _textblob_fallback_suggestions(
                                 "Recurring content terms in file."))
         if top_words:
             candidates.append((f"{top_words[0].title()} Files", 50.0,
-                                f"Grouped by dominant keyword: '{top_words[0]}'."))
+                                f"Grouped by dominant term: '{top_words[0]}'."))
 
         suggestions, seen = [], set()
         for folder_name, confidence, reason in candidates:
@@ -523,91 +540,42 @@ def _textblob_fallback_suggestions(
                 "folder": folder_name, "emoji": emoji,
                 "color": _color_for_emoji(emoji), "bg": _bg_for_emoji(emoji),
                 "confidence": confidence, "is_new": is_new, "reason": reason,
+                "ai_source": "textblob",
             })
 
         suggestions.sort(key=lambda x: x["confidence"], reverse=True)
 
-        for fb in _keyword_fallback_suggestions(filename, text, existing_folders):
+        for default in _textblob_default_suggestions(existing_folders):
             if len(suggestions) >= 3:
                 break
-            if not any(s["folder"].lower() == fb["folder"].lower() for s in suggestions):
-                suggestions.append(fb)
+            if not any(s["folder"].lower() == default["folder"].lower() for s in suggestions):
+                suggestions.append(default)
 
         print(f"   TextBlob suggestions: {[s['folder'] for s in suggestions[:3]]}")
         return suggestions[:3]
 
     except Exception as e:
-        print(f"⚠️  TextBlob fallback error: {e}\n⚠️  Falling back to keyword frequency...")
-        return _keyword_fallback_suggestions(filename, text, existing_folders)
+        print(f"⚠️  TextBlob fallback error: {e}")
+        return _textblob_default_suggestions(existing_folders)
 
 
-# ── Keyword Frequency Fallback ─────────────────────────────────────────────────
-
-_KW_STOPWORDS = {
-    "the", "and", "for", "are", "was", "with", "this", "that", "from",
-    "have", "has", "had", "not", "but", "all", "can", "its", "will",
-    "one", "been", "also", "into", "than", "more", "your", "our",
-    "their", "about", "which", "when", "there", "they", "some",
-}
-
-
-def _keyword_fallback_suggestions(
-    filename: str,
-    text: str,
-    existing_folders: List[str],
-) -> List[Dict]:
-    tokens = re.findall(r"[a-zA-Z][a-zA-Z0-9\-]{2,}",
-                        f"{clean_filename_text(filename)} {text}".lower())[:400]
-    freq = Counter(tokens)
-    ranked = [
-        w for w, _ in freq.most_common(20)
-        if len(w) >= 4 and w not in _KW_STOPWORDS and not w.isdigit()
+def _textblob_default_suggestions(existing_folders: List[str]) -> List[Dict]:
+    defaults = [
+        ("Inbox", "📥", 30.0, "TextBlob could not identify strong terms."),
+        ("General Files", "📁", 25.0, "Default TextBlob suggestion."),
+        ("Review Later", "📋", 20.0, "Needs manual review before sorting."),
     ]
-
     suggestions = []
-
-    def _add(name, conf, reason):
-        if not any(s["folder"].lower() == name.lower() for s in suggestions):
-            suggestions.append(_make_suggestion(name, existing_folders, conf, reason))
-
-    if len(ranked) >= 2:
-        _add(f"{ranked[0].title()} {ranked[1].title()}", 55,
-             f"Most frequent terms: '{ranked[0]}', '{ranked[1]}'.")
-    if len(ranked) >= 4:
-        _add(f"{ranked[2].title()} {ranked[3].title()}", 48,
-             f"Recurring terms: '{ranked[2]}', '{ranked[3]}'.")
-    if ranked:
-        _add(f"{ranked[0].title()} Files", 42,
-             f"Grouped by top keyword: '{ranked[0]}'.")
-
-    fn_words = [w.title() for w in clean_filename_text(filename).split() if len(w) >= 3]
-    if len(fn_words) >= 2:
-        _add(f"{fn_words[0]} {fn_words[1]} Files", 38, "Suggested from filename.")
-    if fn_words:
-        _add(f"{fn_words[0]} Folder", 28, "Suggested from first word of filename.")
-
-    while len(suggestions) < 3:
-        emoji = "📥"
+    for folder_name, emoji, confidence, reason in defaults:
+        matched = next((f for f in existing_folders if f.lower() == folder_name.lower()), None)
+        final_name = matched or folder_name
         suggestions.append({
-            "folder": "Inbox", "emoji": emoji,
+            "folder": final_name, "emoji": emoji,
             "color": _color_for_emoji(emoji), "bg": _bg_for_emoji(emoji),
-            "confidence": 30.0, "is_new": True,
-            "reason": "Catch-all folder for unsorted files.",
+            "confidence": confidence, "is_new": matched is None,
+            "reason": reason, "ai_source": "textblob",
         })
-
-    return sorted(suggestions, key=lambda x: x["confidence"], reverse=True)[:3]
-
-
-def _make_suggestion(name: str, existing_folders: List[str], confidence: float, reason: str) -> Dict:
-    matched = next((f for f in existing_folders if f.lower() == name.lower()), None)
-    final_name = matched or name
-    emoji = _emoji_for_phrase(final_name)
-    return {
-        "folder": final_name, "emoji": emoji,
-        "color": _color_for_emoji(emoji), "bg": _bg_for_emoji(emoji),
-        "confidence": float(confidence), "is_new": matched is None,
-        "reason": reason,
-    }
+    return suggestions
 
 
 def _emoji_for_phrase(name: str) -> str:
@@ -680,7 +648,6 @@ def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
     limited_text = raw_text[:1500]
     ranked = ask_gemini_suggestions(filename, limited_text, existing_folder_names)
 
-# In analyze_file(), change the final return to:
     ai_status = "textblob" if any(s.get("ai_source") == "textblob" for s in ranked) else "gemini"
 
     return {
@@ -692,7 +659,7 @@ def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
         "top_folder":   ranked[0],
         "no_match":     False,
         "text_preview": limited_text[:300],
-        "ai_status":    ai_status,          # ← add this line
+        "ai_status":    ai_status,
     }
 
 def analyze_files(file_list: List[Dict], folders: List[Dict] = None) -> List[Dict]:
