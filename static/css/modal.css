@@ -252,6 +252,18 @@
 .new-folder-toggle:hover { border-color: var(--accent); color: var(--accent); }
 .new-folder-panel { display: none; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-top: 8px; }
 .new-folder-panel.show { display: block; }
+
+.folder-note-row {
+  width: 100%;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folder-note-row .folder-file-icon {
+  color: var(--accent);
+}
 .color-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .color-opt {
   width: 28px; height: 28px; border-radius: 50%; cursor: pointer;

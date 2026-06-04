@@ -1,5 +1,6 @@
 // ── DELETE FOLDER MODAL STATE ─────────────────────────────────
 let folderToDeleteId = null;
+let currentFolderNotes = [];
 
 function showDeleteFolderModal(id, name) {
   folderToDeleteId = id;
@@ -198,18 +199,27 @@ async function deleteFolder(id) {
 async function openFolderFiles(folderId, folderName, emoji) {
   currentFolderFilesContext = { id: folderId, name: folderName, emoji };
   document.getElementById('folderFilesTitle').innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(folderName)}`;
-  if (allFilesLoaded) {
-    openModal('folderFiles');
-    renderCurrentFolderFilesFromCache();
-    return;
-  }
   const countEl = document.getElementById('folderFilesCount');
   if (countEl) countEl.textContent = 'Loading...';
   const listEl = document.getElementById('folderFilesList');
   listEl.innerHTML = '<div class="folder-files-loading"><div class="spinner"></div></div>';
   openModal('folderFiles');
-  await loadAllFiles();
+
+  await Promise.all([
+    allFilesLoaded ? Promise.resolve() : loadAllFiles(),
+    loadCurrentFolderNotes(folderId),
+  ]);
+
   renderCurrentFolderFilesFromCache();
+}
+
+async function loadCurrentFolderNotes(folderId) {
+  try {
+    const res = await fetch(`/api/notes?folder_id=${encodeURIComponent(folderId)}`);
+    currentFolderNotes = await res.json();
+  } catch (err) {
+    currentFolderNotes = [];
+  }
 }
 
 function openEditModalFromEncoded(id, name, emoji, color, bg) {
@@ -229,13 +239,16 @@ function renderCurrentFolderFilesFromCache() {
   if (!listEl) return;
 
   const files = allFiles.filter(f => Number(f.folder_id) === Number(currentFolderFilesContext.id));
+  const notes = [...(currentFolderNotes || [])];
   if (folderFilesSortMode === 'name') files.sort((a,b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
   if (folderFilesSortMode === 'type') files.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
   if (folderFilesSortMode === 'date') files.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+  if (folderFilesSortMode === 'name') notes.sort((a,b) => String(a.title || '').localeCompare(String(b.title || ''), undefined, { sensitivity: 'base' }));
+  if (folderFilesSortMode === 'date') notes.sort((a,b) => (parseAppDate(b.updated_at)?.getTime() || 0) - (parseAppDate(a.updated_at)?.getTime() || 0));
 
-  if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
-  if (!files.length) {
-    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">--</div><div class="es-text">No files in this folder yet.</div></div>`;
+  if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'} - ${notes.length} note${notes.length === 1 ? '' : 's'}`;
+  if (!files.length && !notes.length) {
+    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">--</div><div class="es-text">No files or notes in this folder yet.</div></div>`;
     return;
   }
   listEl.innerHTML = `
@@ -250,8 +263,31 @@ function renderCurrentFolderFilesFromCache() {
       <span class="folder-file-size">${formatSize(f.file_size)}</span>
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileFromCurrentFolder(${f.id})`)}
     </div>`).join('')}
+        ${notes.map(note => `
+    <div class="folder-file-row folder-note-row" onclick="openFolderNote(${note.id})">
+      <div class="folder-file-icon"><span class="material-symbols-rounded">sticky_note_2</span></div>
+      <div class="folder-file-main">
+        <div class="folder-file-name">${escHtml(note.title || 'Untitled Note')}</div>
+        <div class="fi-meta">NOTE - ${note.progress?.done || 0}/${note.progress?.total || 0} tasks - Updated ${timeAgo(note.updated_at)}</div>
+      </div>
+      <span class="folder-file-size">Note</span>
+      <div onclick="event.stopPropagation()">
+        <button class="folder-menu-btn"
+          onclick="showFloatingNoteMenu(event, this)"
+          data-note-id="${note.id}"
+          data-folder-id="${note.folder_id || ''}"
+          title="Options">
+          <span aria-hidden="true">⋮</span>
+        </button>
+      </div>
+    </div>`).join('')}
       </div>
     `;
+}
+
+async function openFolderNote(noteId) {
+  closeModal('folderFiles');
+  await openNote(noteId);
 }
 
 function setFolderFilesSort(mode, el) {

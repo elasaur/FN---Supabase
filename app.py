@@ -1309,6 +1309,241 @@ def api_delete_account():
 
     return jsonify({'success': True})
 
+def normalize_checklist(items):
+    clean_items = []
+
+    if not isinstance(items, list):
+        return clean_items
+
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+
+        text = str(item.get('text') or '').strip()
+        done = bool(item.get('done'))
+
+        if text:
+            clean_items.append({
+                'text': text[:180],
+                'done': done
+            })
+
+    return clean_items
+
+
+def note_progress(checklist):
+    total = len(checklist)
+    done = sum(1 for item in checklist if item.get('done'))
+
+    return {
+        'done': done,
+        'total': total,
+        'label': f'{done}/{total} task{"s" if total != 1 else ""} done'
+    }
+
+
+def enrich_note(note, folders_by_id=None):
+    data = dict(note)
+    checklist = data.get('checklist') or []
+
+    if isinstance(checklist, str):
+        try:
+            checklist = json.loads(checklist)
+        except Exception:
+            checklist = []
+
+    data['checklist'] = checklist
+    data['progress'] = note_progress(checklist)
+
+    if folders_by_id:
+        folder = folders_by_id.get(data.get('folder_id'))
+        if folder:
+            data['folder_name'] = folder.get('name')
+            data['folder_emoji'] = folder.get('emoji')
+            data['folder_color'] = folder.get('color')
+            data['folder_bg'] = folder.get('bg')
+
+    return data
+
+
+def parse_optional_folder_id(value):
+    if value in (None, '', 'null'):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+@app.route('/api/notes', methods=['GET'])
+@login_required
+def api_get_notes():
+    db = get_db()
+    uid = get_current_user_id()
+
+    folder_id = request.args.get('folder_id', '').strip()
+    search = request.args.get('search', '').strip().lower()
+
+    filters = {'user_id': f'eq.{uid}'}
+
+    if folder_id:
+        filters['folder_id'] = f'eq.{folder_id}'
+
+    notes = db.select('notes', filters, order='updated_at.desc')
+    folders = db.select('folders', {'user_id': f'eq.{uid}'})
+    folders_by_id = {folder['id']: folder for folder in folders}
+
+    if search:
+        notes = [
+            note for note in notes
+            if search in str(note.get('title', '')).lower()
+            or search in str(note.get('body', '')).lower()
+        ]
+
+    return jsonify([
+        enrich_note(note, folders_by_id)
+        for note in notes
+    ])
+
+
+@app.route('/api/notes', methods=['POST'])
+@login_required
+def api_create_note():
+    db = get_db()
+    uid = get_current_user_id()
+    data = request.get_json(silent=True) or {}
+
+    title = str(data.get('title') or 'Untitled Note').strip()[:120]
+    body = str(data.get('body') or '')
+    folder_id = parse_optional_folder_id(data.get('folder_id'))
+    checklist = normalize_checklist(data.get('checklist') or [])
+
+    folder = None
+    if folder_id:
+        folder = db.execute(
+            'SELECT * FROM folders WHERE id=? AND user_id=?',
+            (folder_id, uid)
+        ).fetchone()
+
+        if not folder:
+            return jsonify({'success': False, 'message': 'Invalid folder tag.'}), 400
+
+    now = now_utc().isoformat()
+
+    created = db.insert('notes', {
+        'user_id': uid,
+        'folder_id': folder['id'] if folder else None,
+        'title': title or 'Untitled Note',
+        'body': body,
+        'checklist': checklist,
+        'created_at': now,
+        'updated_at': now,
+    })
+
+    note = created[0] if created else None
+
+    return jsonify({
+        'success': True,
+        'note': enrich_note(note, {folder['id']: dict(folder)} if folder else {})
+    })
+
+
+@app.route('/api/notes/<int:note_id>', methods=['GET'])
+@login_required
+def api_get_note(note_id):
+    db = get_db()
+    uid = get_current_user_id()
+
+    rows = db.select('notes', {
+        'id': f'eq.{note_id}',
+        'user_id': f'eq.{uid}',
+    })
+
+    if not rows:
+        return jsonify({'success': False, 'message': 'Note not found.'}), 404
+
+    folders = db.select('folders', {'user_id': f'eq.{uid}'})
+    folders_by_id = {folder['id']: folder for folder in folders}
+
+    return jsonify({
+        'success': True,
+        'note': enrich_note(rows[0], folders_by_id)
+    })
+
+
+@app.route('/api/notes/<int:note_id>', methods=['PUT'])
+@login_required
+def api_update_note(note_id):
+    db = get_db()
+    uid = get_current_user_id()
+    data = request.get_json(silent=True) or {}
+
+    existing_rows = db.select('notes', {
+        'id': f'eq.{note_id}',
+        'user_id': f'eq.{uid}',
+    })
+
+    if not existing_rows:
+        return jsonify({'success': False, 'message': 'Note not found.'}), 404
+
+    payload = {
+        'updated_at': now_utc().isoformat()
+    }
+
+    if 'title' in data:
+        title = str(data.get('title') or '').strip()[:120]
+        payload['title'] = title or 'Untitled Note'
+
+    if 'body' in data:
+        payload['body'] = str(data.get('body') or '')
+
+    if 'checklist' in data:
+        payload['checklist'] = normalize_checklist(data.get('checklist') or [])
+
+    if 'folder_id' in data:
+        folder_id = parse_optional_folder_id(data.get('folder_id'))
+
+        if folder_id is None:
+            payload['folder_id'] = None
+        else:
+            folder = db.execute(
+                'SELECT * FROM folders WHERE id=? AND user_id=?',
+                (folder_id, uid)
+            ).fetchone()
+
+            if not folder:
+                return jsonify({'success': False, 'message': 'Invalid folder tag.'}), 400
+
+            payload['folder_id'] = folder['id']
+
+    updated = db.update('notes', {
+        'id': f'eq.{note_id}',
+        'user_id': f'eq.{uid}',
+    }, payload)
+
+    folders = db.select('folders', {'user_id': f'eq.{uid}'})
+    folders_by_id = {folder['id']: folder for folder in folders}
+
+    return jsonify({
+        'success': True,
+        'note': enrich_note(updated[0], folders_by_id)
+    })
+
+
+@app.route('/api/notes/<int:note_id>', methods=['DELETE'])
+@login_required
+def api_delete_note(note_id):
+    db = get_db()
+    uid = get_current_user_id()
+
+    deleted = db.delete('notes', {
+        'id': f'eq.{note_id}',
+        'user_id': f'eq.{uid}',
+    })
+
+    return jsonify({
+        'success': bool(deleted)
+    })
 
 if __name__ == '__main__':
     with app.app_context():

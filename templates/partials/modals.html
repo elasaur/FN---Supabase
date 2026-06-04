@@ -126,6 +126,30 @@
   </div>
 </div>
 
+<!-- Note editor modal -->
+<div class="modal-bg" id="modal-noteEditor" onclick="if(event.target===this)closeNoteEditor()">
+  <div class="modal note-editor-modal">
+    <div id="noteEditorModalContent"></div>
+  </div>
+</div>
+
+<!-- Move Note -->
+<div class="modal-bg" id="modal-moveNote" onclick="if(event.target===this)closeModal('moveNote')">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title"><img class="ui-icon" src="/icons-pack/icons8-move-50.png" alt=""> Move Note</div>
+    <div class="modal-form">
+      <div>
+        <label class="form-label">Destination Folder</label>
+        <select class="form-input" id="moveNoteFolder"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('moveNote')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitMoveNote()">Move</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Rename File -->
 <div class="modal-bg" id="modal-renameFile" onclick="if(event.target===this)closeModal('renameFile')">
   <div class="modal" style="max-width:420px;">

@@ -31,6 +31,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notes.css') }}">
 </head>
 <body>
 
@@ -49,6 +50,7 @@
   {% include 'partials/about.html' %}
   {% include 'partials/stats.html' %}
   {% include 'partials/settings.html' %}
+  {% include 'partials/notes.html' %}
 
 </div>
 
@@ -78,6 +80,7 @@
 <script src="{{ url_for('static', filename='js/password_validation.js') }}"></script>
 <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/navigation.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 

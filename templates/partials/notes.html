@@ -1,0 +1,46 @@
+<!-- PAGE: NOTES -->
+<div class="page" id="page-notes">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Notes</div>
+      <div class="section-sub">Create notes, tag them by folder, and track checklist progress.</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="createNewNote()">
+      <span class="material-symbols-rounded">add</span>
+      New Note
+    </button>
+  </div>
+
+  <div class="notes-tools">
+    <label class="notes-search-wrap">
+      <span class="material-symbols-rounded">search</span>
+      <input
+        class="notes-search"
+        id="notesSearch"
+        placeholder="Search notes"
+        oninput="loadNotes()"
+      />
+    </label>
+
+    <select class="notes-folder-filter" id="notesFolderFilter" onchange="loadNotes()">
+      <option value="">All tags</option>
+    </select>
+  </div>
+
+  <div class="sort-bar notes-sort-bar">
+    <span style="font-size:0.78rem;font-weight:800;color:var(--text3);">Sort by:</span>
+    <button class="sort-chip active" data-sort="name" onclick="setNotesSort('name',this)">Name (A-Z)</button>
+    <button class="sort-chip" data-sort="tag" onclick="setNotesSort('tag',this)">Tags</button>
+    <button class="sort-chip" data-sort="created_asc" onclick="setNotesSort('created_asc',this)">Date Created Asc</button>
+    <button class="sort-chip" data-sort="created_desc" onclick="setNotesSort('created_desc',this)">Date Created Desc</button>
+    <button class="sort-chip" data-sort="modified" onclick="setNotesSort('modified',this)">Date Modified</button>
+  </div>
+
+  <div class="notes-grid" id="notesList">
+    <div class="empty-state">
+      <div class="es-icon"><span class="material-symbols-rounded">edit_note</span></div>
+      <div class="es-text">Loading notes...</div>
+    </div>
+  </div> 
+</div>

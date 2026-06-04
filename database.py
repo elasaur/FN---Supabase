@@ -15,7 +15,7 @@ from flask import g
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
-ALLOWED_TABLES = {"users", "folders", "files"}
+ALLOWED_TABLES = {"users", "folders", "files", "notes"}
 ALLOWED_FILTER_OPERATORS = {"eq", "neq", "gt", "gte", "lt", "lte"}
 
 

@@ -13,9 +13,11 @@ let uploadSortMode = 'date';
 let dashRecentSortMode = 'date';
 let dashRecentFiles = [];
 let folderFilesSortMode = 'name';
+let notesSortMode = 'name';
 let currentFolderFilesContext = null;
 let fileToMoveId = null;
 let fileToRenameId = null;
+let noteToMoveId = null;
 
 let pickedColor = COLOR_OPTIONS[0];
 let pickedEmoji = '📁';
