@@ -272,6 +272,7 @@ async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
   const errEl    = document.getElementById('loginError');
+  errEl.classList.remove('success');
   errEl.style.display = 'none';
 
   if (!email || !password) {
@@ -499,6 +500,7 @@ if (resetAccessToken) {
 if (new URLSearchParams(window.location.search).get('expired') === '1') {
   showLogin();
   const loginError = document.getElementById('loginError');
+  loginError.classList.remove('success');
   loginError.textContent = 'Session expired. Please log in again.';
   loginError.style.display = 'block';
 }
@@ -506,6 +508,7 @@ if (new URLSearchParams(window.location.search).get('expired') === '1') {
 if (new URLSearchParams(window.location.search).get('reset') === '1') {
   showLogin();
   const loginError = document.getElementById('loginError');
+  loginError.classList.add('success');
   loginError.textContent = 'Password updated. Log in with your new password.';
   loginError.style.display = 'block';
 }

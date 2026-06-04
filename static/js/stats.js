@@ -129,34 +129,34 @@ function selectTypeSegment(btn) {
 
 function renderAiSortingSummary(stats) {
   const total = Number(stats.total_files || 0);
-  const aiSorted = Number(stats.ai_sorted || 0);
-  const manual = Math.max(total - aiSorted, 0);
-  const aiPct = total ? Math.round((aiSorted / total) * 100) : 0;
+  const accepted = Number(stats.ai_suggestions_accepted ?? stats.ai_sorted ?? 0);
+  const manual = Math.max(total - accepted, 0);
+  const aiPct = total ? Math.round((accepted / total) * 100) : 0;
   const summary = document.getElementById('aiSortingSummary');
   if (!summary) return;
 
   summary.innerHTML = `
     <div class="ai-summary-meter">
       <div>
-        <div class="ai-summary-kicker">AI auto-sorted</div>
+        <div class="ai-summary-kicker">AI suggestions accepted</div>
         <div class="ai-summary-value">${aiPct}%</div>
       </div>
       <span class="ai-summary-tag"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-gemini-ai-48.png')}" alt=""> Gemini + TextBlob</span>
     </div>
-    <div class="ai-summary-track" title="${aiSorted} of ${total} files sorted by AI">
+    <div class="ai-summary-track" title="${accepted} of ${total} uploads followed the AI recommendation">
       <div class="ai-summary-fill" style="width:${aiPct}%;"></div>
     </div>
     <div class="ai-summary-tiles">
       <div class="ai-summary-tile" style="--tile-color:var(--accent);">
-        <div class="ai-summary-label">Total Files Sorted</div>
+        <div class="ai-summary-label">Total Uploads</div>
         <div class="ai-summary-count" id="statTotal">${total}</div>
       </div>
       <div class="ai-summary-tile" style="--tile-color:var(--mint);">
-        <div class="ai-summary-label">AI Auto-Sorted</div>
-        <div class="ai-summary-count" id="statAI">${aiSorted}</div>
+        <div class="ai-summary-label">AI Suggestions Accepted</div>
+        <div class="ai-summary-count" id="statAI">${accepted}</div>
       </div>
       <div class="ai-summary-tile" style="--tile-color:var(--yellow);">
-        <div class="ai-summary-label">Manually Sorted</div>
+        <div class="ai-summary-label">Manual Choices</div>
         <div class="ai-summary-count" id="statManual">${manual}</div>
       </div>
     </div>`;

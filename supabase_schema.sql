@@ -22,6 +22,8 @@ create table if not exists public.folders (
   bg text not null default '#fde8de',
   pinned boolean not null default false,
   is_default boolean not null default false,
+  note_body text not null default '',
+  note_updated_at timestamptz,
   created_at timestamptz not null default now(),
   unique (user_id, name)
 );
@@ -39,6 +41,12 @@ create table if not exists public.files (
   created_at timestamptz not null default now(),
   constraint files_stored_name_user_path check (stored_name like (user_id::text || '/%'))
 );
+
+-- One quick note per folder. The note is deleted with the folder row.
+alter table public.folders add column if not exists note_body text not null default '';
+alter table public.folders add column if not exists note_updated_at timestamptz;
+update public.folders set note_body = '' where note_body is null;
+alter table public.folders alter column note_body set default '';
 
 create index if not exists idx_folders_user on public.folders(user_id);
 create index if not exists idx_files_user on public.files(user_id);
@@ -134,6 +142,8 @@ drop policy if exists "Users can delete own files" on public.files;
 create policy "Users can delete own files"
 on public.files for delete
 using (auth.uid() = user_id);
+
+notify pgrst, 'reload schema';
 
 -- Private Supabase Storage bucket for uploaded files.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

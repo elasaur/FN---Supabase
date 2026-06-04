@@ -1,5 +1,7 @@
 // static/js/utils.js
 
+const buttonOriginalHtml = new WeakMap();
+
 function getExt(name) {
   return (name.split('.').pop() || '').toLowerCase();
 }
@@ -167,16 +169,16 @@ async function openFile(id) {
 function setButtonLoading(button, loading, label) {
   if (!button) return;
   if (loading) {
-    if (!button.dataset.originalHtml) button.dataset.originalHtml = button.innerHTML;
+    if (!buttonOriginalHtml.has(button)) buttonOriginalHtml.set(button, button.innerHTML);
     button.disabled = true;
     button.classList.add('is-loading');
     button.innerHTML = `<span class="btn-spinner"></span><span>${label || 'Loading...'}</span>`;
   } else {
     button.disabled = false;
     button.classList.remove('is-loading');
-    if (button.dataset.originalHtml) {
-      button.innerHTML = button.dataset.originalHtml;
-      delete button.dataset.originalHtml;
+    if (buttonOriginalHtml.has(button)) {
+      button.innerHTML = buttonOriginalHtml.get(button);
+      buttonOriginalHtml.delete(button);
     }
   }
 }

@@ -14,6 +14,8 @@ let dashRecentSortMode = 'date';
 let dashRecentFiles = [];
 let folderFilesSortMode = 'name';
 let currentFolderFilesContext = null;
+let folderNoteBody = '';
+let folderNoteDirty = false;
 let fileToMoveId = null;
 let fileToRenameId = null;
 

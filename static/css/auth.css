@@ -45,6 +45,7 @@
 .auth-link { color: var(--accent); font-weight: 800; cursor: pointer; }
 .auth-link:hover { text-decoration: underline; }
 .auth-error { background: var(--red2); color: var(--red); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; margin-bottom: 12px; border: 1px solid var(--red); }
+.auth-error.success { background: var(--green2); color: var(--green); border-color: var(--green); }
 .pw-strength {
   display: flex;
   gap: 4px;

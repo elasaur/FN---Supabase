@@ -32,18 +32,22 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
     }
   }
 
-  function resetIdleTimer() {
+  function scheduleSessionExpiry(expiresAt) {
     if (expired) return;
+    const expiresAtMs = Date.parse(expiresAt);
+    if (!Number.isFinite(expiresAtMs)) return;
+    const remainingMs = Math.max(0, expiresAtMs - Date.now());
     window.clearTimeout(idleTimer);
-    idleTimer = window.setTimeout(showExpiredSession, SESSION_TIMEOUT_MS);
+    idleTimer = window.setTimeout(showExpiredSession, remainingMs);
   }
 
-  ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach((eventName) => {
-    document.addEventListener(eventName, resetIdleTimer, { passive: true });
-  });
+  function scheduleInitialExpiry() {
+    scheduleSessionExpiry(new Date(Date.now() + SESSION_TIMEOUT_MS).toISOString());
+  }
 
   window.fetch = async function guardedFetch(input, init) {
     const response = await originalFetch(input, init);
+    const sessionExpiresAt = response.headers.get('X-Session-Expires-At');
     if (response.status === 401) {
       try {
         const data = await response.clone().json();
@@ -51,11 +55,11 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
       } catch (_) {
         showExpiredSession();
       }
-    } else {
-      resetIdleTimer();
+    } else if (sessionExpiresAt) {
+      scheduleSessionExpiry(sessionExpiresAt);
     }
     return response;
   };
 
-  resetIdleTimer();
+  scheduleInitialExpiry();
 })();

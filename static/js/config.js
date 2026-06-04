@@ -54,6 +54,7 @@ const pageTitles = {
   dashboard:'Home',
   upload:'Upload Files',
   folders:'All Folders',
+  'folder-detail':'Folder',
   files:'All Files',
   stats:'Statistics',
   features:'Features',

@@ -11,11 +11,33 @@
 //   }, 3200);
 // }
 
+let toastAudioContext = null;
+let toastAudioUnlocked = false;
+
+function getToastAudioContext() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!toastAudioContext) toastAudioContext = new AudioCtx();
+  if (toastAudioContext.state === 'suspended') {
+    toastAudioContext.resume().catch(() => {});
+  }
+  return toastAudioContext;
+}
+
+function unlockToastAudio() {
+  if (toastAudioUnlocked) return;
+  const ctx = getToastAudioContext();
+  if (!ctx) return;
+  toastAudioUnlocked = true;
+}
+
+document.addEventListener('pointerdown', unlockToastAudio, { once: true, passive: true });
+document.addEventListener('keydown', unlockToastAudio, { once: true });
+
 function playToastSound(type) {
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getToastAudioContext();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -30,14 +52,15 @@ function playToastSound(type) {
     };
 
     const s = soundMap[type] || soundMap.info;
+    const now = ctx.currentTime;
     osc.type = s.type;
-    osc.frequency.setValueAtTime(s.freq, ctx.currentTime);
+    osc.frequency.setValueAtTime(s.freq, now);
 
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + s.duration);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + s.duration);
 
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + s.duration);
+    osc.start(now);
+    osc.stop(now + s.duration);
   } catch (_) {}
 }
 

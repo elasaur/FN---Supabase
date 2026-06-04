@@ -18,4 +18,45 @@
     
   </div>
 
-  
+  <!-- ══ PAGE: SINGLE FOLDER ══ -->
+  <div class="page" id="page-folder-detail">
+    <button class="btn btn-ghost folder-detail-back" onclick="navigate('folders', document.getElementById('nav-folders'))">
+      Back to folders
+    </button>
+
+    <div class="folder-detail-shell">
+      <section class="folder-detail-files">
+        <div class="folder-detail-head">
+          <div class="folder-detail-header-row">
+            <div class="folder-detail-title-wrap">
+              <div class="section-title" id="folderFilesTitle">Folder</div>
+              <div class="sort-bar folder-files-sort">
+                <span class="folder-files-sort-label">Sort by:</span>
+                <button class="sort-chip active" onclick="setFolderFilesSort('name',this)">Name</button>
+                <button class="sort-chip" onclick="setFolderFilesSort('date',this)">Date</button>
+                <button class="sort-chip" onclick="setFolderFilesSort('type',this)">Type</button>
+              </div>
+            </div>
+            <span class="folder-files-counter" id="folderFilesCount">0 files</span>
+          </div>
+        </div>
+        <div id="folderFilesList" class="folder-files-list-wrap"></div>
+      </section>
+
+      <aside class="folder-detail-note">
+        <div class="folder-detail-panel-head">
+          <div>
+            <div class="folder-detail-panel-title">Note</div>
+            <div class="folder-detail-panel-sub" id="folderNoteSavedAt">Not saved yet</div>
+          </div>
+        </div>
+        <div id="folderNoteEditor" class="note-body-editor folder-note-editor" aria-label="Folder note"></div>
+        <div class="note-footer">
+          <div class="note-footer-actions">
+            <button id="folderNoteDiscardBtn" class="btn btn-ghost" onclick="discardFolderNote()" disabled>Discard</button>
+            <button id="folderNoteSaveBtn" class="btn btn-primary" onclick="saveFolderNote(currentFolderFilesContext.id, this)" disabled>Save note</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>

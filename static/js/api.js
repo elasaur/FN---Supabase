@@ -56,7 +56,7 @@ function currentStatsFromCache() {
       const created = parseAppDate(file.created_at)?.getTime();
       return created && now - created <= weekMs;
     }).length,
-    ai_sorted: allFiles.filter(file => Number(file.ai_sorted) === 1 || file.ai_sorted === true).length,
+    ai_suggestions_accepted: allFiles.filter(file => Number(file.ai_sorted) === 1 || file.ai_sorted === true).length,
   };
 }
 
@@ -83,12 +83,12 @@ function renderDashboardFromCache() {
   const totalFolders = document.getElementById('dashTotalFolders');
   const totalFiles = document.getElementById('dashTotalFiles');
   const recentCount = document.getElementById('dashRecentCount');
-  const aiSorted = document.getElementById('dashAiSorted');
+  const aiAccepted = document.getElementById('dashAiAccepted');
 
   if (totalFolders) totalFolders.textContent = stats.total_folders;
   if (totalFiles) totalFiles.textContent = stats.total_files;
   if (recentCount) recentCount.textContent = stats.recent_count;
-  if (aiSorted) aiSorted.textContent = stats.ai_sorted;
+  if (aiAccepted) aiAccepted.textContent = `${stats.ai_suggestions_accepted} / ${stats.total_files}`;
 
   if (typeof renderDashboardPinnedFoldersFromCache === 'function') renderDashboardPinnedFoldersFromCache();
   if (typeof renderDashboardRecentUploads === 'function') renderDashboardRecentUploads();
@@ -202,8 +202,8 @@ function removeCachedFolder(folderId) {
   dashRecentFiles = dashRecentFiles.filter(file => !sameId(file.folder_id, folderId));
 
   if (currentFolderFilesContext && sameId(currentFolderFilesContext.id, folderId)) {
-    closeModal?.('folderFiles');
     currentFolderFilesContext = null;
+    navigate?.('folders', document.getElementById('nav-folders'));
   }
 
   renderEverywhereFromCache();
@@ -224,8 +224,8 @@ function removeCachedNonDefaultFolders() {
   dashRecentFiles = dashRecentFiles.filter(file => !deletedIds.has(Number(file.folder_id)));
 
   if (currentFolderFilesContext && deletedIds.has(Number(currentFolderFilesContext.id))) {
-    closeModal?.('folderFiles');
     currentFolderFilesContext = null;
+    navigate?.('folders', document.getElementById('nav-folders'));
   }
 
   renderEverywhereFromCache();

@@ -42,7 +42,6 @@ from supabase_auth import (
     reset_password_for_email,
 )
 
-from nlp_analyzer import analyze_file
 from storage import make_storage_path, upload_file, create_signed_url, delete_files
 
 # ── App Configuration ──────────────────────────────────────────────────────────
@@ -70,8 +69,9 @@ DEFAULT_FOLDER_EMOJI = '📁'
 LOGIN_MAX_FAILED_ATTEMPTS = 3
 LOGIN_LOCKOUT_DURATION = timedelta(hours=24)
 LOGIN_ATTEMPTS_FILE = os.path.join(os.path.dirname(__file__), 'login_attempts.json')
+ANALYZE_REQUEST_DIR = os.path.join(UPLOAD_FOLDER, '.analyze_requests')
 ANALYZE_REQUEST_LOCK = threading.Lock()
-ANALYZE_REQUEST_TOKENS = {}
+os.makedirs(ANALYZE_REQUEST_DIR, exist_ok=True)
 
 # Rate limiting configuration
 limiter = Limiter(
@@ -121,6 +121,9 @@ def add_security_headers(response):
     response.headers.setdefault('X-Frame-Options', 'DENY')
     response.headers.setdefault('Referrer-Policy', 'same-origin')
     response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    expires_at = current_session_expires_at()
+    if expires_at:
+        response.headers['X-Session-Expires-At'] = expires_at.isoformat()
     if request.endpoint in {'landing', 'index', 'index_html', 'dashboard', 'logout', 'reset_page', 'reset_password_html', 'update_password_page', 'change_password_page', 'change_password_html'}:
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache'
@@ -173,6 +176,19 @@ def clear_auth_session():
     session.modified = True
 
 
+def current_session_expires_at():
+    if 'user_id' not in session or not is_valid_uuid(session.get('user_id')):
+        return None
+    try:
+        last = datetime.fromisoformat(session.get('last_activity', ''))
+    except (TypeError, ValueError):
+        return None
+    if last.tzinfo is None:
+        last = last.replace(tzinfo=timezone.utc)
+    expires_at = last + SESSION_TIMEOUT
+    return expires_at if expires_at > now_utc() else None
+
+
 def session_is_active():
     if 'user_id' not in session or not is_valid_uuid(session.get('user_id')):
         clear_auth_session()
@@ -222,29 +238,206 @@ def get_current_user_id():
     return session.get('user_id')
 
 
+def pg_filter(operator, value):
+    if value is None:
+        raise ValueError("Filter value cannot be empty.")
+    if isinstance(value, bool):
+        raw = "true" if value else "false"
+    else:
+        raw = str(value)
+    return f"{operator}.{raw}"
+
+
+def first(rows):
+    return rows[0] if rows else None
+
+
+def select_user(db, user_id, select="*"):
+    return first(db.select("users", {"id": pg_filter("eq", user_id)}, select))
+
+
+def select_folder(db, folder_id, user_id, select="*"):
+    return first(db.select(
+        "folders",
+        {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", user_id)},
+        select,
+    ))
+
+
+def select_default_folder(db, user_id, select="*"):
+    return first(db.select(
+        "folders",
+        {"user_id": pg_filter("eq", user_id), "is_default": pg_filter("eq", True)},
+        select,
+    ))
+
+
+def select_file(db, file_id, user_id, select="*"):
+    return first(db.select(
+        "files",
+        {"id": pg_filter("eq", file_id), "user_id": pg_filter("eq", user_id)},
+        select,
+    ))
+
+
+def create_folder_record(db, user_id, name, emoji, color, bg, is_default=False, pinned=False):
+    rows = db.insert("folders", {
+        "user_id": user_id,
+        "name": name,
+        "emoji": emoji,
+        "color": color,
+        "bg": bg,
+        "is_default": bool(is_default),
+        "pinned": bool(pinned),
+    })
+    return first(rows)
+
+
+def create_file_record(db, user_id, folder_id, original_name, stored_name, extension, file_size, ai_sorted, keywords):
+    rows = db.insert("files", {
+        "user_id": user_id,
+        "folder_id": folder_id,
+        "original_name": original_name,
+        "stored_name": stored_name,
+        "extension": extension,
+        "file_size": file_size,
+        "ai_sorted": bool(ai_sorted),
+        "keywords": keywords,
+    })
+    return first(rows)
+
+
+def get_folder_file_counts(db, user_id):
+    counts = {}
+    for item in db.select("files", {"user_id": pg_filter("eq", user_id)}, "folder_id"):
+        folder_id = item.get("folder_id")
+        counts[folder_id] = counts.get(folder_id, 0) + 1
+    return counts
+
+
+def list_folders_with_counts(db, user_id, search=""):
+    search = str(search or "").strip().lower()
+    counts = get_folder_file_counts(db, user_id)
+    rows = []
+    for folder in db.select("folders", {"user_id": pg_filter("eq", user_id)}):
+        if search and search not in str(folder.get("name") or "").lower():
+            continue
+        rows.append({**folder, "file_count": counts.get(folder.get("id"), 0)})
+    rows.sort(key=lambda row: (-int(bool(row.get("pinned"))), str(row.get("name") or "").lower()))
+    return rows
+
+
+def list_files_with_folder_metadata(db, user_id, folder_id=None, search="", sort="date"):
+    filters = {"user_id": pg_filter("eq", user_id)}
+    if folder_id:
+        filters["folder_id"] = pg_filter("eq", folder_id)
+
+    search = str(search or "").strip().lower()
+    folders = {
+        row["id"]: row
+        for row in db.select("folders", {"user_id": pg_filter("eq", user_id)})
+    }
+    rows = []
+    for item in db.select("files", filters):
+        if search and search not in str(item.get("original_name") or "").lower():
+            continue
+        folder = folders.get(item.get("folder_id"))
+        if not folder:
+            continue
+        rows.append({
+            **item,
+            "folder_name": folder["name"],
+            "folder_emoji": folder["emoji"],
+            "folder_color": folder["color"],
+            "folder_bg": folder["bg"],
+        })
+
+    if sort == "name":
+        rows.sort(key=lambda row: str(row.get("original_name") or "").lower())
+    elif sort == "type":
+        rows.sort(key=lambda row: (str(row.get("extension") or "").lower(), str(row.get("original_name") or "").lower()))
+    elif sort == "folder":
+        rows.sort(key=lambda row: (str(row.get("folder_name") or "").lower(), str(row.get("original_name") or "").lower()))
+    else:
+        rows.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
+    return rows
+
+
+def stats_chart_rows(db, user_id):
+    counts = get_folder_file_counts(db, user_id)
+    rows = [
+        {
+            "name": folder.get("name", "Untitled"),
+            "emoji": folder.get("emoji", DEFAULT_FOLDER_EMOJI),
+            "color": folder.get("color", "#e8855a"),
+            "count": counts.get(folder.get("id"), 0),
+        }
+        for folder in db.select("folders", {"user_id": pg_filter("eq", user_id)})
+    ]
+    rows.sort(key=lambda row: row["count"], reverse=True)
+    return rows
+
+
+def get_file_analyzer():
+    from nlp_analyzer import analyze_file
+    return analyze_file
+
+
 def begin_analyze_request(user_id):
     token = uuid.uuid4().hex
+    path = analyze_request_path(user_id)
+    if not path:
+        return token
     with ANALYZE_REQUEST_LOCK:
-        ANALYZE_REQUEST_TOKENS[str(user_id)] = token
+        write_analyze_request_token(path, token)
     return token
 
 
 def cancel_analyze_request(user_id):
     if not user_id:
         return
+    path = analyze_request_path(user_id)
+    if not path:
+        return
     with ANALYZE_REQUEST_LOCK:
-        ANALYZE_REQUEST_TOKENS[str(user_id)] = uuid.uuid4().hex
+        write_analyze_request_token(path, uuid.uuid4().hex)
 
 
 def analyze_request_is_current(user_id, token):
+    path = analyze_request_path(user_id)
+    if not path:
+        return False
     with ANALYZE_REQUEST_LOCK:
-        return ANALYZE_REQUEST_TOKENS.get(str(user_id)) == token
+        return read_analyze_request_token(path) == token
 
 
 def finish_analyze_request(user_id, token):
-    with ANALYZE_REQUEST_LOCK:
-        if ANALYZE_REQUEST_TOKENS.get(str(user_id)) == token:
-            ANALYZE_REQUEST_TOKENS.pop(str(user_id), None)
+    # Begin/cancel overwrite this file atomically. Leaving it in place avoids
+    # an old worker deleting a newer worker's token in a multi-process server.
+    return None
+
+
+def analyze_request_path(user_id):
+    try:
+        safe_user_id = str(uuid.UUID(str(user_id)))
+    except (TypeError, ValueError):
+        return None
+    return os.path.join(ANALYZE_REQUEST_DIR, f"{safe_user_id}.token")
+
+
+def write_analyze_request_token(path, token):
+    tmp_path = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"
+    with open(tmp_path, 'w', encoding='utf-8') as fh:
+        fh.write(token)
+    os.replace(tmp_path, path)
+
+
+def read_analyze_request_token(path):
+    try:
+        with open(path, 'r', encoding='utf-8') as fh:
+            return fh.read().strip()
+    except OSError:
+        return None
 
 
 def normalize_login_email(email):
@@ -384,24 +577,14 @@ def index():
         clear_failed_logins(email)
 
         db = get_db()
-        user = db.execute(
-            'SELECT * FROM users WHERE id=?', (user_id,)
-        ).fetchone()
+        user = select_user(db, user_id)
         if not user:
             db.insert('users', {'id': user_id, 'name': name, 'email': auth_user.get('email') or email})
             db.commit()
-            user = db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone()
-        default_folder = db.execute(
-            'SELECT id FROM folders WHERE user_id=? AND is_default=1', (user_id,)
-        ).fetchone()
+            user = select_user(db, user_id)
+        default_folder = select_default_folder(db, user_id, "id")
         if not default_folder:
-            db.execute(
-                '''
-                INSERT INTO folders (user_id, name, emoji, color, bg, is_default, pinned)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''',
-                (user_id, 'Uncategorized', '📂', '#b09e94', '#f7f4f0', 1, 0)
-            )
+            create_folder_record(db, user_id, 'Uncategorized', '📂', '#b09e94', '#f7f4f0', True, False)
             db.commit()
 
         session.clear()
@@ -430,8 +613,6 @@ def index_html():
 
 @app.route('/')
 def landing():
-    if session_is_active():
-        return redirect(url_for('dashboard'))
     return render_template('landing.html')
 
 @app.route('/features')
@@ -483,13 +664,7 @@ def signup():
         session.permanent = True
 
     # create default folder
-    db.execute(
-        '''
-        INSERT INTO folders (user_id, name, emoji, color, bg, is_default, pinned)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''',
-        (auth_user['id'], 'Uncategorized', '📂', '#b09e94', '#f7f4f0', 1, 0)
-    )
+    create_folder_record(db, auth_user['id'], 'Uncategorized', '📂', '#b09e94', '#f7f4f0', True, False)
     db.commit()
 
     return jsonify({'success': True, 'confirm_email': not bool(auth.get('access_token'))})
@@ -608,9 +783,7 @@ def dashboard():
     db = get_db()
     uid = session['user_id']
 
-    user = db.execute(
-        'SELECT * FROM users WHERE id=?', (uid,)
-    ).fetchone()
+    user = select_user(db, uid)
 
     return render_template('app.html', user=user)
 
@@ -622,22 +795,27 @@ def api_stats():
     db  = get_db()
     uid = get_current_user_id()
 
-    total_folders = db.execute('SELECT COUNT(*) FROM folders WHERE user_id=?', (uid,)).fetchone()[0]
-    total_files   = db.execute('SELECT COUNT(*) FROM files   WHERE user_id=?', (uid,)).fetchone()[0]
+    total_folders = len(db.select("folders", {"user_id": pg_filter("eq", uid)}, "id"))
+    total_files   = len(db.select("files", {"user_id": pg_filter("eq", uid)}, "id"))
 
     week_ago = (now_utc() - timedelta(days=7)).isoformat()
-    recent_count = db.execute(
-        'SELECT COUNT(*) FROM files WHERE user_id=? AND created_at>?', (uid, week_ago)
-    ).fetchone()[0]
-    ai_sorted = db.execute(
-        'SELECT COUNT(*) FROM files WHERE user_id=? AND ai_sorted=1', (uid,)
-    ).fetchone()[0]
+    recent_count = len(db.select(
+        "files",
+        {"user_id": pg_filter("eq", uid), "created_at": pg_filter("gt", week_ago)},
+        "id",
+    ))
+    ai_suggestions_accepted = len(db.select(
+        "files",
+        {"user_id": pg_filter("eq", uid), "ai_sorted": pg_filter("eq", True)},
+        "id",
+    ))
 
     return jsonify({
         'total_folders': total_folders,
         'total_files':   total_files,
         'recent_count':  recent_count,
-        'ai_sorted':     ai_sorted,
+        'ai_suggestions_accepted': ai_suggestions_accepted,
+        'ai_sorted': ai_suggestions_accepted,
     })
 
 
@@ -648,17 +826,7 @@ def api_get_folders():
     db  = get_db()
     uid = get_current_user_id()
     search = request.args.get('search', '').strip()
-    query = '''
-        SELECT f.*, COUNT(fi.id) as file_count
-        FROM folders f LEFT JOIN files fi ON fi.folder_id = f.id
-        WHERE f.user_id = ?
-    '''
-    params = [uid]
-    if search:
-        query += ' AND f.name LIKE ?'
-        params.append(f'%{search}%')
-    query += ' GROUP BY f.id ORDER BY f.pinned DESC, f.name ASC'
-    rows = db.execute(query, params).fetchall()
+    rows = list_folders_with_counts(db, uid, search)
     return jsonify([dict(r) for r in rows])
 
 
@@ -676,20 +844,16 @@ def api_create_folder():
 
     db  = get_db()
     uid = get_current_user_id()
-    existing = db.execute(
-        'SELECT id FROM folders WHERE user_id=? AND name=?', (uid, name)
-    ).fetchone()
+    existing = first(db.select(
+        "folders",
+        {"user_id": pg_filter("eq", uid), "name": pg_filter("eq", name)},
+        "id",
+    ))
     if existing:
         return jsonify({'success': False, 'message': 'A folder with that name already exists.'})
 
-    db.execute(
-        'INSERT INTO folders (user_id, name, emoji, color, bg) VALUES (?,?,?,?,?)',
-        (uid, name, emoji, color, bg)
-    )
+    folder = create_folder_record(db, uid, name, emoji, color, bg)
     db.commit()
-    folder = db.execute(
-        'SELECT * FROM folders WHERE user_id=? AND name=?', (uid, name)
-    ).fetchone()
     return jsonify({'success': True, 'folder': dict(folder)})
 
 
@@ -698,9 +862,7 @@ def api_create_folder():
 def api_update_folder(folder_id):
     db  = get_db()
     uid = get_current_user_id()
-    folder = db.execute(
-        'SELECT * FROM folders WHERE id=? AND user_id=?', (folder_id, uid)
-    ).fetchone()
+    folder = select_folder(db, folder_id, uid)
     if not folder:
         return jsonify({'success': False, 'message': 'Folder not found.'})
 
@@ -711,12 +873,79 @@ def api_update_folder(folder_id):
     bg     = data.get('bg',     folder['bg'])
     pinned = data.get('pinned', folder['pinned'])
 
-    db.execute(
-        'UPDATE folders SET name=?, emoji=?, color=?, bg=?, pinned=? WHERE id=?',
-        (name, emoji, color, bg, pinned, folder_id)
-    )
+    payload = {
+        "name": name,
+        "emoji": emoji,
+        "color": color,
+        "bg": bg,
+        "pinned": bool(pinned),
+    }
+    if "note_body" in data:
+        payload["note_body"] = str(data.get("note_body") or "")
+        payload["note_updated_at"] = data.get("note_updated_at") or now_utc().isoformat()
+
+    try:
+        db.update("folders", {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", uid)}, payload)
+    except RuntimeError as exc:
+        if "note_body" in payload and is_folder_note_schema_error(exc):
+            return folder_note_schema_error_response()
+        raise
     db.commit()
     return jsonify({'success': True})
+
+
+def is_folder_note_schema_error(exc):
+    message = str(exc)
+    return (
+        "PGRST204" in message
+        and ("note_body" in message or "note_updated_at" in message)
+        and "folders" in message
+    )
+
+
+def folder_note_schema_error_response():
+    return jsonify({
+        'success': False,
+        'message': (
+            "Folder notes are not ready in Supabase yet. Run the folder note "
+            "ALTER TABLE statements in supabase_schema.sql, then refresh the "
+            "PostgREST schema cache."
+        ),
+    }), 503
+
+
+@app.route('/api/folders/<int:folder_id>/note', methods=['PUT'])
+@login_required
+@limiter.limit("30 per minute")
+def api_update_folder_note(folder_id):
+    db = get_db()
+    uid = get_current_user_id()
+    folder = select_folder(db, folder_id, uid, "id")
+    if not folder:
+        return jsonify({'success': False, 'message': 'Folder not found.'}), 404
+
+    data = request.get_json(silent=True) or {}
+    note_body = str(data.get('note_body') or '')
+    if len(note_body) > 5000:
+        return jsonify({'success': False, 'message': 'Folder note is too long.'}), 400
+
+    note_updated_at = now_utc().isoformat()
+    try:
+        db.update(
+            "folders",
+            {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", uid)},
+            {"note_body": note_body, "note_updated_at": note_updated_at},
+        )
+    except RuntimeError as exc:
+        if is_folder_note_schema_error(exc):
+            return folder_note_schema_error_response()
+        raise
+    db.commit()
+    return jsonify({
+        'success': True,
+        'note_body': note_body,
+        'note_updated_at': note_updated_at,
+    })
 
 
 @app.route('/api/folders/<int:folder_id>', methods=['DELETE'])
@@ -724,25 +953,24 @@ def api_update_folder(folder_id):
 def api_delete_folder(folder_id):
     db  = get_db()
     uid = get_current_user_id()
-    folder = db.execute(
-        'SELECT * FROM folders WHERE id=? AND user_id=?', (folder_id, uid)
-    ).fetchone()
+    folder = select_folder(db, folder_id, uid)
     if not folder:
         return jsonify({'success': False, 'message': 'Folder not found.'})
     if folder['is_default']:
         return jsonify({'success': False, 'message': 'Cannot delete the default folder.'})
 
-    files = db.execute(
-        'SELECT stored_name FROM files WHERE user_id=? AND folder_id=?',
-        (uid, folder_id)
-    ).fetchall()
+    files = db.select(
+        "files",
+        {"user_id": pg_filter("eq", uid), "folder_id": pg_filter("eq", folder_id)},
+        "stored_name",
+    )
     try:
         delete_files([f['stored_name'] for f in files])
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
 
-    db.execute('DELETE FROM files WHERE user_id=? AND folder_id=?', (uid, folder_id))
-    db.execute('DELETE FROM folders WHERE id=?', (folder_id,))
+    db.delete("files", {"user_id": pg_filter("eq", uid), "folder_id": pg_filter("eq", folder_id)})
+    db.delete("folders", {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", uid)})
     db.commit()
     return jsonify({'success': True})
 
@@ -758,33 +986,7 @@ def api_get_files():
     search    = request.args.get('search', '').strip()
     sort      = request.args.get('sort', 'date')
 
-    order_map = {
-        'date':   'fi.created_at DESC',
-        'name':   'fi.original_name ASC',
-        'type':   'fi.extension ASC',
-        'folder': 'fo.name ASC',
-    }
-    order_clause = order_map.get(sort, 'fi.created_at DESC')
-
-    query = '''
-        SELECT fi.*, fo.name as folder_name, fo.emoji as folder_emoji,
-               fo.color as folder_color, fo.bg as folder_bg
-        FROM files fi
-        JOIN folders fo ON fo.id = fi.folder_id
-        WHERE fi.user_id = ?
-    '''
-    params = [uid]
-
-    if folder_id:
-        query += ' AND fi.folder_id = ?'
-        params.append(folder_id)
-    if search:
-        query += ' AND fi.original_name LIKE ?'
-        params.append(f'%{search}%')
-
-    query += f' ORDER BY {order_clause}'
-
-    rows = db.execute(query, params).fetchall()
+    rows = list_files_with_folder_metadata(db, uid, folder_id, search, sort)
     return jsonify([dict(r) for r in rows])
 
 
@@ -793,9 +995,7 @@ def api_get_files():
 def api_delete_file(file_id):
     db  = get_db()
     uid = get_current_user_id()
-    f   = db.execute(
-        'SELECT * FROM files WHERE id=? AND user_id=?', (file_id, uid)
-    ).fetchone()
+    f   = select_file(db, file_id, uid)
     if not f:
         return jsonify({'success': False, 'message': 'File not found.'})
 
@@ -804,7 +1004,7 @@ def api_delete_file(file_id):
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
 
-    db.execute('DELETE FROM files WHERE id=?', (file_id,))
+    db.delete("files", {"id": pg_filter("eq", file_id), "user_id": pg_filter("eq", uid)})
     db.commit()
     return jsonify({'success': True})
 
@@ -817,12 +1017,12 @@ def api_move_file(file_id):
     data      = request.get_json()
     folder_id = data.get('folder_id')
 
-    f      = db.execute('SELECT * FROM files   WHERE id=? AND user_id=?', (file_id,   uid)).fetchone()
-    folder = db.execute('SELECT * FROM folders WHERE id=? AND user_id=?', (folder_id, uid)).fetchone()
+    f      = select_file(db, file_id, uid)
+    folder = select_folder(db, folder_id, uid)
     if not f or not folder:
         return jsonify({'success': False, 'message': 'Not found.'})
 
-    db.execute('UPDATE files SET folder_id=? WHERE id=?', (folder_id, file_id))
+    db.update("files", {"id": pg_filter("eq", file_id), "user_id": pg_filter("eq", uid)}, {"folder_id": folder_id})
     db.commit()
     return jsonify({'success': True})
 
@@ -843,15 +1043,14 @@ def api_rename_file(file_id):
     if not allowed_file(new_name):
         return jsonify({'success': False, 'message': 'File type not supported.'})
 
-    f = db.execute('SELECT * FROM files WHERE id=? AND user_id=?', (file_id, uid)).fetchone()
+    f = select_file(db, file_id, uid)
     if not f:
         return jsonify({'success': False, 'message': 'File not found.'})
 
-    db.execute('UPDATE files SET original_name=?, extension=? WHERE id=?', (
-        new_name,
-        new_name.rsplit('.', 1)[1].lower(),
-        file_id,
-    ))
+    db.update("files", {"id": pg_filter("eq", file_id), "user_id": pg_filter("eq", uid)}, {
+        "original_name": new_name,
+        "extension": new_name.rsplit('.', 1)[1].lower(),
+    })
     db.commit()
     return jsonify({'success': True, 'name': new_name})
 
@@ -886,9 +1085,7 @@ def api_analyze():
 
     db  = get_db()
 
-    folder_rows = db.execute(
-        'SELECT * FROM folders WHERE user_id=?', (uid,)
-    ).fetchall()
+    folder_rows = db.select("folders", {"user_id": pg_filter("eq", uid)})
     folder_list = [
         {**dict(f), 'folder': f['name']}
         for f in folder_rows
@@ -897,6 +1094,7 @@ def api_analyze():
     try:
         if not analyze_request_is_current(uid, analyze_token):
             return jsonify({'success': False, 'message': 'Analysis cancelled.'}), 409
+        analyze_file = get_file_analyzer()
         result = analyze_file(temp_path, filename, folder_list)
         if not analyze_request_is_current(uid, analyze_token):
             return jsonify({'success': False, 'message': 'Analysis cancelled.'}), 409
@@ -935,9 +1133,7 @@ def api_upload():
     db  = get_db()
     uid = get_current_user_id()
 
-    folder = db.execute(
-        'SELECT * FROM folders WHERE id=? AND user_id=?', (folder_id, uid)
-    ).fetchone()
+    folder = select_folder(db, folder_id, uid)
     if not folder:
         return jsonify({'success': False, 'message': 'Invalid folder.'})
 
@@ -952,15 +1148,9 @@ def api_upload():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage upload error: {str(e)}'})
 
-    db.execute(
-        '''INSERT INTO files (user_id, folder_id, original_name, stored_name,
-                              extension, file_size, ai_sorted, keywords)
-           VALUES (?,?,?,?,?,?,?,?)''',
-        (uid, folder_id, filename, stored_name, ext, file_size, int(ai_sorted), keywords)
-    )
+    f = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords)
     db.commit()
 
-    f = db.execute('SELECT * FROM files WHERE stored_name=?', (stored_name,)).fetchone()
     return jsonify({'success': True, 'file': dict(f)})
 
 
@@ -997,28 +1187,22 @@ def api_confirm_upload():
             folder_id = None
 
     if not folder_id and folder_name:
-        existing = db.execute(
-            'SELECT id FROM folders WHERE user_id=? AND name=?', (uid, folder_name)
-        ).fetchone()
+        existing = first(db.select(
+            "folders",
+            {"user_id": pg_filter("eq", uid), "name": pg_filter("eq", folder_name)},
+            "id",
+        ))
         if existing:
             folder_id = existing['id']
         else:
-            db.execute(
-                'INSERT INTO folders (user_id, name, emoji, color, bg) VALUES (?,?,?,?,?)',
-                (uid, folder_name, emoji, color, bg)
-            )
+            new_folder = create_folder_record(db, uid, folder_name, emoji, color, bg)
             db.commit()
-            new_folder = db.execute(
-                'SELECT id FROM folders WHERE user_id=? AND name=?', (uid, folder_name)
-            ).fetchone()
             folder_id = new_folder['id']
 
     if not folder_id:
         return jsonify({'success': False, 'message': 'No folder specified.'})
 
-    folder = db.execute(
-        'SELECT * FROM folders WHERE id=? AND user_id=?', (folder_id, uid)
-    ).fetchone()
+    folder = select_folder(db, folder_id, uid)
     if not folder:
         return jsonify({'success': False, 'message': 'Invalid folder.'})
 
@@ -1033,17 +1217,8 @@ def api_confirm_upload():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage upload error: {str(e)}'})
 
-    db.execute(
-        '''INSERT INTO files (user_id, folder_id, original_name, stored_name,
-                              extension, file_size, ai_sorted, keywords)
-           VALUES (?,?,?,?,?,?,?,?)''',
-        (uid, folder_id, filename, stored_name, ext, file_size, int(ai_sorted), keywords)
-    )
+    saved_file = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords)
     db.commit()
-
-    saved_file = db.execute(
-        'SELECT * FROM files WHERE stored_name=?', (stored_name,)
-    ).fetchone()
 
     return jsonify({
         'success': True,
@@ -1058,7 +1233,7 @@ def api_confirm_upload():
 def api_open_file(file_id):
     db  = get_db()
     uid = get_current_user_id()
-    f   = db.execute('SELECT * FROM files WHERE id=? AND user_id=?', (file_id, uid)).fetchone()
+    f   = select_file(db, file_id, uid)
     if not f:
         return jsonify({'success': False, 'message': 'File not found.'})
 
@@ -1074,7 +1249,7 @@ def api_open_file(file_id):
 def api_download_file(file_id):
     db  = get_db()
     uid = get_current_user_id()
-    f   = db.execute('SELECT * FROM files WHERE id=? AND user_id=?', (file_id, uid)).fetchone()
+    f   = select_file(db, file_id, uid)
     if not f:
         return jsonify({'success': False, 'message': 'File not found.'})
     try:
@@ -1089,36 +1264,7 @@ def api_download_file(file_id):
 def api_stats_chart():
     db  = get_db()
     uid = get_current_user_id()
-    try:
-        rows = db.execute(
-            '''SELECT fo.name, fo.emoji, fo.color, COUNT(fi.id) as count
-               FROM folders fo
-               LEFT JOIN files fi ON fi.folder_id = fo.id
-               WHERE fo.user_id = ?
-               GROUP BY fo.id
-               ORDER BY count DESC''',
-            (uid,)
-        ).fetchall()
-        return jsonify([dict(r) for r in rows])
-    except Exception:
-        app.logger.exception('Failed to load stats chart through query adapter.')
-        folders = db.select("folders", {"user_id": f"eq.{uid}"})
-        files = db.select("files", {"user_id": f"eq.{uid}"}, "folder_id")
-        counts = {}
-        for item in files:
-            folder_id = item.get("folder_id")
-            counts[folder_id] = counts.get(folder_id, 0) + 1
-        rows = [
-            {
-                "name": folder.get("name", "Untitled"),
-                "emoji": folder.get("emoji", DEFAULT_FOLDER_EMOJI),
-                "color": folder.get("color", "#e8855a"),
-                "count": counts.get(folder.get("id"), 0),
-            }
-            for folder in folders
-        ]
-        rows.sort(key=lambda row: row["count"], reverse=True)
-        return jsonify(rows)
+    return jsonify(stats_chart_rows(db, uid))
 
 
 # ── API: Delete All Files ──────────────────────────────────────────────────────
@@ -1129,13 +1275,13 @@ def api_delete_all_files():
     db  = get_db()
     uid = get_current_user_id()
 
-    files = db.execute('SELECT stored_name FROM files WHERE user_id=?', (uid,)).fetchall()
+    files = db.select("files", {"user_id": pg_filter("eq", uid)}, "stored_name")
     try:
         delete_files([f['stored_name'] for f in files])
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
 
-    db.execute('DELETE FROM files WHERE user_id=?', (uid,))
+    db.delete("files", {"user_id": pg_filter("eq", uid)})
     db.commit()
     return jsonify({'success': True})
 
@@ -1152,9 +1298,7 @@ def api_delete_all_folders():
     db  = get_db()
     uid = get_current_user_id()
 
-    default_folder = db.execute(
-        'SELECT id FROM folders WHERE user_id=? AND is_default=1', (uid,)
-    ).fetchone()
+    default_folder = select_default_folder(db, uid, "id")
     if not default_folder:
         return jsonify({'success': False, 'message': 'Default folder not found.'})
 
@@ -1171,13 +1315,12 @@ def api_delete_all_folders():
         return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
 
     for item in files_to_delete:
-        db.execute('DELETE FROM files WHERE id=?', (item['id'],))
-    db.execute('DELETE FROM folders WHERE user_id=? AND is_default=0', (uid,))
+        db.delete("files", {"id": pg_filter("eq", item['id']), "user_id": pg_filter("eq", uid)})
+    db.delete("folders", {"user_id": pg_filter("eq", uid), "is_default": pg_filter("eq", False)})
     db.commit()
     return jsonify({'success': True, 'deleted_files': len(files_to_delete)})
 
-
-# ── API: User Settings ─────────────────────────────────────────────────────────
+# API: User Settings
 @app.route('/api/user', methods=['GET'])
 @login_required
 def api_get_user():
@@ -1187,7 +1330,7 @@ def api_get_user():
     """
     uid  = get_current_user_id()
     db   = get_db()
-    user = db.execute('SELECT * FROM users WHERE id=?', (uid,)).fetchone()
+    user = select_user(db, uid)
     if not user:
         return jsonify({'success': False, 'message': 'User not found.'}), 404
     return jsonify({
@@ -1211,13 +1354,11 @@ def api_update_user():
         access_token = session.get('access_token')
         if access_token:
             update_user_metadata(access_token, {'name': name})
-        db.execute('UPDATE users SET name=? WHERE id=?', (name, uid))
+        db.update("users", {"id": pg_filter("eq", uid)}, {"name": name})
 
     if email:
-        existing = db.execute(
-            'SELECT id FROM users WHERE email=? AND id != ?',
-            (email, uid)
-        ).fetchone()
+        matching_users = db.select("users", {"email": pg_filter("eq", email)}, "id")
+        existing = next((row for row in matching_users if str(row.get("id")) != str(uid)), None)
 
         if existing:
             return jsonify({'success': False, 'message': 'Email already in use.'})
@@ -1228,7 +1369,7 @@ def api_update_user():
             if result.get('error') or result.get('msg'):
                 return jsonify({'success': False, 'message': result.get('msg') or result.get('error_description') or 'Unable to update email.'})
 
-        db.execute('UPDATE users SET email=? WHERE id=?', (email, uid))
+        db.update("users", {"id": pg_filter("eq", uid)}, {"email": email})
 
     db.commit()
     return jsonify({'success': True})
@@ -1258,7 +1399,7 @@ def api_change_password():
 
     uid = get_current_user_id()
     db = get_db()
-    user = db.execute('SELECT * FROM users WHERE id=?', (uid,)).fetchone()
+    user = select_user(db, uid)
 
     current_auth = sign_in(user['email'], current_pw) if user else {}
     if not user or not current_auth.get('access_token'):
@@ -1288,10 +1429,7 @@ def api_delete_account():
     db  = get_db()
     uid = get_current_user_id()
 
-    files = db.execute(
-        'SELECT stored_name FROM files WHERE user_id=?',
-        (uid,)
-    ).fetchall()
+    files = db.select("files", {"user_id": pg_filter("eq", uid)}, "stored_name")
 
     try:
         delete_files([f['stored_name'] for f in files])
@@ -1299,9 +1437,9 @@ def api_delete_account():
         return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
 
     # delete from database
-    db.execute('DELETE FROM files WHERE user_id=?', (uid,))
-    db.execute('DELETE FROM folders WHERE user_id=?', (uid,))
-    db.execute('DELETE FROM users WHERE id=?', (uid,))
+    db.delete("files", {"user_id": pg_filter("eq", uid)})
+    db.delete("folders", {"user_id": pg_filter("eq", uid)})
+    db.delete("users", {"id": pg_filter("eq", uid)})
     db.commit()
     admin_delete_user(uid)
 

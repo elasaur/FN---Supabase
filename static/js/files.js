@@ -35,7 +35,7 @@ function renderAllFilesTable() {
   }
   tbody.innerHTML = allFiles.map(f => `
     <tr data-file-id="${f.id}">
-      <td><span class="file-name-cell">${getExtIcon(f.original_name)} <span class="file-name-text" style="font-weight:700;">${escHtml(f.original_name)}</span>${newFileBadge(f.created_at)}${f.ai_sorted?' <span style="font-size:0.65rem;background:var(--lavender2);color:var(--lavender);padding:1px 6px;border-radius:8px;font-weight:800;">AI</span>':''}</span></td>
+      <td><span class="file-name-cell">${getExtIcon(f.original_name)} <span class="file-name-text" style="font-weight:700;">${escHtml(f.original_name)}</span>${newFileBadge(f.created_at)}${f.ai_sorted?' <span style="font-size:0.65rem;background:var(--lavender2);color:var(--lavender);padding:1px 6px;border-radius:8px;font-weight:800;">AI accepted</span>':''}</span></td>
       <td><span style="font-size:0.72rem;background:var(--bg);padding:2px 8px;border-radius:6px;font-weight:700;color:var(--text2);">${getExt(f.original_name).toUpperCase()||'—'}</span></td>
       <td><span class="file-folder-tag" style="background:${f.folder_bg};color:${f.folder_color};">${folderIconHtml(f.folder_emoji, 'file-folder-icon')} ${escHtml(f.folder_name)}</span></td>
       <td style="color:var(--text3);font-size:0.82rem;">${formatSize(f.file_size)}</td>

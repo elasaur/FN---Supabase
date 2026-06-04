@@ -12,7 +12,7 @@ async function loadDashboard() {
   document.getElementById('dashTotalFolders').textContent = data.total_folders;
   document.getElementById('dashTotalFiles').textContent = data.total_files;
   document.getElementById('dashRecentCount').textContent = data.recent_count;
-  document.getElementById('dashAiSorted').textContent = data.ai_sorted;
+  document.getElementById('dashAiAccepted').textContent = `${data.ai_suggestions_accepted} / ${data.total_files}`;
 
   allFolders = folders;
   allFiles = files;
@@ -114,7 +114,7 @@ async function deleteFileDashboard(id) {
 }
 
 function setDashboardLoading() {
-  ['dashTotalFolders', 'dashTotalFiles', 'dashRecentCount', 'dashAiSorted'].forEach(id => {
+  ['dashTotalFolders', 'dashTotalFiles', 'dashRecentCount', 'dashAiAccepted'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<span class="spinner"></span>';
   });

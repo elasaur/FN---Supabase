@@ -108,24 +108,6 @@
   </div>
 </div>
 
-<!-- Folder contents modal -->
-<div class="modal-bg" id="modal-folderFiles" onclick="if(event.target===this)closeModal('folderFiles')">
-  <div class="modal folder-files-modal">
-    <div class="folder-files-modal-head">
-      <div class="modal-title" id="folderFilesTitle"><img class="ui-icon" src="/icons-pack/icons8-folder-50.png" alt=""> Folder Files</div>
-      <span class="folder-files-counter" id="folderFilesCount">0 files</span>
-    </div>
-    <div class="sort-bar folder-files-sort">
-      <span style="font-size:0.78rem;font-weight:800;color:var(--text3);">Sort by:</span>
-      <button class="sort-chip active" onclick="setFolderFilesSort('name',this)">Name</button>
-      <button class="sort-chip" onclick="setFolderFilesSort('date',this)">Date</button>
-      <button class="sort-chip" onclick="setFolderFilesSort('type',this)">Type</button>
-    </div>
-    <div id="folderFilesList" class="folder-files-list-wrap"></div>
-    <button class="btn btn-ghost" onclick="closeModal('folderFiles')" style="width:100%;justify-content:center;">Close</button>
-  </div>
-</div>
-
 <!-- Rename File -->
 <div class="modal-bg" id="modal-renameFile" onclick="if(event.target===this)closeModal('renameFile')">
   <div class="modal" style="max-width:420px;">

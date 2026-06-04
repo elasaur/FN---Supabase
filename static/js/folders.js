@@ -73,6 +73,7 @@ function makeFolderCard(f, minimal) {
   const icon = folderIconHtml(f.emoji, 'folder-emoji');
   const pinDot  = f.pinned ? '<div class="pinned-dot"></div>' : '';
   const count   = f.file_count || 0;
+  const notePreview = renderFolderNotePreview(f);
   const actions = `
     <div class="folder-top-right" onclick="event.stopPropagation()">
       <div class="folder-badge">${count}</div>
@@ -97,7 +98,33 @@ function makeFolderCard(f, minimal) {
       ${icon}
       <div class="folder-name">${escHtml(f.name)}</div>
       <div class="folder-count">${count} file${count!==1?'s':''}</div>
+      ${notePreview}
     </div>`;
+}
+
+function renderFolderNotePreview(folder) {
+  const body = String(folder.note_body || '').trim();
+  if (!body) return '<div class="fc-note-preview fc-note-empty">No note yet.</div>';
+
+  const lines = body
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  const preview = lines.map(line => {
+    const done = /^\[[xX]\]\s*/.test(line);
+    const pending = /^(\[\]|\[ \])\s*/.test(line);
+    const text = stripFolderNoteMarkdown(line.replace(/^(\[[xX]\]|\[\]|\[ \])\s*/, ''));
+    const cls = done ? 'done' : pending ? 'check' : '';
+    return `<span class="${cls}">${escHtml(text)}</span>`;
+  }).join(' ');
+
+  return `<div class="fc-note-preview">${preview}</div>`;
+}
+
+function stripFolderNoteMarkdown(value) {
+  return String(value || '').replace(/\*\*([^*]+(?:\*(?!\*)[^*]*)*)\*\*/g, '$1');
 }
 
 function showFloatingFolderMenu(e, button) {
@@ -196,10 +223,19 @@ async function deleteFolder(id) {
 }
 
 async function openFolderFiles(folderId, folderName, emoji) {
+  const folder = getCachedFolder(folderId) || { id: folderId, name: folderName, emoji, note_body: '' };
   currentFolderFilesContext = { id: folderId, name: folderName, emoji };
-  document.getElementById('folderFilesTitle').innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(folderName)}`;
+  const title = document.getElementById('folderFilesTitle');
+  if (title) title.innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(folderName)}`;
+  const subtitle = document.getElementById('folderDetailSubtitle');
+  if (subtitle) subtitle.textContent = 'Files and folder note.';
+  const detailPage = document.getElementById('page-folder-detail');
+  if (detailPage) detailPage.style.setProperty('--folder-color', folder.color || COLOR_OPTIONS[0].val);
+  navigate('folder-detail');
+  const topbar = document.getElementById('topbarTitle');
+  if (topbar) topbar.textContent = 'All Folders';
+  renderFolderNoteTab(folder);
   if (allFilesLoaded) {
-    openModal('folderFiles');
     renderCurrentFolderFilesFromCache();
     return;
   }
@@ -207,9 +243,89 @@ async function openFolderFiles(folderId, folderName, emoji) {
   if (countEl) countEl.textContent = 'Loading...';
   const listEl = document.getElementById('folderFilesList');
   listEl.innerHTML = '<div class="folder-files-loading"><div class="spinner"></div></div>';
-  openModal('folderFiles');
   await loadAllFiles();
   renderCurrentFolderFilesFromCache();
+}
+
+function setFolderFilesTab(tab, el) {
+  document.querySelectorAll('.folder-files-tab').forEach(button => {
+    button.classList.toggle('active', button === el || button.dataset.tab === tab);
+  });
+  document.querySelectorAll('.folder-files-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.panel === tab);
+  });
+}
+
+function renderFolderNoteTab(folder) {
+  folderNoteBody = String(folder?.note_body || '');
+  folderNoteDirty = false;
+  const editor = document.getElementById('folderNoteEditor');
+  if (editor) {
+    bindFolderNoteEditor(editor);
+    if (typeof setNoteEditorBody === 'function') {
+      setNoteEditorBody(folderNoteBody, editor);
+    } else {
+      editor.textContent = folderNoteBody;
+    }
+  }
+  const saved = document.getElementById('folderNoteSavedAt');
+  if (saved) {
+    saved.textContent = folder?.note_updated_at ? `Last saved ${timeAgo(folder.note_updated_at)}` : 'Not saved yet';
+  }
+  updateFolderNoteActions();
+}
+
+function bindFolderNoteEditor(editor) {
+  if (editor.dataset.folderNoteBound) return;
+  editor.dataset.folderNoteBound = '1';
+  editor.addEventListener('keydown', handleNoteEditorKeydown);
+  editor.addEventListener('input', () => {
+    folderNoteDirty = true;
+    updateFolderNoteActions();
+  });
+  editor.addEventListener('paste', handleNoteEditorPaste);
+  editor.addEventListener('change', () => {
+    folderNoteDirty = true;
+    updateFolderNoteActions();
+  });
+}
+
+function updateFolderNoteActions() {
+  const save = document.getElementById('folderNoteSaveBtn');
+  const discard = document.getElementById('folderNoteDiscardBtn');
+  if (save) {
+    save.disabled = !folderNoteDirty;
+    save.classList.toggle('is-dirty', folderNoteDirty);
+  }
+  if (discard) discard.disabled = !folderNoteDirty;
+}
+
+async function saveFolderNote(folderId, btn) {
+  const editor = document.getElementById('folderNoteEditor');
+  const body = typeof serializeNoteEditorBody === 'function'
+    ? serializeNoteEditorBody(editor)
+    : String(editor?.textContent || '');
+  let data = null;
+  await withButtonLoading(btn, 'Saving...', async () => {
+    data = await apiPut(`/api/folders/${folderId}/note`, { note_body: body });
+  });
+  if (!data?.success) {
+    showToast(data?.message || 'Could not save folder note.', 'error');
+    return;
+  }
+  updateCachedFolder(folderId, {
+    note_body: data.note_body,
+    note_updated_at: data.note_updated_at,
+  });
+  folderNoteBody = data.note_body || '';
+  folderNoteDirty = false;
+  renderFolderNoteTab(getCachedFolder(folderId));
+  showToast('Folder note saved.', 'success');
+}
+
+function discardFolderNote() {
+  if (!currentFolderFilesContext) return;
+  renderFolderNoteTab(getCachedFolder(currentFolderFilesContext.id));
 }
 
 function openEditModalFromEncoded(id, name, emoji, color, bg) {
@@ -223,7 +339,7 @@ function openEditModalFromEncoded(id, name, emoji, color, bg) {
 }
 
 function renderCurrentFolderFilesFromCache() {
-  if (!currentFolderFilesContext || !document.getElementById('modal-folderFiles')?.classList.contains('open')) return;
+  if (!currentFolderFilesContext || !document.getElementById('page-folder-detail')?.classList.contains('active')) return;
   const listEl = document.getElementById('folderFilesList');
   const countEl = document.getElementById('folderFilesCount');
   if (!listEl) return;
@@ -331,6 +447,9 @@ async function submitCreateFolder() {
 
 // AFTER
 function openEditModal(id, name, emoji, color, bg) {
+  const selectedColor = COLOR_OPTIONS.find(c => c.val === color) || COLOR_OPTIONS[0];
+  rfModalColor = selectedColor;
+
   document.getElementById('rf-id').value = id;
   document.getElementById('rf-name').value = name;
   document.getElementById('rf-emoji').value = isIconUrl(emoji) ? '📁' : emoji;
@@ -338,8 +457,8 @@ function openEditModal(id, name, emoji, color, bg) {
   openModal('editFolder'); // ← open first
 
   // Now the container exists in the DOM
-  rfModalColor = COLOR_OPTIONS.find(c => c.val === color) || COLOR_OPTIONS[0];
-  buildColorPicker('rf-colorPicker', r => { rfModalColor = r; }, rfModalColor);
+  const onColorChange = r => { rfModalColor = r; };
+  buildColorPicker('rf-colorPicker', onColorChange, selectedColor);
 }
 
 function buildColorPicker(containerId, onChange, selected) {
