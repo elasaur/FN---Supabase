@@ -12,12 +12,12 @@
     window.location.replace((target === 'reset' ? '/reset_password.html' : '/change_password.html') + window.location.hash);
   })();
 </script>
-<title>File Nest · Dashboard</title>
+<title>File Nest</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪺</text></svg>">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/reusable_style.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">

@@ -4,7 +4,14 @@ tr.temp-highlight td {
   transition: background 0.5s;
 }
 /* ── FILE TABLE ── */
-.files-table-card { padding: 0 0 8px; overflow: visible; }
+.files-table-card { padding: 0; overflow: hidden; }
+.files-table-scroll {
+  --file-table-header-height: 44px;
+  --file-table-row-height: 56px;
+  max-height: calc(var(--file-table-header-height) + (var(--file-table-row-height) * 10));
+  overflow-y: auto;
+  overflow-x: auto;
+}
 .file-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .file-table th:nth-child(1), .file-table td:nth-child(1) { width: 34%; }
 .file-table th:nth-child(2), .file-table td:nth-child(2) { width: 10%; }
@@ -16,8 +23,13 @@ tr.temp-highlight td {
   text-align: left; font-size: 0.72rem; font-weight: 800;
   text-transform: uppercase; letter-spacing: .08em;
   color: var(--text3); padding: 12px 14px;
+  position: sticky; top: 0; z-index: 2;
+  height: var(--file-table-header-height);
+  background: var(--surface);
+  box-shadow: 0 1px 0 var(--border);
 }
-.file-table td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 0.85rem; }
+.file-table tbody tr { height: var(--file-table-row-height); }
+.file-table td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 0.85rem; height: var(--file-table-row-height); box-sizing: border-box; }
 .file-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-table td:first-child { white-space: normal; }
 .file-table tr:hover td { background: var(--bg); }

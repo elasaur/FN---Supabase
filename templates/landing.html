@@ -12,7 +12,8 @@
       window.location.replace((target === 'change' ? '/change_password.html' : '/reset_password.html') + window.location.hash);
     })();
   </script>
-  <title>File Nest - Smart File Sorter</title>
+  <title>File Nest</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
@@ -282,7 +283,7 @@
       <div>
         <div class="info-kicker">About</div>
         <h2 class="info-title">A folder-first workspace with AI suggestions.</h2>
-        <p class="info-copy">File Nest keeps uploads, folder notes, search, and statistics in one practical dashboard. AI helps recommend where files could go, but the user confirms the final destination.</p>
+        <p class="info-copy">File Nest keeps uploads, folder notes, search, and statistics in one practical Home view. AI helps recommend where files could go, but the user confirms the final destination.</p>
       </div>
       <span class="info-pill"><img src="/icons-pack/icons8-about-48.png" alt="">System overview</span>
     </div>
@@ -385,7 +386,7 @@
         <span class="step-number">5</span>
         <span class="step-icon"><img src="/icons-pack/icons8-bar-chart-50.png" alt=""></span>
         <h3>Track activity</h3>
-        <p>Use the dashboard and statistics to monitor file activity.</p>
+        <p>Use Home and Statistics to monitor file activity.</p>
       </article>
     </div>
   </section>

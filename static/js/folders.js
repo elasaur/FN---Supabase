@@ -31,9 +31,34 @@ function hideDeleteFolderModal(modalId) {
 
 // ── Folders ───────────────────────────────────────────────────────────────────
 async function loadFolders() {
-  const res = await fetch('/api/folders');
-  allFolders = await res.json();
-  renderFolderGrid();
+  setFoldersLoading();
+  try {
+    const res = await fetch('/api/folders');
+    if (!res.ok) throw new Error('Could not load folders.');
+    allFolders = await res.json();
+    renderFolderGrid();
+  } catch (err) {
+    renderFoldersLoadError(err);
+    showToast(err.message || 'Could not load folders.', 'error');
+  }
+}
+
+function setFoldersLoading() {
+  const el = document.getElementById('allFoldersList');
+  if (!el) return;
+  el.innerHTML = '<div class="section-loading" role="status" aria-live="polite"><div class="spinner" aria-label="Loading folders"></div></div>';
+}
+
+function renderFoldersLoadError(err) {
+  const el = document.getElementById('allFoldersList');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="folders-load-error">
+      <div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-danger-48.png')}" alt=""></div>
+      <div class="es-text">${escHtml(err.message || 'Could not load folders.')}</div>
+      <button class="btn btn-ghost" onclick="loadFolders()">Try again</button>
+    </div>
+  `;
 }
 
 function setFolderSort(mode, el) {
