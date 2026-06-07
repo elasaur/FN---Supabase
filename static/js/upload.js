@@ -307,10 +307,13 @@ function renderUploadFileList() {
       <div class="fi-icon">${getExtIcon(f.original_name)}</div>
       <div class="fi-info">
         <div class="fi-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
-        <div class="fi-meta">${getExt(f.original_name).toUpperCase()} · ${timeAgo(f.created_at)}</div>
+        <div class="fi-meta">
+          <span class="fi-folder" style="background:${f.folder_bg};color:${f.folder_color};">${folderIconHtml(f.folder_emoji, 'file-folder-icon')} ${escHtml(f.folder_name)}</span>
+          <span>${getExt(f.original_name).toUpperCase() || 'FILE'}</span>
+          <span>${formatSize(f.file_size)}</span>
+        </div>
       </div>
-      <span class="fi-folder" style="background:${f.folder_bg};color:${f.folder_color};">${folderIconHtml(f.folder_emoji, 'file-folder-icon')} ${escHtml(f.folder_name)}</span>
-      <span class="fi-size">${formatSize(f.file_size)}</span>
+      <span class="fi-date">${timeAgo(f.created_at)}</span>
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileUpload(${f.id})`)}
     </div>`).join('');
 }

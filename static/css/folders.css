@@ -279,12 +279,24 @@
   align-items: center;
   justify-content: center;
 }
+#page-folder-detail {
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  box-sizing: border-box;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+}
+#page-folder-detail.active {
+  display: flex;
+}
 .folder-detail-head {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 24px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  flex: 0 0 auto;
 }
 .folder-detail-title-wrap { min-width: 0; }
 .folder-detail-header-row {
@@ -295,10 +307,13 @@
   gap: 16px;
 }
 .folder-detail-title-wrap .section-title {
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 .folder-detail-back {
-  margin-bottom: 24px;
+  margin-bottom: 14px;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: auto;
 }
 .folder-detail-shell {
   display: grid;
@@ -313,6 +328,9 @@
   border-radius: 0;
   box-shadow: none;
   padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 .folder-detail-files,
 .folder-detail-note { min-width: 0; }
@@ -322,12 +340,13 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 .folder-detail-note {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 172px);
-  min-height: 500px;
+  height: auto;
+  min-height: 0;
   overflow: hidden;
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -454,9 +473,11 @@
 .folder-files-list-wrap {
   --folder-file-row-height: 84px;
   --folder-file-row-gap: 10px;
-  max-height: calc((var(--folder-file-row-height) * 10) + (var(--folder-file-row-gap) * 9) + 6px);
+  flex: 1 1 auto;
   min-height: 0;
+  max-height: none;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 2px 4px 4px 0;
 }
 
@@ -500,7 +521,7 @@
 }
 .folder-note-editor {
   flex: 1;
-  min-height: 430px;
+  min-height: 0;
   max-height: none;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
@@ -626,8 +647,15 @@
 }
 
 @media (max-width: 980px) {
+  #page-folder-detail {
+    height: calc(100vh - 64px);
+    min-height: 0;
+    overflow: hidden;
+  }
   .folder-detail-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, .85fr) minmax(300px, 1.15fr);
+    overflow: hidden;
   }
   .folder-detail-head {
     align-items: stretch;
@@ -639,12 +667,12 @@
     margin-left: auto;
   }
   .folder-files-list-wrap {
-    max-height: calc((var(--folder-file-row-height) * 10) + (var(--folder-file-row-gap) * 9) + 6px);
+    max-height: none;
     min-height: 0;
   }
   .folder-detail-note {
     height: auto;
-    min-height: 430px;
+    min-height: 0;
   }
   .note-footer {
     align-items: stretch;

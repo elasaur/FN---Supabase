@@ -381,16 +381,26 @@ function renderCurrentFolderFilesFromCache() {
   }
   listEl.innerHTML = `
       <div class="folder-files-list">
-        ${files.map(f => `
+        ${files.map(f => {
+          const folderName = f.folder_name || currentFolderFilesContext.name;
+          const folderEmoji = f.folder_emoji || currentFolderFilesContext.emoji;
+          const folderBg = f.folder_bg || 'var(--accent3)';
+          const folderColor = f.folder_color || 'var(--accent)';
+          return `
     <div class="folder-file-row">
       <div class="folder-file-icon">${getExtIcon(f.original_name)}</div>
       <div class="folder-file-main">
         <div class="folder-file-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
-        <div class="fi-meta">${getExt(f.original_name).toUpperCase()} · ${formatSize(f.file_size)} · ${timeAgo(f.created_at)}</div>
+        <div class="fi-meta">
+          <span class="fi-folder" style="background:${folderBg};color:${folderColor};">${folderIconHtml(folderEmoji, 'file-folder-icon')} ${escHtml(folderName)}</span>
+          <span>${getExt(f.original_name).toUpperCase() || 'FILE'}</span>
+          <span>${formatSize(f.file_size)}</span>
+        </div>
       </div>
-      <span class="folder-file-size">${formatSize(f.file_size)}</span>
+      <span class="folder-file-date">${timeAgo(f.created_at)}</span>
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileFromCurrentFolder(${f.id})`)}
-    </div>`).join('')}
+    </div>`;
+        }).join('')}
       </div>
     `;
 }
