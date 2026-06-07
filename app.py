@@ -44,7 +44,7 @@ from supabase_auth import (
 
 from storage import make_storage_path, upload_file, create_signed_url, delete_files
 
-# ── App Configuration ──────────────────────────────────────────────────────────
+# Application setup: Flask, upload limits, session lifetime, and rate limiting.
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'filenest-secret-key-change-in-production')
 
@@ -227,7 +227,7 @@ def login_required(f):
         if not session_is_active():
             return auth_failure('Session expired. Please log in again.')
 
-        # Update activity (sliding session)
+        # Session management: refresh activity for the sliding timeout window.
         session['last_activity'] = now_utc().isoformat()
 
         return f(*args, **kwargs)
@@ -248,6 +248,7 @@ def pg_filter(operator, value):
     return f"{operator}.{raw}"
 
 
+# Supabase row helpers: keep common PostgREST lookups and inserts in one place.
 def first(rows):
     return rows[0] if rows else None
 
@@ -307,6 +308,7 @@ def create_file_record(db, user_id, folder_id, original_name, stored_name, exten
     return first(rows)
 
 
+# Folder/file listing helpers: build dashboard-ready rows from Supabase tables.
 def get_folder_file_counts(db, user_id):
     counts = {}
     for item in db.select("files", {"user_id": pg_filter("eq", user_id)}, "folder_id"):
@@ -378,6 +380,7 @@ def stats_chart_rows(db, user_id):
     return rows
 
 
+# AI analysis request state: token files let newer requests cancel older work.
 def get_file_analyzer():
     from nlp_analyzer import analyze_file
     return analyze_file
@@ -440,6 +443,7 @@ def read_analyze_request_token(path):
         return None
 
 
+# Login lockout persistence: hash email keys before writing attempt state.
 def normalize_login_email(email):
     return str(email or '').strip().lower()
 
@@ -545,7 +549,7 @@ def clear_failed_logins(email):
         save_login_attempts(attempts)
 
 
-#login
+# Authentication and public pages: login, signup, logout, and static pages.
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit(
     "5 per 5 minutes",
@@ -623,7 +627,6 @@ def features():
 def instructions():
     return render_template('instructions.html')
 
-#signup
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
@@ -655,7 +658,7 @@ def signup():
     db.insert('users', {'id': auth_user['id'], 'name': name, 'email': auth_user.get('email') or email})
     db.commit()
 
-    # auto login when Supabase returns a session immediately
+    # Signup flow: auto-login when Supabase returns a session immediately.
     if auth.get('access_token'):
         session['user_id'] = auth_user['id']
         session['access_token'] = auth['access_token']
@@ -663,7 +666,7 @@ def signup():
         session['last_activity'] = now_utc().isoformat()
         session.permanent = True
 
-    # create default folder
+    # Signup flow: each new account starts with one default folder.
     create_folder_record(db, auth_user['id'], 'Uncategorized', '📂', '#b09e94', '#f7f4f0', True, False)
     db.commit()
 
@@ -776,7 +779,7 @@ def perform_reset():
 
 
 
-# ── Main App Routes ────────────────────────────────────────────────────────────
+# Authenticated dashboard route.
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -788,7 +791,7 @@ def dashboard():
     return render_template('app.html', user=user)
 
 
-# ── API: Dashboard Stats ───────────────────────────────────────────────────────
+# Dashboard stats API: cards and AI sorting summary.
 @app.route('/api/stats')
 @login_required
 def api_stats():
@@ -819,7 +822,7 @@ def api_stats():
     })
 
 
-# ── API: Folders ───────────────────────────────────────────────────────────────
+# Folder API: list, create, update, notes, and deletion.
 @app.route('/api/folders', methods=['GET'])
 @login_required
 def api_get_folders():
@@ -975,7 +978,7 @@ def api_delete_folder(folder_id):
     return jsonify({'success': True})
 
 
-# ── API: Files ─────────────────────────────────────────────────────────────────
+# File API: list, delete, move, and rename file metadata.
 @app.route('/api/files', methods=['GET'])
 @limiter.limit("120 per minute")
 @login_required
@@ -1027,7 +1030,6 @@ def api_move_file(file_id):
     return jsonify({'success': True})
 
 
-# ── API: Analyze ───────────────────────────────────────────────────────────────
 @app.route('/api/files/<int:file_id>/rename', methods=['PUT'])
 @login_required
 def api_rename_file(file_id):
@@ -1055,13 +1057,14 @@ def api_rename_file(file_id):
     return jsonify({'success': True, 'name': new_name})
 
 
+# AI analysis API: extract file text and return ranked folder suggestions.
 @app.route('/api/analyze', methods=['POST'])
 @login_required
 @limiter.limit("3 per minute")
 @limiter.limit("1 per 5 seconds")
 def api_analyze():
 
-    # keep session alive during AI processing
+    # AI analysis flow: keep the session active during longer Gemini work.
     session['last_activity'] = now_utc().isoformat()
     uid = get_current_user_id()
     analyze_token = begin_analyze_request(uid)
@@ -1113,7 +1116,7 @@ def api_analyze():
     return jsonify({'success': True, 'analysis': result})
 
 
-# ── API: Upload (direct, no analysis) ─────────────────────────────────────────
+# Direct upload API: save a user-selected file to a known folder.
 @app.route('/api/upload', methods=['POST'])
 @login_required
 @limiter.limit("5 per minute")
@@ -1154,7 +1157,7 @@ def api_upload():
     return jsonify({'success': True, 'file': dict(f)})
 
 
-# ── API: Confirm Upload (AI flow) ──────────────────────────────────────────────
+# Confirm upload API: persist the AI-recommended destination.
 @app.route('/api/confirm-upload', methods=['POST'])
 @login_required
 @limiter.limit("10 per minute")
@@ -1227,7 +1230,7 @@ def api_confirm_upload():
     })
 
 
-# ── API: Open File ─────────────────────────────────────────────────────────────
+# Storage access API: create short-lived links for preview and download.
 @app.route('/api/files/<int:file_id>/open', methods=['POST'])
 @login_required
 def api_open_file(file_id):
@@ -1243,7 +1246,6 @@ def api_open_file(file_id):
         return jsonify({'success': False, 'message': str(e)})
 
 
-# ── API: Download File ─────────────────────────────────────────────────────────
 @app.route('/api/files/<int:file_id>/download')
 @login_required
 def api_download_file(file_id):
@@ -1258,7 +1260,7 @@ def api_download_file(file_id):
         return jsonify({'success': False, 'message': str(e)})
 
 
-# ── API: Statistics Chart ──────────────────────────────────────────────────────
+# Statistics chart API: folder distribution for the stats view.
 @app.route('/api/stats/chart')
 @login_required
 def api_stats_chart():
@@ -1267,7 +1269,7 @@ def api_stats_chart():
     return jsonify(stats_chart_rows(db, uid))
 
 
-# ── API: Delete All Files ──────────────────────────────────────────────────────
+# Bulk cleanup APIs: user-triggered file and folder deletion.
 @app.route('/api/files/delete-all', methods=['DELETE'])
 @login_required
 def api_delete_all_files():
@@ -1286,7 +1288,6 @@ def api_delete_all_files():
     return jsonify({'success': True})
 
 
-# ── API: Delete All Folders ────────────────────────────────────────────────────
 @app.route('/api/folders/delete-all', methods=['DELETE'])
 @login_required
 def api_delete_all_folders():
@@ -1320,7 +1321,7 @@ def api_delete_all_folders():
     db.commit()
     return jsonify({'success': True, 'deleted_files': len(files_to_delete)})
 
-# API: User Settings
+# User settings API: profile, credentials, and account deletion.
 @app.route('/api/user', methods=['GET'])
 @login_required
 def api_get_user():
@@ -1436,7 +1437,7 @@ def api_delete_account():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
 
-    # delete from database
+    # Account deletion: remove metadata after Storage deletion succeeds.
     db.delete("files", {"user_id": pg_filter("eq", uid)})
     db.delete("folders", {"user_id": pg_filter("eq", uid)})
     db.delete("users", {"id": pg_filter("eq", uid)})
@@ -1449,6 +1450,7 @@ def api_delete_account():
 
 
 if __name__ == '__main__':
+    # Local development entrypoint.
     with app.app_context():
         init_db()
     app.run(debug=True, port=5000)

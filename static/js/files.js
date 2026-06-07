@@ -1,4 +1,4 @@
-// ── All Files ──────────────────────────────────────────────────────────────────
+// All files feature: list, sort, rename, move, download, and delete files.
 async function loadAllFiles(search) {
   let url = `/api/files?sort=${allFilesSortMode}`;
   if (search) url += `&search=${encodeURIComponent(search)}`;

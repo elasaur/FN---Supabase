@@ -1,11 +1,11 @@
-// ── Prediction Card ────────────────────────────────────────────────────────────
+// Prediction card feature: render AI folder suggestions and manual choices.
 function showPredictionCard(file, analysis) {
   document.getElementById('predFileIcon').innerHTML = getExtIcon(file.name);
   document.getElementById('predFileName').textContent = file.name;
   document.getElementById('predFileMeta').textContent =
     `${getExt(file.name).toUpperCase()} · ${formatSize(file.size)} · Uploaded just now`;
 
-  // Keyword chips
+  // Keyword chips: show extracted terms used by the recommendation.
   const kwRow   = document.getElementById('keywordsRow');
   kwRow.innerHTML = `
     <span class="kw-label">
@@ -37,7 +37,7 @@ function showPredictionCard(file, analysis) {
   const confWrap = document.getElementById('confBarWrap');
   if (confWrap) confWrap.style.display = 'none';
 
-  // Render recommendation cards
+  // Recommendation cards: rank choices and keep the selected folder in state.
   const recList = document.getElementById('recList');
   recList.innerHTML = '';
 
@@ -144,7 +144,7 @@ function toggleAllFolders() {
   else                               { wrap.style.display = 'none';  btn.textContent = 'Show all folders ▾'; }
 }
 
-// ── New Folder Panel (inline, inside prediction card) ─────────────────────────
+// New folder panel: create a custom destination inside the prediction card.
 function toggleNewFolder() {
   const panel  = document.getElementById('newFolderPanel');
   const isOpen = panel.classList.contains('show');

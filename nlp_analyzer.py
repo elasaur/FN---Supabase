@@ -29,7 +29,7 @@ from google import genai
 from google.genai import types
 
 
-# ── Gemini Setup ───────────────────────────────────────────────────────────────
+# Gemini setup: load the API key lazily and create clients only when needed.
 
 def _load_api_key() -> str:
     key = os.environ.get("GEMINI_API_KEY")
@@ -70,7 +70,7 @@ def _runtime_env_flag(name: str) -> bool:
     return _runtime_env_value(name).strip().lower() in {"1", "true", "yes", "on"}
 
 
-# ── Extension → Category Map ───────────────────────────────────────────────────
+# Extension category map: non-text files can be sorted without an AI call.
 
 EXT_CATEGORY_MAP = {
     "jpg":  ("Photos",   "📸", "#9b87d4", "#ede8f8"),
@@ -123,7 +123,7 @@ def _bg_for_emoji(emoji: str) -> str:
     return _EMOJI_COLORS.get(emoji, ("#7ec8e3", "#e0f4fb"))[1]
 
 
-# ── Text Extraction ────────────────────────────────────────────────────────────
+# Text extraction: normalize supported document formats into plain text.
 
 def detect_and_extract(path: str, filename: str) -> Tuple[str, str]:
     """Detect file type and extract text. Returns (file_type, raw_text)."""
@@ -220,7 +220,7 @@ def _extract_txt(path: str) -> str:
         return ""
 
 
-# ── Text Utilities ─────────────────────────────────────────────────────────────
+# Text utilities: clean extraction output before keywording or prompting.
 
 def normalize_text(text: str) -> str:
     if not text:
@@ -249,7 +249,7 @@ def extract_keywords(text: str, max_keywords: int = 8) -> List[str]:
     return [w for w, _ in ranked[:max_keywords]]
 
 
-# ── JSON Repair ────────────────────────────────────────────────────────────────
+# JSON repair: salvage valid suggestions from a partial Gemini response.
 
 def _repair_json(raw: str) -> str:
     """Salvage valid JSON from a truncated or fence-wrapped Gemini response."""
@@ -284,7 +284,7 @@ def _repair_json(raw: str) -> str:
     raise ValueError("Could not repair malformed JSON from Gemini.")
 
 
-# ── Gemini Suggestions ─────────────────────────────────────────────────────────
+# Gemini suggestions: ask for ranked folder matches, then validate the result.
 
 def ask_gemini_suggestions(
     filename: str,
@@ -426,7 +426,7 @@ Return ONLY a JSON array with exactly 3 objects. No extra text."""
         return suggestions
 
 
-# ── TextBlob Fallback ──────────────────────────────────────────────────────────
+# TextBlob fallback: produce deterministic suggestions when Gemini is disabled.
 
 _TB_STOPWORDS = {
     "the", "and", "for", "are", "was", "with", "this", "that", "from",
@@ -599,7 +599,7 @@ def _emoji_for_phrase(name: str) -> str:
     return "📁"
 
 
-# ── Main Analyzer ──────────────────────────────────────────────────────────────
+# Main analyzer: combine extraction, AI/fallback suggestions, and metadata.
 
 def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
     """

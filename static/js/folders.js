@@ -1,4 +1,4 @@
-// ── DELETE FOLDER MODAL STATE ─────────────────────────────────
+// Folder deletion modal state.
 let folderToDeleteId = null;
 
 function showDeleteFolderModal(id, name) {
@@ -29,7 +29,7 @@ function hideDeleteFolderModal(modalId) {
   if (modal) modal.style.display = 'none';
 }
 
-// ── Folders ───────────────────────────────────────────────────────────────────
+// Folders feature: list, sort, pin, open, edit, note, and delete folders.
 async function loadFolders() {
   setFoldersLoading();
   try {
@@ -183,7 +183,7 @@ function showFloatingFolderMenu(e, button) {
   const color = data.folderColor || COLOR_OPTIONS[0].val;
   const bg = data.folderBg || COLOR_OPTIONS[0].bg;
   closeFolderMenus();
-  // Create or select the floating menu
+  // Floating action menu for edit, pin, and delete commands.
   let menu = document.getElementById('floating-folder-menu');
   if (!menu) {
     menu = document.createElement('div');
@@ -198,7 +198,7 @@ function showFloatingFolderMenu(e, button) {
   `;
 
   menu.style.width = '168px';
-  // Position menu near button
+  // Keep the menu anchored to the clicked options button.
   const rect = button.getBoundingClientRect();
   menu.style.position = 'absolute';
   menu.style.left = (rect.left + window.scrollX - menu.offsetWidth + rect.width) + 'px';
@@ -212,7 +212,7 @@ function closeFolderMenus() {
   if (menu) menu.remove();
 }
 
-// Only close menus if click is outside any menu or button
+// Close folder menus when the user clicks elsewhere.
 document.addEventListener('click', function(e) {
   const menu = document.getElementById('floating-folder-menu');
   if (menu && !menu.contains(e.target)) {
@@ -461,7 +461,7 @@ async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
   else showToast(data.message, 'error');
 }
 
-// ── Create Folder Modal ────────────────────────────────────────────────────────
+// Folder modal feature: create and edit folder names, icons, and colors.
 
 function openCreateFolderModal() {
   document.getElementById('cf-name').value = '';
@@ -517,7 +517,6 @@ async function submitCreateFolder() {
   }
 }
 
-// AFTER
 function openEditModal(id, name, emoji, color, bg) {
   const selectedColor = COLOR_OPTIONS.find(c => c.val === color) || COLOR_OPTIONS[0];
   rfModalColor = selectedColor;
@@ -526,9 +525,9 @@ function openEditModal(id, name, emoji, color, bg) {
   document.getElementById('rf-name').value = name;
   document.getElementById('rf-emoji').value = isIconUrl(emoji) ? '📁' : emoji;
 
-  openModal('editFolder'); // ← open first
+  openModal('editFolder');
 
-  // Now the container exists in the DOM
+  // Build color choices after the modal DOM is visible.
   const onColorChange = r => { rfModalColor = r; };
   buildColorPicker('rf-colorPicker', onColorChange, selectedColor);
 }

@@ -1,115 +1,4 @@
-// // ── Settings ───────────────────────────────────────────────────────────────────
-// async function saveName() {
-//   const v = document.getElementById('editNameInput').value.trim();
-//   if (!v) return;
-//   const res  = await fetch('/api/user', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name:v }) });
-//   const data = await res.json();
-//   if (data.success) {
-//     document.getElementById('userName').textContent     = v;
-//     document.getElementById('userAvatar').textContent   = v[0].toUpperCase();
-//     document.getElementById('greetName').textContent    = v;
-//     document.getElementById('settingsName').textContent = v;
-//     closeModal('editName'); showToast('✅ Name updated!', 'success');
-//   }
-// }
-
-// async function saveEmail() {
-//   const v = document.getElementById('editEmailInput').value.trim();
-//   if (!v) return;
-//   const res  = await fetch('/api/user', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email:v }) });
-//   const data = await res.json();
-//   if (data.success) {
-//     document.getElementById('userEmail').textContent     = v;
-//     document.getElementById('settingsEmail').textContent = v;
-//     closeModal('editEmail'); showToast('✅ Email updated!', 'success');
-//   }
-// }
-
-// async function savePassword() {
-//   const current = document.getElementById('editPasswordCurrent').value.trim();
-//   const newPw   = document.getElementById('editPasswordNew').value.trim();
-//   const confirm = document.getElementById('editPasswordConfirm').value.trim();
-
-//   if (!current || !newPw || !confirm) {
-//     showToast('Please fill in all fields.', 'warn');
-//     return;
-//   }
-
-//   const res  = await fetch('/api/user/password', {
-//     method: 'PUT',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({
-//       current_password: current,
-//       new_password:     newPw,
-//       confirm_password: confirm,
-//     }),
-//   });
-//   const data = await res.json();
-
-//   if (data.success) {
-//     document.getElementById('editPasswordCurrent').value = '';
-//     document.getElementById('editPasswordNew').value     = '';
-//     document.getElementById('editPasswordConfirm').value = '';
-//     closeModal('editPassword');
-//     showToast('🔒 Password updated!', 'success');
-//   } else {
-//     showToast(data.message, 'error');
-//   }
-// }
-
-// async function loadMemberSince() {
-//   const res  = await fetch('/api/user');
-//   const data = await res.json();
-//   const el   = document.getElementById('memberSince');
-// }
-
-// async function deleteAllFiles() {
-//   openModal('deleteAllFiles');
-// }
- 
-// async function confirmDeleteAllFiles() {
-//   closeModal('deleteAllFiles');
-//   const res  = await fetch('/api/files/delete-all', { method: 'DELETE' });
-//   const data = await res.json();
-//   if (data.success) {
-//     showToast('🗑️ All files deleted.', 'warn');
-//     if (typeof loadFiles === 'function') loadFiles();
-//     if (typeof loadStats === 'function') loadStats();
-//   } else {
-//     showToast('❌ ' + (data.message || 'Something went wrong.'), 'error');
-//   }
-// }
- 
-// async function deleteAllFolders() {
-//   openModal('deleteAllFolders');
-// }
- 
-// async function confirmDeleteAllFolders() {
-//   closeModal('deleteAllFolders');
-//   const res  = await fetch('/api/folders/delete-all', { method: 'DELETE' });
-//   const data = await res.json();
-//   if (data.success) {
-//     showToast('All folders deleted. Files inside those folders were deleted.', 'warn');
-//     if (typeof loadFolders === 'function') loadFolders();
-//     if (typeof loadStats   === 'function') loadStats();
-//   } else {
-//     showToast('❌ ' + (data.message || 'Something went wrong.'), 'error');
-//   }
-// }
- 
-// async function deleteAccount() {
-//   openModal('deleteAccount');
-// }
- 
-// async function confirmDeleteAccount() {
-//   closeModal('deleteAccount');
-//   const res  = await fetch('/api/user/delete', { method: 'DELETE' });
-//   const data = await res.json();
-//   if (data.success) window.location.href = '/';
-//   else showToast('❌ ' + (data.message || 'Something went wrong.'), 'error');
-// }
-
-// ── Settings ───────────────────────────────────────────────────────────────────
+// Settings feature: profile, credentials, bulk cleanup, and account deletion.
 //
 // All fetch() calls include the Supabase access token in the Authorization
 // header so the @login_required decorator on the Flask side can verify the
@@ -118,7 +7,7 @@
 // TokenStore is defined in index.html / app.html and manages the in-memory
 // + sessionStorage token cache.
 
-// ── Auth Header Helper ────────────────────────────────────────────────────────
+// Auth header helper: attach the current Supabase access token to settings calls.
 function authHeaders(extra = {}) {
   const token = (typeof TokenStore !== 'undefined' && TokenStore.access)
     ? TokenStore.access
@@ -131,7 +20,7 @@ function authHeaders(extra = {}) {
   return headers;
 }
 
-// ── Name ──────────────────────────────────────────────────────────────────────
+// Name settings: update local profile rows and visible UI labels.
 async function saveName() {
   const btn = window.event?.currentTarget;
   const v = document.getElementById('editNameInput').value.trim();
@@ -177,7 +66,7 @@ async function saveName() {
   }
 }
 
-// ── Email ─────────────────────────────────────────────────────────────────────
+// Email settings: request a Supabase Auth email change and mirror profile data.
 async function saveEmail() {
   const btn = window.event?.currentTarget;
   const v = document.getElementById('editEmailInput').value.trim();
@@ -218,7 +107,7 @@ async function saveEmail() {
   }
 }
 
-// ── Password ──────────────────────────────────────────────────────────────────
+// Password settings: validate, update, and refresh the active session tokens.
 function openChangePasswordModal() {
   const currentInput = document.getElementById('editPasswordCurrent');
   const newInput = document.getElementById('editPasswordNew');
@@ -366,7 +255,7 @@ async function savePassword(button) {
   }
 }
 
-// ── Member Since ──────────────────────────────────────────────────────────────
+// Member-since settings: display the profile creation date.
 async function loadMemberSince() {
   const res  = await fetch('/api/user', {
     credentials: 'same-origin',
@@ -384,7 +273,7 @@ async function loadMemberSince() {
   }
 }
 
-// ── Delete All Files ──────────────────────────────────────────────────────────
+// Bulk file deletion: clear all current-user files after confirmation.
 async function deleteAllFiles() {
   openModal('deleteAllFiles');
 }
@@ -412,7 +301,7 @@ async function confirmDeleteAllFiles() {
   if (toastMessage) showToast(toastMessage, toastType);
 }
 
-// ── Delete All Folders ────────────────────────────────────────────────────────
+// Bulk folder deletion: remove non-default folders and their files.
 async function deleteAllFolders() {
   openModal('deleteAllFolders');
 }
@@ -440,7 +329,7 @@ async function confirmDeleteAllFolders() {
   if (toastMessage) showToast(toastMessage, toastType);
 }
 
-// ── Delete Account ────────────────────────────────────────────────────────────
+// Account deletion: remove Storage, metadata, Auth user, and local tokens.
 async function deleteAccount() {
   openModal('deleteAccount');
 }
@@ -454,7 +343,7 @@ async function confirmDeleteAccount() {
   });
   const data = await res.json();
   if (data.success) {
-    // Clear local token cache before redirecting
+    // Clear local token cache before redirecting to the landing page.
     if (typeof TokenStore !== 'undefined') TokenStore.clear();
     window.location.href = '/';
   } else {

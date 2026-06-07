@@ -1,4 +1,4 @@
-// ── Upload / Analyze ───────────────────────────────────────────────────────────
+// Upload analysis feature: validate files, call AI analysis, and show suggestions.
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1024 * 1024);
 let activeAnalyzeRequestId = 0;
@@ -79,8 +79,7 @@ async function handleFiles(files) {
     }
 
     currentAnalysis = data.analysis;
-
-    // ✅ SAFE: now always exists
+    // The backend always returns the engine used for this analysis.
     const engine = data.analysis.ai_status;
 
     const engineLabel = document.getElementById('predEngineLabel');
@@ -156,7 +155,7 @@ function resetUploadZone() {
   document.getElementById('uploadZoneTitle').textContent = 'Drag & drop your file here';
 }
 
-// ── Confirm Upload ─────────────────────────────────────────────────────────────
+// Confirm upload feature: resolve the target folder and persist the file.
 async function confirmUpload() {
   const btn = window.event?.currentTarget;
   if (uploadSaveInFlight) return;
@@ -174,90 +173,87 @@ async function confirmUpload() {
   let toastType = 'success';
 
   try {
-  if (selectedFolderObj) {
-    const name = selectedFolderObj.folder || selectedFolderObj.name;
-
-    // Case 1: picked from folder picker — _db_id already set
-    if (selectedFolderObj._db_id) {
-      folderId = selectedFolderObj._db_id;
-      aiSorted = false;
-    } else {
-      // Case 2: check if folder already exists (case-insensitive)
-      let existing = allFolders.find(f => f.name.toLowerCase() === name.toLowerCase());
-
-      // Case 3: folder doesn't exist yet — create it automatically
-      if (!existing) {
-        const res = await fetch('/api/folders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name,
-            emoji: selectedFolderObj.emoji || '📁',
-            color: selectedFolderObj.color || '#7ec8e3',
-            bg:    selectedFolderObj.bg    || '#e0f4fb',
-          }),
-        });
-        const d = await res.json();
-        if (d.success) {
-          allFolders.push(d.folder);
-          existing = d.folder;
-          toastMessage = `Folder "${name}" created.`;
-        } else {
-          toastType = 'error';
-          toastMessage = d.message || 'Could not create folder.';
-          return;
+    if (selectedFolderObj) {
+      const name = selectedFolderObj.folder || selectedFolderObj.name;
+      // Existing folder selected from the picker.
+      if (selectedFolderObj._db_id) {
+        folderId = selectedFolderObj._db_id;
+        aiSorted = false;
+      } else {
+        // AI suggested a folder name; reuse an existing match when possible.
+        let existing = allFolders.find(f => f.name.toLowerCase() === name.toLowerCase());
+        // Create the AI-suggested folder when no existing folder matches.
+        if (!existing) {
+          const res = await fetch('/api/folders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name,
+              emoji: selectedFolderObj.emoji || '📁',
+              color: selectedFolderObj.color || '#7ec8e3',
+              bg:    selectedFolderObj.bg    || '#e0f4fb',
+            }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            allFolders.push(d.folder);
+            existing = d.folder;
+            toastMessage = `Folder "${name}" created.`;
+          } else {
+            toastType = 'error';
+            toastMessage = d.message || 'Could not create folder.';
+            return;
+          }
         }
+
+        folderId = existing.id;
+        aiSorted = true;
       }
-
-      folderId = existing.id;
-      aiSorted = true;
     }
-  }
+    // Last resort: use the default folder when the user did not pick one.
+    if (!folderId) {
+      const unc = allFolders.find(f => f.is_default);
+      if (unc) {
+        folderId = unc.id;
+        toastType = 'warn';
+        toastMessage = 'No folder selected. Saved to Uncategorized.';
+      } else {
+        toastType = 'warn';
+        toastMessage = 'Please select a folder.';
+        return;
+      }
+    }
 
-  // Last resort — use Uncategorized if nothing selected
-  if (!folderId) {
-    const unc = allFolders.find(f => f.is_default);
-    if (unc) {
-      folderId = unc.id;
-      toastType = 'warn';
-      toastMessage = 'No folder selected. Saved to Uncategorized.';
-    } else {
-      toastType = 'warn';
-      toastMessage = 'Please select a folder.';
+    const formData = new FormData();
+    formData.append('file',      currentFile);
+    formData.append('folder_id', folderId);
+    formData.append('ai_sorted', aiSorted ? '1' : '0');
+    formData.append('keywords',  (currentAnalysis?.keywords || []).join(','));
+
+    const res  = await fetch('/api/upload', { method:'POST', body:formData });
+    const data = await res.json().catch(() => ({
+      success: false,
+      message: res.status === 413
+        ? `File exceeded the maximum upload size of ${MAX_UPLOAD_MB} MB.`
+        : 'Upload failed. Please try again.',
+    }));
+    if (!data.success) {
+      toastType = 'error';
+      toastMessage = data.message;
       return;
     }
-  }
 
-  const formData = new FormData();
-  formData.append('file',      currentFile);
-  formData.append('folder_id', folderId);
-  formData.append('ai_sorted', aiSorted ? '1' : '0');
-  formData.append('keywords',  (currentAnalysis?.keywords || []).join(','));
+    document.getElementById('predictionCard').classList.remove('show');
+    const folderName = selectedFolderObj
+      ? (selectedFolderObj.folder || selectedFolderObj.name)
+      : 'Uncategorized';
+    showToast(`"${data.file?.original_name || 'File'}" saved to ${folderName}.`, 'success');
 
-  const res  = await fetch('/api/upload', { method:'POST', body:formData });
-  const data = await res.json().catch(() => ({
-    success: false,
-    message: res.status === 413
-      ? `File exceeded the maximum upload size of ${MAX_UPLOAD_MB} MB.`
-      : 'Upload failed. Please try again.',
-  }));
-  if (!data.success) {
-    toastType = 'error';
-    toastMessage = data.message;
-    return;
-  }
-
-  document.getElementById('predictionCard').classList.remove('show');
-  const folderName = selectedFolderObj
-    ? (selectedFolderObj.folder || selectedFolderObj.name)
-    : 'Uncategorized';
-  showToast(`"${data.file?.original_name || 'File'}" saved to ${folderName}.`, 'success');
-
-  currentFile = null; currentAnalysis = null; selectedFolderObj = null;
-  document.getElementById('fileInput').value = '';
-  addCachedFile(data.file, folderId);
-  syncCachesSilently();
-  toastMessage = '';
+    currentFile = null; currentAnalysis = null; selectedFolderObj = null;
+    document.getElementById('fileInput').value = '';
+    addCachedFile(data.file, folderId);
+    syncCachesSilently();
+    toastMessage = '';
   } finally {
     uploadSaveInFlight = false;
     resetUploadZone();
@@ -274,7 +270,7 @@ function cancelUpload() {
   showToast('Upload cancelled.', 'warn');
 }
 
-// ── Upload File List ───────────────────────────────────────────────────────────
+// Upload file list feature: render, sort, and delete uploaded files.
 async function loadUploadFileList(sortMode) {
   if (sortMode) uploadSortMode = sortMode;
   const list    = document.getElementById('fileList');
