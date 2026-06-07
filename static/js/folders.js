@@ -252,7 +252,7 @@ function renderDashboardPinnedFoldersFromCache() {
   const pinned = allFolders.filter(f => Number(f.pinned) === 1 || f.pinned === true);
   pinnedEl.innerHTML = pinned.length
     ? pinned.map(f => makeFolderCard(f, true)).join('')
-    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-folder-50.png')}" alt=""></div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
+    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-pin-50.png')}" alt=""></div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
 }
 async function deleteFolder(id) {
   const res  = await fetch(`/api/folders/${id}`, { method:'DELETE' });
@@ -413,7 +413,7 @@ function renderCurrentFolderFilesFromCache() {
 
   if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
   if (!files.length) {
-    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">--</div><div class="es-text">No files in this folder yet.</div></div>`;
+    listEl.innerHTML = `<div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-file-50.png')}" alt=""></div><div class="es-text">No files in this folder yet.</div></div>`;
     return;
   }
   listEl.innerHTML = `
@@ -450,15 +450,7 @@ function setFolderFilesSort(mode, el) {
 }
 
 async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
-  if (!confirm('Delete this file permanently?')) return;
-  const res  = await fetch(`/api/files/${fileId}`, { method:'DELETE' });
-  const data = await res.json();
-  if (data.success) {
-    removeCachedFile(fileId);
-    showToast('File deleted.', 'warn');
-    syncCachesSilently();
-  }
-  else showToast(data.message, 'error');
+  deleteFileById(fileId);
 }
 
 // Folder modal feature: create and edit folder names, icons, and colors.

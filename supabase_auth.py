@@ -102,6 +102,27 @@ def sign_out(access_token: str) -> bool:
     return resp.status_code in (200, 204)
 
 
+def get_auth_user(access_token: str) -> dict:
+    """Fetch the Supabase Auth user tied to the current access token."""
+    require_supabase_auth_config()
+    if not access_token:
+        return {}
+
+    resp = http_requests.get(
+        f"{AUTH_URL}/user",
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "apikey": SUPABASE_ANON_KEY,
+        },
+        timeout=10,
+    )
+    data = _json_or_empty(resp)
+    if resp.status_code >= 400:
+        data.setdefault("error", f"supabase_get_user_failed_{resp.status_code}")
+        data.setdefault("msg", data.get("message") or "Unable to verify current user.")
+    return data
+
+
 def update_user_email(access_token: str, new_email: str) -> dict:
     """Update the authenticated user's email via Supabase Auth."""
     require_supabase_auth_config()

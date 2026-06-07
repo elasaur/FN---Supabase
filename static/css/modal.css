@@ -18,6 +18,22 @@
 }
 .modal-title.danger-title { justify-content: center; text-align: center; }
 .modal-title-icon { font-size: 1.25rem; vertical-align: middle; }
+.delete-file-icon {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.delete-file-title {
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.delete-file-subtitle {
+  margin: 0 0 24px;
+  color: var(--text2);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  text-align: center;
+}
 .modal-form { display: flex; flex-direction: column; gap: 14px; }
 .form-label { font-size: 0.78rem; font-weight: 800; color: var(--text2); display: block; letter-spacing: .03em; }
 .form-input {
@@ -33,6 +49,42 @@
   gap: 6px;
 }
 .form-input:focus { border-color: var(--accent); background: #fff; }
+.password-field {
+  position: relative;
+  width: 100%;
+}
+.password-field .form-input {
+  padding-right: 44px;
+}
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: background .18s ease, opacity .18s ease;
+}
+.password-toggle-btn:hover,
+.password-toggle-btn:focus-visible,
+.password-toggle-btn.is-visible {
+  background: rgba(232, 133, 90, 0.12);
+  opacity: 1;
+}
+.password-toggle-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  pointer-events: none;
+}
 .modal-actions {
   display: flex;
   flex-direction: row;

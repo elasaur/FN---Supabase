@@ -1,4 +1,6 @@
 // All files feature: list, sort, rename, move, download, and delete files.
+let fileToDeleteId = null;
+
 async function loadAllFiles(search) {
   let url = `/api/files?sort=${allFilesSortMode}`;
   if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -30,7 +32,7 @@ function renderAllFilesTable() {
   const tbody = document.getElementById('allFilesTbody');
   if (!tbody) return;
   if (!allFiles.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">No files yet. Upload some to get started!</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-file-50.png')}" alt=""></div><div class="es-text">No files yet - upload some to get started!</div></div></td></tr>`;
     return;
   }
   tbody.innerHTML = allFiles.map(f => `
@@ -185,9 +187,32 @@ async function submitMoveFile() {
   }
 }
 
-async function deleteFileById(id) {
-  if (!confirm('Delete this file permanently?')) return;
-  const btn = window.event?.currentTarget;
+function openDeleteFileModal(fileId) {
+  fileToDeleteId = fileId;
+  const file = getCachedFile(fileId);
+  const msg = document.getElementById('deleteFileMsg');
+  if (msg) {
+    const fileName = file?.original_name
+      ? `<strong>${escHtml(file.original_name)}</strong>`
+      : 'this file';
+    msg.innerHTML = `This will permanently delete ${fileName}. This action cannot be undone.`;
+  }
+  openModal('deleteFile');
+}
+
+async function confirmDeleteFile(button) {
+  if (!fileToDeleteId) return;
+  const fileId = fileToDeleteId;
+  fileToDeleteId = null;
+  await deleteFileById(fileId, button, true);
+}
+
+async function deleteFileById(id, button, confirmed = false) {
+  if (!confirmed) {
+    openDeleteFileModal(id);
+    return;
+  }
+  const btn = button || window.event?.currentTarget;
   let toastMessage = '';
   let toastType = 'warn';
   setButtonLoading(btn, true, 'Deleting...');
@@ -195,6 +220,7 @@ async function deleteFileById(id) {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
     const data = await res.json();
     if (data.success) {
+      closeModal('deleteFile');
       removeCachedFile(id);
       toastMessage = 'File deleted.';
       syncCachesSilently();

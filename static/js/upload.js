@@ -295,7 +295,7 @@ function renderUploadFileList() {
   const countEl = document.getElementById('filesCount');
   if (countEl) countEl.textContent = files.length;
   if (!files.length) {
-    list.innerHTML = `<div class="empty-state"><div class="es-icon">🪺</div><div class="es-text">No files yet — upload one above to get started!</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-file-50.png')}" alt=""></div><div class="es-text">No files yet - upload one above to get started!</div></div>`;
     return;
   }
   list.innerHTML = files.map((f, idx) => `
@@ -323,23 +323,5 @@ function sortFiles(mode, el) {
 }
 
 async function deleteFileUpload(id) {
-  const btn = window.event?.currentTarget;
-  let toastMessage = '';
-  let toastType = 'warn';
-  setButtonLoading(btn, true, 'Deleting...');
-  try {
-    const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      removeCachedFile(id);
-      toastMessage = 'File removed.';
-      syncCachesSilently();
-    } else {
-      toastType = 'error';
-      toastMessage = data.message;
-    }
-  } finally {
-    setButtonLoading(btn, false);
-    if (toastMessage) showToast(toastMessage, toastType);
-  }
+  deleteFileById(id);
 }

@@ -34,6 +34,7 @@ from supabase_auth import (
     sign_in,
     sign_up,
     sign_out,
+    get_auth_user,
     update_user_email,
     update_user_password,
     admin_update_user_password,
@@ -588,7 +589,7 @@ def index():
             user = select_user(db, user_id)
         default_folder = select_default_folder(db, user_id, "id")
         if not default_folder:
-            create_folder_record(db, user_id, 'Uncategorized', '📂', '#b09e94', '#f7f4f0', True, False)
+            create_folder_record(db, user_id, 'Uncategorized', '📂', '#e8b84b', '#f7f4f0', True, False)
             db.commit()
 
         session.clear()
@@ -667,7 +668,7 @@ def signup():
         session.permanent = True
 
     # Signup flow: each new account starts with one default folder.
-    create_folder_record(db, auth_user['id'], 'Uncategorized', '📂', '#b09e94', '#f7f4f0', True, False)
+    create_folder_record(db, auth_user['id'], 'Uncategorized', '📂', '#e8b84b', '#f7f4f0', True, False)
     db.commit()
 
     return jsonify({'success': True, 'confirm_email': not bool(auth.get('access_token'))})
@@ -1381,7 +1382,7 @@ def api_update_user():
 def api_change_password():
     data = request.get_json()
 
-    current_pw = data.get('current_password', '').strip()
+    current_pw = data.get('current_password', '')
     new_pw     = data.get('new_password', '')
     confirm_pw = data.get('confirm_password', '')
 
@@ -1401,16 +1402,34 @@ def api_change_password():
     uid = get_current_user_id()
     db = get_db()
     user = select_user(db, uid)
+    auth_header = request.headers.get('Authorization', '')
+    bearer_token = auth_header.removeprefix('Bearer ').strip() if auth_header.startswith('Bearer ') else ''
+    access_token = bearer_token or session.get('access_token', '')
+    auth_user = get_auth_user(access_token)
 
-    current_auth = sign_in(user['email'], current_pw) if user else {}
-    if not user or not current_auth.get('access_token'):
+    if auth_user.get('error') or auth_user.get('msg'):
+        return jsonify({
+            'success': False,
+            'message': auth_user.get('msg') or 'Unable to verify your current session. Please log in again.',
+        }), 401
+
+    if auth_user.get('id') and str(auth_user.get('id')) != str(uid):
+        clear_auth_session()
+        return auth_failure('Session expired. Please log in again.')
+    if bearer_token:
+        session['access_token'] = bearer_token
+        session.modified = True
+
+    auth_email = (auth_user.get('email') or (user or {}).get('email') or '').strip()
+    current_auth = sign_in(auth_email, current_pw) if auth_email else {}
+    if not current_auth.get('access_token'):
         return jsonify({'success': False, 'message': 'Current password is incorrect.'})
 
     result = admin_update_user_password(uid, new_pw)
     if result.get('error') or result.get('msg'):
         return jsonify({'success': False, 'message': result.get('msg') or result.get('error_description') or 'Unable to update password.'})
 
-    refreshed_auth = sign_in(user['email'], new_pw)
+    refreshed_auth = sign_in(auth_email, new_pw)
     if refreshed_auth.get('access_token'):
         session['access_token'] = refreshed_auth['access_token']
         session['refresh_token'] = refreshed_auth.get('refresh_token', '')

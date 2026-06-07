@@ -24,11 +24,9 @@ async function loadDashboard() {
   pinnedEl.innerHTML = pinned.length
     ? pinned.map(f => makeFolderCard(f, true)).join('')
     : `<div class="empty-state" style="grid-column:1/-1;padding:20px;">
-    <div class="es-icon">
-        <img src="${localIcon('icons8-pin-48.png')}" alt="Pin Icon">
-    </div>
+    <div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-pin-50.png')}" alt=""></div>
     <div class="es-text">
-        No pinned folders — pin one from the Folders page!
+        No pinned folders yet - pin one from the Folders page!
     </div>
 </div>`;
 
@@ -78,11 +76,9 @@ function renderDashboardRecentUploads() {
   recEl.innerHTML = sorted.length
     ? sorted.slice(0,5).map(f => makeRecentItem(f)).join('')
     : `<div class="empty-state">
-      <div class="es-icon">
-          <img src="${localIcon('icons8-document-50.png')}" alt="Files Icon">
-      </div>
+      <div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-file-50.png')}" alt=""></div>
       <div class="es-text">
-          No files yet — upload one to get started!
+          No files yet - upload one to get started!
       </div>
   </div>`;
   }
@@ -105,16 +101,7 @@ function makeRecentItem(f) {
 }
 
 async function deleteFileDashboard(id) {
-  if (!confirm('Delete this file permanently?')) return;
-  const res = await fetch(`/api/files/${id}`, { method:'DELETE' });
-  const data = await res.json();
-  if (data.success) {
-    removeCachedFile(id);
-    showToast('File deleted.', 'warn');
-    syncCachesSilently();
-  } else {
-    showToast(data.message, 'error');
-  }
+  deleteFileById(id);
 }
 
 function setDashboardLoading() {

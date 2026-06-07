@@ -142,12 +142,29 @@
   </div>
 </div>
 
+<!-- Delete File -->
+<div class="modal-bg" id="modal-deleteFile" onclick="if(event.target===this)closeModal('deleteFile')">
+  <div class="modal delete-file-modal" style="max-width: 400px;">
+    <div class="delete-file-icon">
+      <img class="ui-icon ui-icon-xl" src="/icons-pack/icons8-delete-file-50.png" alt="">
+    </div>
+    <div class="modal-title danger-title delete-file-title">Delete File?</div>
+    <p class="delete-file-subtitle" id="deleteFileMsg">
+      This file will be permanently deleted. This action cannot be undone.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('deleteFile')">No, cancel</button>
+      <button class="btn btn-primary" style="background:var(--red); box-shadow:none;" onclick="confirmDeleteFile(this)">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── DELETE ALL FILES CONFIRMATION MODAL ── -->
 <div class="modal-bg" id="modal-deleteAllFiles">
   <div class="modal" style="max-width: 400px;">
     <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
     <div class="modal-title danger-title">Delete All Files?</div>
-    <p style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;">
+    <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
       This will permanently delete <strong>all your uploaded files</strong>.
       This action cannot be undone. Do you want to proceed?
     </p>
@@ -170,7 +187,7 @@
   <div class="modal" style="max-width: 400px;">
     <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
     <div class="modal-title danger-title">Delete Account?</div>
-    <p style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;">
+    <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
       This will permanently delete your <strong>account, all files, and all folders</strong>.
       There is no way to recover your data after this. Do you want to proceed?
     </p>
@@ -193,7 +210,7 @@
   <div class="modal" style="max-width: 400px;">
     <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
     <div class="modal-title danger-title">Delete Folder?</div>
-    <p id="deleteFolderMsg" style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;"></p>
+    <p id="deleteFolderMsg" style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;"></p>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="hideDeleteFolderModal('deleteFolder')">No, cancel</button>
       <button class="btn btn-primary" style="background:var(--red); box-shadow:none;" onclick="confirmDeleteFolder()">Yes, delete</button>
@@ -206,7 +223,7 @@
   <div class="modal" style="max-width: 400px;">
     <div style="text-align:center; margin-bottom: 8px; font-size: 2.2rem;">⚠️</div>
     <div class="modal-title danger-title">Delete All Folders?</div>
-    <p style="font-size:0.85rem; color:var(--text2); text-align:left; line-height:1.6; margin-bottom: 24px;">
+    <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
       This will permanently delete every non-default folder and
       <strong>all files inside those folders</strong>. Move your important files to
       <strong>Uncategorized</strong> before confirming. This action cannot be undone.
