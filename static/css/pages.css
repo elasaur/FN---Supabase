@@ -2,6 +2,10 @@
 .page {
   display: none;
   padding: 32px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   animation: fadeIn .3s ease;
 }
 
@@ -17,7 +21,9 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  gap: 16px;
   margin-bottom: 22px;
+  min-width: 0;
 }
 
 .section-title {

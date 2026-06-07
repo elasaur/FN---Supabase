@@ -11,7 +11,10 @@
       <span style="font-size:0.78rem;font-weight:800;color:var(--text3);">Sort by:</span>
       <button class="sort-chip active" data-sort="name" onclick="setFolderSort('name',this)">Name</button>
       <button class="sort-chip" data-sort="count" onclick="setFolderSort('count',this)">File Count</button>
-      <button class="sort-chip" data-sort="pinned" onclick="setFolderSort('pinned',this)">Pinned First</button>
+      <button class="sort-chip" data-sort="created-asc" onclick="setFolderSort('created-asc',this)">Created Asc</button>
+      <button class="sort-chip" data-sort="created-desc" onclick="setFolderSort('created-desc',this)">Created Desc</button>
+      <button class="sort-chip" data-sort="modified-asc" onclick="setFolderSort('modified-asc',this)">Modified Asc</button>
+      <button class="sort-chip" data-sort="modified-desc" onclick="setFolderSort('modified-desc',this)">Modified Desc</button>
     </div>
     <div class="folders-grid" id="allFoldersList"></div>
     <button class="folder-menu-btn" onclick="toggleFolderMenu(this, event)" title="Options"></button>

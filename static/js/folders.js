@@ -84,10 +84,23 @@ function renderFolderGrid() {
   const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
   const byCount = (a, b) => Number(b.file_count || 0) - Number(a.file_count || 0);
   const byPinned = (a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
+  const folderDateValue = (folder, field) => {
+    const value = field === 'updated_at'
+      ? (folder.updated_at || folder.note_updated_at || folder.created_at)
+      : folder.created_at;
+    return parseAppDate(value)?.getTime() || 0;
+  };
+  const sorters = {
+    name: byName,
+    count: byCount,
+    'created-asc': (a, b) => folderDateValue(a, 'created_at') - folderDateValue(b, 'created_at'),
+    'created-desc': (a, b) => folderDateValue(b, 'created_at') - folderDateValue(a, 'created_at'),
+    'modified-asc': (a, b) => folderDateValue(a, 'updated_at') - folderDateValue(b, 'updated_at'),
+    'modified-desc': (a, b) => folderDateValue(b, 'updated_at') - folderDateValue(a, 'updated_at'),
+  };
+  const bySelectedMode = sorters[folderSortMode] || byName;
 
-  if (folderSortMode === 'name') sorted.sort(byName);
-  if (folderSortMode === 'count') sorted.sort((a, b) => byCount(a, b) || byName(a, b));
-  if (folderSortMode === 'pinned') sorted.sort((a, b) => byPinned(a, b) || byName(a, b));
+  sorted.sort((a, b) => byPinned(a, b) || bySelectedMode(a, b) || byName(a, b));
 
   syncFolderSortChips();
   el.innerHTML = sorted.map(f => makeFolderCard(f, false)).join('');
@@ -236,6 +249,7 @@ async function togglePin(id, currentPinned) {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message || 'Could not update pin.');
+    if (folder) folder.updated_at = data.updated_at || new Date().toISOString();
     showToast(nextPinned ? 'Folder pinned.' : 'Folder unpinned.', 'success');
     syncCachesSilently();
   } catch (err) {
@@ -378,6 +392,7 @@ async function saveFolderNote(folderId, btn) {
   updateCachedFolder(folderId, {
     note_body: data.note_body,
     note_updated_at: data.note_updated_at,
+    updated_at: data.updated_at || data.note_updated_at,
   });
   folderNoteBody = data.note_body || '';
   folderNoteDirty = false;
@@ -571,6 +586,7 @@ async function submitEditFolder() {
         emoji,
         color: rfModalColor.val,
         bg: rfModalColor.bg,
+        updated_at: data.updated_at || new Date().toISOString(),
       });
       toastMessage = 'Folder updated.';
       syncCachesSilently();

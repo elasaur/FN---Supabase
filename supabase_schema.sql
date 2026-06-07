@@ -24,6 +24,7 @@ create table if not exists public.folders (
   is_default boolean not null default false,
   note_body text not null default '',
   note_updated_at timestamptz,
+  updated_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   unique (user_id, name)
 );
@@ -45,6 +46,7 @@ create table if not exists public.files (
 -- One quick note per folder. The note is deleted with the folder row.
 alter table public.folders add column if not exists note_body text not null default '';
 alter table public.folders add column if not exists note_updated_at timestamptz;
+alter table public.folders add column if not exists updated_at timestamptz not null default now();
 update public.folders set note_body = '' where note_body is null;
 alter table public.folders alter column note_body set default '';
 

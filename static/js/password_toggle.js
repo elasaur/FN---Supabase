@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     button.className = 'password-toggle-btn';
     button.setAttribute('aria-label', 'Show password');
     button.setAttribute('title', 'Show password');
-    button.innerHTML = '<img class="password-toggle-icon" src="/icons-pack/icons8-eye-50.png" alt="">';
+    button.innerHTML = '<img class="password-toggle-icon" src="/icons-pack/icons8-eyeView-48.png" alt="">';
 
     button.addEventListener('click', () => {
       const isHidden = input.type === 'password';

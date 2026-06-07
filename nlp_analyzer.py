@@ -76,55 +76,77 @@ EXT_CATEGORY_MAP = {
     "jpg":  ("Photos",   "📸", "#9b87d4", "#ede8f8"),
     "jpeg": ("Photos",   "📸", "#9b87d4", "#ede8f8"),
     "png":  ("Photos",   "📸", "#9b87d4", "#ede8f8"),
-    "gif":  ("Photos",   "📸", "#9b87d4", "#ede8f8"),
-    "bmp":  ("Photos",   "📸", "#9b87d4", "#ede8f8"),
-    "webp": ("Photos",   "📸", "#9b87d4", "#ede8f8"),
     "mp4":  ("Videos",   "🎬", "#7ec8e3", "#e0f4fb"),
-    "avi":  ("Videos",   "🎬", "#7ec8e3", "#e0f4fb"),
-    "mkv":  ("Videos",   "🎬", "#7ec8e3", "#e0f4fb"),
-    "mov":  ("Videos",   "🎬", "#7ec8e3", "#e0f4fb"),
-    "wmv":  ("Videos",   "🎬", "#7ec8e3", "#e0f4fb"),
-    "mp3":  ("Audio",    "🎵", "#f5a7c7", "#fce8f3"),
-    "wav":  ("Audio",    "🎵", "#f5a7c7", "#fce8f3"),
-    "ogg":  ("Audio",    "🎵", "#f5a7c7", "#fce8f3"),
-    "flac": ("Audio",    "🎵", "#f5a7c7", "#fce8f3"),
-    "zip":  ("Archives", "🗜️", "#b09e94", "#f7f4f0"),
-    "rar":  ("Archives", "🗜️", "#b09e94", "#f7f4f0"),
-    "7z":   ("Archives", "🗜️", "#b09e94", "#f7f4f0"),
-    "tar":  ("Archives", "🗜️", "#b09e94", "#f7f4f0"),
+    "mp3":  ("Audio",    "🎶", "#f5a7c7", "#fce8f3"),
+    "zip":  ("Archives", "🗂️", "#e8b84b", "#fef7dd"),
 }
 
 _GENERIC_FOLDER_NAMES = {"documents", "files", "misc", "general", "uploads", "other"}
 
 _EMOJI_COLORS = {
-    "💼": ("#e8855a", "#fde8de"), "📚": ("#e8b84b", "#fef7dd"),
-    "🧾": ("#7ecfb3", "#d9f5ec"), "🏥": ("#e87a7a", "#fde8e8"),
-    "⚖️": ("#9b87d4", "#ede8f8"), "💰": ("#52b788", "#d8f3e8"),
-    "📊": ("#e8b84b", "#fef7dd"), "✈️": ("#7ec8e3", "#e0f4fb"),
-    "🛡️": ("#52b788", "#d8f3e8"), "🎓": ("#7ecfb3", "#d9f5ec"),
-    "🎨": ("#f5a7c7", "#fce8f3"), "💻": ("#6c757d", "#f0f0f0"),
-    "🏠": ("#7ec8e3", "#e0f4fb"), "🍽️": ("#f5d06b", "#fef7dd"),
-    "💪": ("#e8855a", "#fde8de"), "🐾": ("#f5d06b", "#fef7dd"),
-    "📸": ("#9b87d4", "#ede8f8"), "📁": ("#7ec8e3", "#e0f4fb"),
-    "🎵": ("#f5a7c7", "#fce8f3"), "🎬": ("#7ec8e3", "#e0f4fb"),
-    "🗜️": ("#b09e94", "#f7f4f0"), "📝": ("#e8b84b", "#fef7dd"),
-    "🗂️": ("#b09e94", "#f7f4f0"), "📋": ("#7ec8e3", "#e0f4fb"),
-    "📘": ("#7ec8e3", "#e0f4fb"), "🤝": ("#7ecfb3", "#d9f5ec"),
-    "📣": ("#e8855a", "#fde8de"), "📖": ("#e8b84b", "#fef7dd"),
-    "📥": ("#b09e94", "#f7f4f0"), "🖥️": ("#6c757d", "#f0f0f0"),
-}
+    "📁": ("#e8b84b", "#fef7dd"), "🗂️": ("#e8b84b", "#fef7dd"),
+    "📂": ("#e8b84b", "#fef7dd"), "🗃️": ("#9b87d4", "#ede8f8"),
+    "📄": ("#7ec8e3", "#e0f4fb"), "📑": ("#7ecfb3", "#d9f5ec"),
+    "📝": ("#f2a65a", "#fff0dc"), "📋": ("#7ec8e3", "#e0f4fb"),
+    "📌": ("#e87a7a", "#fde8e8"), "🔖": ("#f5a7c7", "#fce8f3"),
 
+    "📚": ("#e8b84b", "#fef7dd"), "📖": ("#7ec8e3", "#e0f4fb"),
+    "🎓": ("#7ecfb3", "#d9f5ec"), "✏️": ("#f5d06b", "#fef7dd"),
+    "🖊️": ("#6c757d", "#f0f0f0"), "📐": ("#9b87d4", "#ede8f8"),
+    "🧮": ("#e8855a", "#fde8de"), "🧠": ("#f5a7c7", "#fce8f3"),
+    "🔬": ("#7ec8e3", "#e0f4fb"), "🧪": ("#52b788", "#d8f3e8"),
+
+    "💼": ("#c49a6c", "#f7eadc"), "🧾": ("#7ecfb3", "#d9f5ec"),
+    "📊": ("#e8b84b", "#fef7dd"), "📈": ("#52b788", "#d8f3e8"),
+    "📉": ("#e87a7a", "#fde8e8"), "💰": ("#52b788", "#d8f3e8"),
+    "🪙": ("#d99a3d", "#fff1d6"), "🏦": ("#7ec8e3", "#e0f4fb"),
+    "🛒": ("#f2a65a", "#fff0dc"), "🧺": ("#c49a6c", "#f7eadc"),
+
+    "💻": ("#6c757d", "#f0f0f0"), "🖥️": ("#6c757d", "#f0f0f0"),
+    "⌨️": ("#9b87d4", "#ede8f8"), "🖱️": ("#7ec8e3", "#e0f4fb"),
+    "🧑‍💻": ("#7ecfb3", "#d9f5ec"), "🛠️": ("#e8855a", "#fde8de"),
+    "⚙️": ("#6c757d", "#f0f0f0"), "🔧": ("#7ec8e3", "#e0f4fb"),
+    "🧩": ("#9b87d4", "#ede8f8"), "🚀": ("#e8855a", "#fde8de"),
+
+    "🎨": ("#f5a7c7", "#fce8f3"), "🖼️": ("#9b87d4", "#ede8f8"),
+    "📸": ("#9b87d4", "#ede8f8"), "🎬": ("#7ec8e3", "#e0f4fb"),
+    "🎵": ("#f5a7c7", "#fce8f3"), "🎧": ("#9b87d4", "#ede8f8"),
+    "🎤": ("#e87a7a", "#fde8e8"), "🎮": ("#7ecfb3", "#d9f5ec"),
+    "🖌️": ("#f4a6b8", "#fdecef"), "✂️": ("#e8855a", "#fde8de"),
+
+    "🏠": ("#7ec8e3", "#e0f4fb"), "🏡": ("#7ecfb3", "#d9f5ec"),
+    "🛏️": ("#9b87d4", "#ede8f8"), "🛋️": ("#b09e94", "#f7f4f0"),
+    "🍽️": ("#f5d06b", "#fef7dd"), "☕": ("#8b6f5c", "#f3ebe5"),
+    "🧁": ("#f5a7c7", "#fce8f3"), "🍵": ("#7ecfb3", "#d9f5ec"),
+
+    "🏥": ("#e87a7a", "#fde8e8"), "💊": ("#7ec8e3", "#e0f4fb"),
+    "🩺": ("#52b788", "#d8f3e8"), "💪": ("#e8855a", "#fde8de"),
+    "🧘": ("#9b87d4", "#ede8f8"), "🍎": ("#d94f70", "#fde6ee"),
+    "🥗": ("#52b788", "#d8f3e8"), "💧": ("#7ec8e3", "#e0f4fb"),
+
+    "✈️": ("#7ec8e3", "#e0f4fb"), "🧳": ("#b09e94", "#f7f4f0"),
+    "🗺️": ("#7ecfb3", "#d9f5ec"), "🏖️": ("#f5d06b", "#fef7dd"),
+    "🏕️": ("#52b788", "#d8f3e8"), "🚗": ("#e8855a", "#fde8de"),
+    "🚲": ("#7ecfb3", "#d9f5ec"), "🎟️": ("#f5a7c7", "#fce8f3"),
+
+    "⚖️": ("#9b87d4", "#ede8f8"), "🛡️": ("#52b788", "#d8f3e8"),
+    "🔐": ("#e8b84b", "#fef7dd"), "🔑": ("#f5d06b", "#fef7dd"),
+    "📜": ("#c49a6c", "#f7eadc"), "🤝": ("#7ecfb3", "#d9f5ec"),
+    "📣": ("#e8855a", "#fde8de"), "📥": ("#b09e94", "#f7f4f0"),
+
+    "🌸": ("#f5a7c7", "#fce8f3"), "🌷": ("#f4a6b8", "#fdecef"),
+    "🌻": ("#f5d06b", "#fef7dd"), "🌿": ("#52b788", "#d8f3e8"),
+    "✨": ("#e8b84b", "#fef7dd"), "⭐": ("#f5d06b", "#fef7dd"),
+    "☁️": ("#7ec8e3", "#e0f4fb"), "🌙": ("#9b87d4", "#ede8f8"),
+}
 
 def _color_for_emoji(emoji: str) -> str:
     return _EMOJI_COLORS.get(emoji, ("#7ec8e3", "#e0f4fb"))[0]
 
-
 def _bg_for_emoji(emoji: str) -> str:
     return _EMOJI_COLORS.get(emoji, ("#7ec8e3", "#e0f4fb"))[1]
 
-
 # Text extraction: normalize supported document formats into plain text.
-
 def detect_and_extract(path: str, filename: str) -> Tuple[str, str]:
     """Detect file type and extract text. Returns (file_type, raw_text)."""
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
@@ -221,7 +243,6 @@ def _extract_txt(path: str) -> str:
 
 
 # Text utilities: clean extraction output before keywording or prompting.
-
 def normalize_text(text: str) -> str:
     if not text:
         return ""
@@ -250,7 +271,6 @@ def extract_keywords(text: str, max_keywords: int = 8) -> List[str]:
 
 
 # JSON repair: salvage valid suggestions from a partial Gemini response.
-
 def _repair_json(raw: str) -> str:
     """Salvage valid JSON from a truncated or fence-wrapped Gemini response."""
     raw = re.sub(r"^```(?:json)?", "", raw.strip(), flags=re.IGNORECASE).strip()
@@ -285,7 +305,6 @@ def _repair_json(raw: str) -> str:
 
 
 # Gemini suggestions: ask for ranked folder matches, then validate the result.
-
 def ask_gemini_suggestions(
     filename: str,
     text: str,
@@ -580,22 +599,104 @@ def _textblob_default_suggestions(existing_folders: List[str]) -> List[Dict]:
 
 def _emoji_for_phrase(name: str) -> str:
     name_l = name.lower()
+
     checks = [
-        (["project", "agile", "scrum", "workflow", "task", "sprint"], "📋"),
-        (["school", "assignment", "student", "lesson", "quiz", "course"], "📚"),
-        (["health", "medical", "hospital", "patient", "doctor"], "🏥"),
-        (["finance", "budget", "payment", "invoice", "tax", "salary"], "💰"),
+        # Default / File organization
+        (["inbox", "received", "incoming"], "📥"),
+        (["folder", "file", "document", "directory"], "📁"),
+        (["collection", "organized", "category", "group"], "🗂️"),
+        (["archive", "backup", "compressed", "zip"], "🗂️"),
+        (["form", "paper", "sheet"], "📄"),
+        (["checklist", "list", "task list"], "📋"),
+        (["note", "notes", "memo", "write"], "🗒️"),
+        (["important", "pin", "priority", "reminder"], "📌"),
+        (["bookmark", "reference", "saved", "favorite"], "🔖"),
+
+        # School / Academic
+        (["school", "assignment", "student", "lesson", "quiz", "course", "module", "activity"], "📚"),
+        (["research", "study", "paper", "thesis", "journal", "literature"], "📖"),
+        (["certificate", "diploma", "award", "graduation"], "🎓"),
+        (["math", "calculation", "algebra", "equation"], "📐"),
+        (["science", "experiment", "laboratory", "chemistry", "biology"], "🧪"),
+        (["analysis", "brainstorm", "idea", "thinking"], "🧠"),
+
+        # Technology / Coding
+        (["system", "software", "api", "database", "python", "code", "program", "app", "website"], "💻"),
+        (["computer", "desktop", "monitor", "windows", "device"], "🖥️"),
+        (["settings", "configuration", "setup"], "⚙️"),
+        (["bug", "fix", "repair", "debug", "issue"], "🔧"),
+        (["tool", "maintenance", "build"], "🛠️"),
+        (["feature", "component", "module", "integration"], "🧩"),
+        (["launch", "deployment", "release", "startup"], "🚀"),
+
+        # Business / Finance
+        (["business", "office", "work", "company", "employee"], "💼"),
+        (["receipt", "billing", "transaction", "record"], "🧾"),
         (["report", "dashboard", "analytics", "statistics", "metrics"], "📊"),
-        (["system", "software", "api", "database", "python", "code"], "💻"),
-        (["research", "study", "paper", "thesis", "journal"], "📖"),
-        (["travel", "flight", "trip", "hotel", "booking"], "✈️"),
-        (["legal", "contract", "agreement", "policy", "terms"], "⚖️"),
-        (["resume", "cv", "hiring", "recruitment", "candidate"], "🤝"),
-        (["marketing", "campaign", "brand", "promotion"], "📣"),
+        (["growth", "increase", "progress", "performance"], "📈"),
+        (["decrease", "loss", "decline", "drop"], "📉"),
+        (["finance", "budget", "payment", "invoice", "tax", "salary", "money"], "💰"),
+        (["coin", "income", "savings", "expense"], "💵"),
+        (["bank", "account", "loan", "deposit"], "🏦"),
+        (["sales", "shopping", "purchase", "order"], "🛍️"),
+
+        # Media / Creative
+        (["design", "ui", "ux", "prototype", "wireframe", "layout", "mockup", "art"], "🎨"),
+        (["image", "photo", "picture", "screenshot"], "📸"),
+        (["video", "movie", "recording", "clip"], "🎬"),
+        (["music", "audio", "song", "sound"], "🎵"),
+        (["podcast", "headset", "listening"], "🎧"),
+        (["presentation", "speech", "voice", "record"], "🎤"),
+        (["game", "gaming", "play"], "🎮"),
+        (["edit", "draw", "paint"], "🖌️"),
+
+        # Home / Personal
+        (["home", "house", "family", "personal"], "🏠"),
+        (["room", "bedroom", "sleep", "rest"], "🛏️"),
+        (["food", "meal", "dining", "restaurant"], "🍱"),
+        (["coffee", "drink", "cafe"], "☕"),
+        (["tea", "wellness", "relax"], "🍵"),
+
+        # Health
+        (["health", "medical", "hospital", "patient", "doctor"], "🏥"),
+        (["medicine", "drug", "tablet", "prescription"], "💊"),
+        (["checkup", "clinic", "nurse", "treatment"], "🩺"),
+        (["fitness", "exercise", "workout", "gym"], "💪"),
+        (["meditation", "mental", "calm", "peace"], "🧘"),
+        (["diet", "nutrition", "healthy", "vegetable"], "🥗"),
+        (["water", "hydration"], "💧"),
+
+        # Travel
+        (["travel", "flight", "trip", "airport"], "✈️"),
+        (["luggage", "bag", "packing"], "🧳"),
+        (["map", "location", "direction", "place"], "🗺️"),
+        (["beach", "vacation", "summer"], "🏖️"),
+        (["camp", "camping", "hiking", "nature"], "🏕️"),
+        (["car", "drive", "vehicle"], "🚗"),
+        (["bike", "cycling", "bicycle"], "🚲"),
+        (["ticket", "event", "pass"], "🎟️"),
+
+        # Legal / Security / Communication
+        (["legal", "contract", "agreement", "policy", "terms", "law"], "⚖️"),
+        (["security", "protection", "privacy", "safe"], "🛡️"),
+        (["password", "locked", "login", "authentication"], "🔐"),
+        (["key", "access", "permission"], "🔑"),
+        (["rule", "notice", "official"], "📜"),
+        (["resume", "cv", "hiring", "recruitment", "candidate", "staff"], "🤝"),
+        (["marketing", "campaign", "brand", "promotion", "announcement"], "📣"),
+
+        # Cute / general soft categories
+        (["flower", "cute", "aesthetic", "glam", "beautiful"], "🌸"),
+        (["nature", "plant", "green"], "🌿"),
+        (["star", "special"], "⭐"),
+        (["cloud", "soft"], "☁️"),
+        (["night", "moon"], "🌙"),
     ]
+
     for keywords, emoji in checks:
-        if any(k in name_l for k in keywords):
+        if any(keyword in name_l for keyword in keywords):
             return emoji
+
     return "📁"
 
 

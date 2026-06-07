@@ -876,6 +876,7 @@ def api_update_folder(folder_id):
     color  = data.get('color',  folder['color'])
     bg     = data.get('bg',     folder['bg'])
     pinned = data.get('pinned', folder['pinned'])
+    updated_at = now_utc().isoformat()
 
     payload = {
         "name": name,
@@ -883,19 +884,20 @@ def api_update_folder(folder_id):
         "color": color,
         "bg": bg,
         "pinned": bool(pinned),
+        "updated_at": updated_at,
     }
     if "note_body" in data:
         payload["note_body"] = str(data.get("note_body") or "")
-        payload["note_updated_at"] = data.get("note_updated_at") or now_utc().isoformat()
+        payload["note_updated_at"] = data.get("note_updated_at") or updated_at
 
     try:
-        db.update("folders", {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", uid)}, payload)
+        update_folder_payload(db, {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", uid)}, payload)
     except RuntimeError as exc:
         if "note_body" in payload and is_folder_note_schema_error(exc):
             return folder_note_schema_error_response()
         raise
     db.commit()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'updated_at': updated_at})
 
 
 def is_folder_note_schema_error(exc):
@@ -905,6 +907,24 @@ def is_folder_note_schema_error(exc):
         and ("note_body" in message or "note_updated_at" in message)
         and "folders" in message
     )
+
+
+def is_folder_updated_at_schema_error(exc):
+    message = str(exc)
+    return "PGRST204" in message and "updated_at" in message and "folders" in message
+
+
+def update_folder_payload(db, filters, payload):
+    try:
+        db.update("folders", filters, payload)
+        return True
+    except RuntimeError as exc:
+        if "updated_at" in payload and is_folder_updated_at_schema_error(exc):
+            fallback_payload = dict(payload)
+            fallback_payload.pop("updated_at", None)
+            db.update("folders", filters, fallback_payload)
+            return False
+        raise
 
 
 def folder_note_schema_error_response():
@@ -935,10 +955,14 @@ def api_update_folder_note(folder_id):
 
     note_updated_at = now_utc().isoformat()
     try:
-        db.update(
-            "folders",
+        update_folder_payload(
+            db,
             {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", uid)},
-            {"note_body": note_body, "note_updated_at": note_updated_at},
+            {
+                "note_body": note_body,
+                "note_updated_at": note_updated_at,
+                "updated_at": note_updated_at,
+            },
         )
     except RuntimeError as exc:
         if is_folder_note_schema_error(exc):
@@ -949,6 +973,7 @@ def api_update_folder_note(folder_id):
         'success': True,
         'note_body': note_body,
         'note_updated_at': note_updated_at,
+        'updated_at': note_updated_at,
     })
 
 

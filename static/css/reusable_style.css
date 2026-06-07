@@ -77,13 +77,17 @@
 }
 html {
   font-size: 15px;
+  width: 100%;
+  scrollbar-gutter: stable;
 }
 body {
   font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  width: 100%;
   display: flex;
+  overflow-x: hidden;
 }
 
 /* ── BLOBS ── */

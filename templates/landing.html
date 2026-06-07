@@ -17,214 +17,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reusable_style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/landing_style.css') }}">
-  <style>
-    .landing-info {
-      position: relative;
-      z-index: 1;
-      width: calc(100vw - 32px);
-      max-width: none;
-      margin: 0 auto;
-      padding: 12px 0 72px;
-      display: grid;
-      gap: 18px;
-    }
-
-    .info-band {
-      background: rgba(255,255,255,.82);
-      border: 1.5px solid var(--border);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      padding: 22px;
-    }
-
-    .info-band-head {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 16px;
-      align-items: end;
-      margin-bottom: 16px;
-    }
-
-    .info-kicker {
-      color: var(--accent);
-      font-size: .72rem;
-      font-weight: 900;
-      letter-spacing: .11em;
-      text-transform: uppercase;
-      margin-bottom: 7px;
-    }
-
-    .info-title {
-      color: var(--text);
-      font-family: 'Fraunces', serif;
-      font-size: clamp(1.28rem, 2.1vw, 1.82rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin: 0;
-    }
-
-    .info-copy {
-      color: var(--text2);
-      font-size: .86rem;
-      font-weight: 600;
-      line-height: 1.5;
-      margin-top: 8px;
-      max-width: 690px;
-    }
-
-    .info-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1.5px solid var(--border);
-      border-radius: 999px;
-      background: var(--surface2);
-      color: var(--text2);
-      font-size: .74rem;
-      font-weight: 900;
-      padding: 8px 12px;
-      white-space: nowrap;
-    }
-
-    .info-pill img,
-    .mini-card-icon img,
-    .step-icon img {
-      width: 20px;
-      height: 20px;
-      object-fit: contain;
-    }
-
-    .mini-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .mini-card {
-      min-height: 128px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      background: var(--surface);
-      padding: 15px;
-    }
-
-    .mini-card-icon,
-    .step-icon {
-      width: 38px;
-      height: 38px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1.5px solid var(--tone);
-      border-radius: 11px;
-      background: var(--tone-soft);
-      flex: 0 0 auto;
-    }
-
-    .mini-card h3,
-    .step-card h3 {
-      color: var(--text);
-      font-size: .9rem;
-      font-weight: 800;
-      line-height: 1.2;
-      margin: 0;
-    }
-
-    .mini-card p,
-    .step-card p {
-      color: var(--text2);
-      font-size: .78rem;
-      font-weight: 600;
-      line-height: 1.42;
-      margin: 0;
-    }
-
-    .tone-accent { --tone:#e8855a; --tone-soft:#fde8de; }
-    .tone-mint { --tone:#54b997; --tone-soft:#d9f5ec; }
-    .tone-lavender { --tone:#9b87d4; --tone-soft:#ede8f8; }
-    .tone-sky { --tone:#5aafcf; --tone-soft:#e1f5fb; }
-    .tone-yellow { --tone:#d5a02f; --tone-soft:#fef7dd; }
-    .tone-pink { --tone:#dd78a8; --tone-soft:#fce8f3; }
-
-    .feature-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .feature-chip {
-      display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      min-height: 82px;
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      background: var(--surface);
-      padding: 13px;
-    }
-
-    .step-row {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .step-card {
-      position: relative;
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      background: var(--surface);
-      padding: 14px;
-      min-height: 150px;
-    }
-
-    .step-number {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      color: var(--tone);
-      font-family: 'Fraunces', serif;
-      font-size: 1.25rem;
-      font-weight: 900;
-    }
-
-    .step-card h3 {
-      margin-top: 12px;
-    }
-
-    @media (max-width: 980px) {
-      .mini-grid,
-      .feature-strip {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .step-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 640px) {
-      .landing-info {
-        width: calc(100vw - 20px);
-      }
-
-      .info-band-head {
-        grid-template-columns: 1fr;
-      }
-
-      .mini-grid,
-      .feature-strip,
-      .step-row {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 </head>
+
 <body>
 <div class="blob-wrap">
   <div class="blob blob1"></div>
@@ -267,133 +63,292 @@
     <a class="cta-ghost" href="#instructions">See how it works</a>
   </div>
   <div class="hero-social-proof">
-    <div class="avatar-stack">
-      <div class="avatar-pill" style="background:linear-gradient(135deg,#e8855a,#f5a7c7)">M</div>
-      <div class="avatar-pill" style="background:linear-gradient(135deg,#9b87d4,#7ec8e3)">J</div>
-      <div class="avatar-pill" style="background:linear-gradient(135deg,#7ecfb3,#e8b84b)">A</div>
-      <div class="avatar-pill" style="background:linear-gradient(135deg,#f5a7c7,#9b87d4)">K</div>
-    </div>
-    <span>Project by Angela V. Raquedan</span>
+    <span>🌸 Project of Angela V. Raquedan 🌸</span>
   </div>
 </section>
 
-<main class="landing-info">
-  <section class="info-band" id="about">
-    <div class="info-band-head">
-      <div>
-        <div class="info-kicker">About</div>
-        <h2 class="info-title">A folder-first workspace with AI suggestions.</h2>
-        <p class="info-copy">File Nest keeps uploads, folder notes, search, and statistics in one practical Home view. AI helps recommend where files could go, but the user confirms the final destination.</p>
+<main class="landing-info" aria-label="File Nest information pages">
+
+  <!-- ABOUT -->
+  <section class="info-panel about-panel" id="about">
+    <div class="spot-hero card">
+      <div class="spot-copy">
+        <div class="spot-kicker">About File Nest</div>
+        <h2>A calm digital nest for files that usually get messy.</h2>
+        <p>
+          File Nest is an AI-assisted file organization system designed to help users
+          upload, classify, store, search, and manage files in one organized workspace.
+          Instead of leaving files scattered, the system guides users toward cleaner
+          folder organization.
+        </p>
+        <p>
+          The system is built for students, office users, and anyone who regularly handles
+          documents, images, reports, and other digital files.
+        </p>
+
+        <div class="spot-actions">
+          <a class="spot-btn" href="/login">Start organizing</a>
+          <a class="spot-btn ghost" href="#features">Explore features</a>
+        </div>
       </div>
-      <span class="info-pill"><img src="/icons-pack/icons8-about-48.png" alt="">System overview</span>
+
+      <div class="spot-visual">
+        <div class="orbit-card orbit-main">
+          <img src="/static/images/logo.png" alt="" style="width: 60px; height: 60px;">
+          <strong style="color: var(--accent);">File Nest</strong>
+          <span>AI and NLP Support</span>
+        </div>
+        <div class="orbit-card orbit-one">
+          <img src="/icons-pack/icons8-gemini-ai-48.png" alt="">
+          <span>AI Suggests</span>
+        </div>
+        <div class="orbit-card orbit-two">
+          <img src="/icons-pack/icons8-database-50.png" alt="">
+          <span>Stores Safely</span>
+        </div>
+        <div class="orbit-card orbit-three">
+          <img src="/icons-pack/icons8-search-48.png" alt="">
+          <span>Finds Fast</span>
+        </div>
+      </div>
     </div>
-    <div class="mini-grid">
-      <article class="mini-card tone-accent">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-folder-50.png" alt=""></span>
-        <h3>Folders stay central</h3>
-        <p>Every file belongs to a clear folder with color, icon, count, and notes.</p>
+
+    <div class="about-bento">
+      <article class="bento-card wide">
+        <span class="bento-icon lavender">
+          <img src="/icons-pack/icons8-gemini-ai-48.png" alt="">
+        </span>
+        <h3>User-controlled AI</h3>
+        <p>
+          AI helps analyze supported file names and content, then recommends possible
+          folders. The recommendation is only a guide because the user still reviews and
+          confirms the final folder before saving.
+        </p>
       </article>
-      <article class="mini-card tone-pink">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-cyber-security-50.png" alt=""></span>
-        <h3>Protected accounts</h3>
-        <p>Supabase Auth handles login, password reset, and account changes.</p>
+
+      <article class="bento-card">
+        <span class="bento-icon lavender">
+          <img src="/icons-pack/icons8-cyber-security-50.png" alt="">
+        </span>
+        <h3>Secure account access</h3>
+        <p>
+          User accounts are protected through authentication features such as sign in,
+          password reset, and account-level credential updates.
+        </p>
       </article>
-      <article class="mini-card tone-sky">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-database-50.png" alt=""></span>
-        <h3>Private storage</h3>
-        <p>Metadata stays in Postgres while uploaded files live in private storage.</p>
+
+      <article class="bento-card">
+        <span class="bento-icon lavender">
+          <img src="/icons-pack/icons8-database-50.png" alt="">
+        </span>
+        <h3>Organized data storage</h3>
+        <p>
+          Folder records, file details, and upload information are stored as metadata,
+          while actual files are handled separately in private storage.
+        </p>
       </article>
-      <article class="mini-card tone-lavender">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-gemini-ai-48.png" alt=""></span>
-        <h3>Helpful AI</h3>
-        <p>Gemini and TextBlob assist with recommendations, not final sorting.</p>
+
+      <article class="bento-card wide">
+        <span class="bento-icon accent">
+          <img src="/icons-pack/icons8-folder-50.png" alt="">
+        </span>
+        <h3>Folder-first workspace</h3>
+        <p>
+          File Nest keeps folders at the center of the experience. Users can create folders,
+          pin important ones, add notes, view recent files, and check file activity from a
+          clean dashboard.
+        </p>
       </article>
     </div>
   </section>
 
-  <section class="info-band" id="features">
-    <div class="info-band-head">
-      <div>
-        <div class="info-kicker">Features</div>
-        <h2 class="info-title">Tools for repeated file work, not a marketing page.</h2>
-        <p class="info-copy">The interface is built for scanning, uploading, moving, finding, and cleaning files quickly.</p>
+  <!-- FEATURES -->
+  <section class="info-panel feature-panel" id="features">
+    <div class="spot-hero card compact">
+      <div class="spot-copy">
+        <div class="spot-kicker">Features</div>
+        <h2>Everything needed for daily file cleanup.</h2>
+        <p>
+          File Nest focuses on practical actions that users need often: uploading,
+          analyzing, organizing, searching, moving, downloading, deleting, and monitoring
+          files. Each feature supports a simpler and cleaner file workflow.
+        </p>
       </div>
-      <span class="info-pill"><img src="/icons-pack/icons8-rocket-48.png" alt="">Core tools</span>
+
+      <div class="feature-score-card">
+        <span>Workspace tools</span>
+        <strong>6</strong>
+        <small>core features for organizing and managing files</small>
+      </div>
     </div>
-    <div class="feature-strip">
-      <article class="feature-chip tone-lavender">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-gemini-ai-48.png" alt=""></span>
-        <div><h3>AI recommendations</h3><p>Review suggested folders before saving.</p></div>
+
+    <div class="feature-bento">
+      <article class="feature-tile large">
+        <span class="bento-icon lavender">
+          <img src="/icons-pack/icons8-gemini-ai-48.png" alt="">
+        </span>
+        <h3>AI folder recommendations</h3>
+        <p>
+          File Nest can analyze supported uploads and suggest suitable folders based on
+          the filename and readable content. This helps reduce manual decision-making when
+          users upload many files.
+        </p>
       </article>
-      <article class="feature-chip tone-mint">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-pin-48.png" alt=""></span>
-        <div><h3>Pinned folders</h3><p>Keep important folders visible.</p></div>
+
+      <article class="feature-tile">
+        <span class="bento-icon lavender">
+          <img src="/icons-pack/icons8-brain-48.png" alt="">
+        </span>
+        <h3>NLP-Based File Analysis</h3>
+        <p>
+          When AI analysis is unavailable, File Nest can still use TextBlob NLP to
+          read basic keywords and patterns from supported files. This keeps folder
+          suggestions working even without the main AI service.
+        </p>
       </article>
-      <article class="feature-chip tone-accent">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-upload-50.png" alt=""></span>
-        <div><h3>Direct upload</h3><p>Save straight to a chosen folder.</p></div>
+
+      <article class="feature-tile">
+        <span class="bento-icon accent">
+          <img src="/icons-pack/icons8-upload-50.png" alt="">
+        </span>
+        <h3>Direct upload</h3>
+        <p>
+          Users can skip AI analysis and save a file directly to a chosen folder when they
+          already know where the file belongs.
+        </p>
       </article>
-      <article class="feature-chip tone-sky">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-search-48.png" alt=""></span>
-        <div><h3>Fast search</h3><p>Find files and act on them quickly.</p></div>
+
+      <article class="feature-tile">
+        <span class="bento-icon accent">
+          <img src="/icons-pack/icons8-pin-48.png" alt="">
+        </span>
+        <h3>Pinned folders</h3>
+        <p>
+          Important folders can be pinned so they stay visible and easier to access from
+          the Home page.
+        </p>
       </article>
-      <article class="feature-chip tone-yellow">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-bar-chart-50.png" alt=""></span>
-        <div><h3>Statistics</h3><p>See file types, folder totals, and accepted AI suggestions.</p></div>
+
+      <article class="feature-tile">
+        <span class="bento-icon accent">
+          <img src="/icons-pack/icons8-search-48.png" alt="">
+        </span>
+        <h3>Fast search</h3>
+        <p>
+          Search helps users quickly find folders and files without scrolling through long
+          lists manually.
+        </p>
       </article>
-      <article class="feature-chip tone-pink">
-        <span class="mini-card-icon"><img src="/icons-pack/icons8-edit-48.png" alt=""></span>
-        <div><h3>Folder notes</h3><p>Add quick notes directly inside each folder.</p></div>
+
+      <article class="feature-tile">
+        <span class="bento-icon yellow">
+          <img src="/icons-pack/icons8-bar-chart-50.png" alt="">
+        </span>
+        <h3>Statistics dashboard</h3>
+        <p>
+          Users can monitor file counts, folder usage, file types, recent uploads, and how
+          often AI sorting helps organize files.
+        </p>
+      </article>
+
+      <article class="feature-tile">
+        <span class="bento-icon pink">
+          <img src="/icons-pack/icons8-edit-48.png" alt="">
+        </span>
+        <h3>Folder notes</h3>
+        <p>
+          Each folder can include short notes for reminders, context, tasks, or file-related
+          instructions.
+        </p>
       </article>
     </div>
   </section>
 
-  <section class="info-band" id="instructions">
-    <div class="info-band-head">
-      <div>
-        <div class="info-kicker">Instructions</div>
-        <h2 class="info-title">Five steps from upload to organized storage.</h2>
-        <p class="info-copy">Create folders, upload files, review recommendations when needed, then manage everything from the folder and file views.</p>
+  <!-- INSTRUCTIONS -->
+  <section class="info-panel instruction-panel" id="instructions">
+    <div class="spot-hero card compact">
+      <div class="spot-copy">
+        <div class="spot-kicker">Instructions</div>
+        <h2>Use File Nest in five simple moves.</h2>
+        <p>
+          The workflow is beginner-friendly. Users first prepare folders, then upload files,
+          review AI suggestions when needed, manage saved files, and check activity through
+          the dashboard and statistics page.
+        </p>
       </div>
-      <span class="info-pill"><img src="/icons-pack/icons8-manual-48.png" alt="">Simple flow</span>
+
+      <div class="instruction-note">
+        <img src="/icons-pack/icons8-manual-48.png" alt="">
+        <strong>Helpful tip</strong>
+        <span>
+          Use clear folder names like School Reports, Receipts, Certificates, or Images so
+          AI suggestions become easier to understand and match.
+        </span>
+      </div>
     </div>
-    <div class="step-row">
-      <article class="step-card tone-mint">
-        <span class="step-number">1</span>
-        <span class="step-icon"><img src="/icons-pack/icons8-folder-50.png" alt=""></span>
-        <h3>Create folders</h3>
-        <p>Name folders clearly and use colors/icons for quick scanning.</p>
+
+    <div class="timeline-wrap">
+      <article class="timeline-step">
+        <span class="timeline-number">01</span>
+        <div>
+          <h3>Create folders</h3>
+          <p>
+            Open All Folders, create a new folder, choose a color and icon, then pin folders
+            that you use often.
+          </p>
+        </div>
       </article>
-      <article class="step-card tone-accent">
-        <span class="step-number">2</span>
-        <span class="step-icon"><img src="/icons-pack/icons8-upload-50.png" alt=""></span>
-        <h3>Upload files</h3>
-        <p>Choose direct upload or ask for AI folder suggestions.</p>
+
+      <article class="timeline-step">
+        <span class="timeline-number">02</span>
+        <div>
+          <h3>Upload a file</h3>
+          <p>
+            Choose a file from your device. You can upload it directly to a folder or let the
+            system analyze it first.
+          </p>
+        </div>
       </article>
-      <article class="step-card tone-lavender">
-        <span class="step-number">3</span>
-        <span class="step-icon"><img src="/icons-pack/icons8-gemini-ai-48.png" alt=""></span>
-        <h3>Review AI</h3>
-        <p>Accept the recommendation or choose a better folder yourself.</p>
+
+      <article class="timeline-step">
+        <span class="timeline-number">03</span>
+        <div>
+          <h3>Review AI suggestions</h3>
+          <p>
+            Check the recommended folders and confidence result. Accept the suggestion or
+            manually choose a better folder.
+          </p>
+        </div>
       </article>
-      <article class="step-card tone-sky">
-        <span class="step-number">4</span>
-        <span class="step-icon"><img src="/icons-pack/icons8-document-50.png" alt=""></span>
-        <h3>Manage files</h3>
-        <p>Preview, rename, move, download, sort, or delete files.</p>
+
+      <article class="timeline-step">
+        <span class="timeline-number">04</span>
+        <div>
+          <h3>Manage saved files</h3>
+          <p>
+            Use the file and folder views to preview, rename, move, download, sort, or delete
+            uploaded files.
+          </p>
+        </div>
       </article>
-      <article class="step-card tone-yellow">
-        <span class="step-number">5</span>
-        <span class="step-icon"><img src="/icons-pack/icons8-bar-chart-50.png" alt=""></span>
-        <h3>Track activity</h3>
-        <p>Use Home and Statistics to monitor file activity.</p>
+
+      <article class="timeline-step">
+        <span class="timeline-number">05</span>
+        <div>
+          <h3>Track activity</h3>
+          <p>
+            Visit Home and Statistics to monitor recent uploads, folder totals, file types,
+            and AI-assisted sorting activity.
+          </p>
+        </div>
       </article>
     </div>
   </section>
+
 </main>
 
 <footer>
-  File Nest - Smart File Sorter
+  File Nest - AI-Assisted File Organization System
 </footer>
 </body>
 </html>
