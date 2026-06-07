@@ -149,7 +149,27 @@ function renderFolderNotePreview(folder) {
 }
 
 function stripFolderNoteMarkdown(value) {
-  return String(value || '').replace(/\*\*([^*]+(?:\*(?!\*)[^*]*)*)\*\*/g, '$1');
+  return String(value || '')
+    .replace(/^#\s+/, '')
+    .replace(/\*\*([^*]+(?:\*(?!\*)[^*]*)*)\*\*/g, '$1');
+}
+
+function splitFolderNoteBody(value) {
+  const lines = String(value || '').split(/\r?\n/);
+  const firstLine = lines[0] || '';
+  if (/^#\s+/.test(firstLine)) {
+    return {
+      title: firstLine.replace(/^#\s+/, '').trim(),
+      body: lines.slice(1).join('\n').replace(/^\n+/, ''),
+    };
+  }
+  return { title: '', body: String(value || '') };
+}
+
+function composeFolderNoteBody(title, body) {
+  const cleanTitle = String(title || '').trim();
+  const cleanBody = String(body || '').replace(/^\n+/, '');
+  return cleanTitle ? `# ${cleanTitle}${cleanBody ? `\n${cleanBody}` : ''}` : cleanBody;
 }
 
 function showFloatingFolderMenu(e, button) {
@@ -284,13 +304,19 @@ function setFolderFilesTab(tab, el) {
 function renderFolderNoteTab(folder) {
   folderNoteBody = String(folder?.note_body || '');
   folderNoteDirty = false;
+  const noteParts = splitFolderNoteBody(folderNoteBody);
+  const titleInput = document.getElementById('folderNoteTitle');
+  if (titleInput) {
+    bindFolderNoteTitle(titleInput);
+    titleInput.value = noteParts.title;
+  }
   const editor = document.getElementById('folderNoteEditor');
   if (editor) {
     bindFolderNoteEditor(editor);
     if (typeof setNoteEditorBody === 'function') {
-      setNoteEditorBody(folderNoteBody, editor);
+      setNoteEditorBody(noteParts.body, editor);
     } else {
-      editor.textContent = folderNoteBody;
+      editor.textContent = noteParts.body;
     }
   }
   const saved = document.getElementById('folderNoteSavedAt');
@@ -298,6 +324,15 @@ function renderFolderNoteTab(folder) {
     saved.textContent = folder?.note_updated_at ? `Last saved ${timeAgo(folder.note_updated_at)}` : 'Not saved yet';
   }
   updateFolderNoteActions();
+}
+
+function bindFolderNoteTitle(input) {
+  if (input.dataset.folderNoteTitleBound) return;
+  input.dataset.folderNoteTitleBound = '1';
+  input.addEventListener('input', () => {
+    folderNoteDirty = true;
+    updateFolderNoteActions();
+  });
 }
 
 function bindFolderNoteEditor(editor) {
@@ -317,19 +352,21 @@ function bindFolderNoteEditor(editor) {
 
 function updateFolderNoteActions() {
   const save = document.getElementById('folderNoteSaveBtn');
-  const discard = document.getElementById('folderNoteDiscardBtn');
+  const cancel = document.getElementById('folderNoteCancelBtn');
   if (save) {
     save.disabled = !folderNoteDirty;
     save.classList.toggle('is-dirty', folderNoteDirty);
   }
-  if (discard) discard.disabled = !folderNoteDirty;
+  if (cancel) cancel.disabled = !folderNoteDirty;
 }
 
 async function saveFolderNote(folderId, btn) {
   const editor = document.getElementById('folderNoteEditor');
-  const body = typeof serializeNoteEditorBody === 'function'
+  const titleInput = document.getElementById('folderNoteTitle');
+  const editorBody = typeof serializeNoteEditorBody === 'function'
     ? serializeNoteEditorBody(editor)
     : String(editor?.textContent || '');
+  const body = composeFolderNoteBody(titleInput?.value, editorBody);
   let data = null;
   await withButtonLoading(btn, 'Saving...', async () => {
     data = await apiPut(`/api/folders/${folderId}/note`, { note_body: body });
@@ -348,7 +385,7 @@ async function saveFolderNote(folderId, btn) {
   showToast('Folder note saved.', 'success');
 }
 
-function discardFolderNote() {
+function cancelFolderNote() {
   if (!currentFolderFilesContext) return;
   renderFolderNoteTab(getCachedFolder(currentFolderFilesContext.id));
 }

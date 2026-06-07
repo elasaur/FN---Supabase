@@ -353,6 +353,34 @@
   border-radius: var(--radius-sm);
   padding: 14px;
 }
+.folder-note-fields {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.folder-note-title-input {
+  width: 100%;
+  min-height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 750;
+  outline: 0;
+  padding: 10px 12px;
+}
+.folder-note-title-input::placeholder {
+  color: var(--text3);
+  font-weight: 700;
+}
+.folder-note-title-input:focus {
+  border-color: var(--accent2);
+  background: #fff;
+}
 .folder-detail-panel-head {
   display: flex;
   align-items: center;
@@ -682,4 +710,16 @@
     justify-content: flex-end;
     flex-wrap: wrap;
   }
+}
+.note-footer-actions .note-save-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(232, 133, 90, .25);
+}
+.note-footer-actions .note-save-btn:hover {
+  background: #d96b3c;
+  border-color: #d96b3c;
+  color: #fff;
+  box-shadow: 0 5px 16px rgba(232, 133, 90, .35);
 }

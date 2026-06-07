@@ -50,11 +50,14 @@
             <div class="folder-detail-panel-sub" id="folderNoteSavedAt">Not saved yet</div>
           </div>
         </div>
-        <div id="folderNoteEditor" class="note-body-editor folder-note-editor" aria-label="Folder note"></div>
+        <div class="folder-note-fields">
+          <input id="folderNoteTitle" class="folder-note-title-input" type="text" placeholder="Title" aria-label="Note title">
+          <div id="folderNoteEditor" class="note-body-editor folder-note-editor" aria-label="Folder note"></div>
+        </div>
         <div class="note-footer">
           <div class="note-footer-actions">
-            <button id="folderNoteDiscardBtn" class="btn btn-ghost" onclick="discardFolderNote()" disabled>Discard</button>
-            <button id="folderNoteSaveBtn" class="btn btn-primary" onclick="saveFolderNote(currentFolderFilesContext.id, this)" disabled>Save note</button>
+            <button id="folderNoteCancelBtn" class="btn btn-ghost" onclick="cancelFolderNote()" disabled>Cancel</button>
+            <button id="folderNoteSaveBtn" class="btn btn-primary note-save-btn" onclick="saveFolderNote(currentFolderFilesContext.id, this)" disabled>Save note</button>
           </div>
         </div>
       </aside>
