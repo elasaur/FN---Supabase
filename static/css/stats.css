@@ -11,9 +11,85 @@
   flex-direction: column;
   gap: 20px;
 }
+.stats-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: stretch;
+}
 .stats-card-panel { padding: 24px; }
 .stats-card-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
 .stats-donut-card { min-height: 100%; }
+.storage-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+}
+.storage-kicker {
+  color: var(--text3);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.storage-value {
+  margin-top: 5px;
+  color: var(--text);
+  font-family: 'Fraunces', sans-serif;
+  font-size: 1.85rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.storage-value span {
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.storage-percent {
+  color: var(--accent);
+  font-size: 1.18rem;
+  font-weight: 900;
+}
+.storage-percent.is-near {
+  color: var(--yellow);
+}
+.storage-percent.is-full {
+  color: var(--red);
+}
+.storage-track {
+  height: 14px;
+  margin-top: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+}
+.storage-fill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--lavender));
+  transition: width .6s ease;
+}
+.storage-fill.is-near {
+  background: linear-gradient(90deg, var(--yellow), var(--accent));
+}
+.storage-fill.is-full {
+  background: linear-gradient(90deg, var(--red), var(--accent));
+}
+.storage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--text3);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
 .stats-loading {
   min-height: 92px;
   display: flex;
@@ -254,10 +330,13 @@
 
 @media (max-width: 980px) {
   .stats-grid { grid-template-columns: 1fr; }
+  .stats-summary-grid { grid-template-columns: 1fr; }
   .donut-layout { grid-template-columns: minmax(170px, 220px) 1fr; }
 }
 
 @media (max-width: 640px) {
+  .storage-summary { grid-template-columns: 1fr; gap: 10px; }
+  .storage-percent { justify-self: start; }
   .donut-layout { grid-template-columns: 1fr; justify-items: center; }
   .donut-legend { width: 100%; }
   .chart-bar-row { align-items: flex-start; }

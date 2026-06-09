@@ -96,6 +96,7 @@ function renderDashboardFromCache() {
 
 function renderStatsFromCache() {
   if (typeof renderAiSortingSummary === 'function') renderAiSortingSummary(currentStatsFromCache());
+  if (typeof renderStorageUsage === 'function') renderStorageUsage(allFiles);
   if (typeof renderFolderBars === 'function') renderFolderBars(chartDataFromCache());
   if (typeof renderTypeDonut === 'function') renderTypeDonut(allFiles);
 }

@@ -1,5 +1,6 @@
 // Statistics
 let activeTypeSegment = null;
+const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024;
 
 async function loadStats() {
   setStatsLoading();
@@ -14,8 +15,38 @@ async function loadStats() {
   allFilesLoaded = true;
 
   renderAiSortingSummary(stats);
+  renderStorageUsage(files);
   renderFolderBars(chartData);
   renderTypeDonut(files);
+}
+
+function renderStorageUsage(files) {
+  const el = document.getElementById('storageUsageSummary');
+  if (!el) return;
+
+  const usedBytes = files.reduce((sum, file) => sum + Number(file.file_size || 0), 0);
+  const remainingBytes = Math.max(STORAGE_LIMIT_BYTES - usedBytes, 0);
+  const pct = STORAGE_LIMIT_BYTES ? (usedBytes / STORAGE_LIMIT_BYTES) * 100 : 0;
+  const displayPct = Math.min(pct, 100);
+  const roundedPct = pct < 0.1 && usedBytes > 0 ? '<0.1' : Math.min(pct, 100).toFixed(1).replace(/\.0$/, '');
+  const isNearLimit = pct >= 90;
+  const isFull = pct >= 100;
+
+  el.innerHTML = `
+    <div class="storage-summary">
+      <div>
+        <div class="storage-kicker">Default storage</div>
+        <div class="storage-value">${formatSize(usedBytes)} <span>used of 5 GB</span></div>
+      </div>
+      <div class="storage-percent ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}">${roundedPct}%</div>
+    </div>
+    <div class="storage-track" title="${formatSize(usedBytes)} used of 5 GB">
+      <div class="storage-fill ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}" style="width:${displayPct}%;"></div>
+    </div>
+    <div class="storage-meta">
+      <span>${formatSize(remainingBytes)} remaining</span>
+      <span>${files.length} file${files.length === 1 ? '' : 's'} uploaded</span>
+    </div>`;
 }
 
 function renderFolderBars(chartData) {
@@ -166,7 +197,9 @@ function setStatsLoading() {
   const folderBars = document.getElementById('folderChartBars');
   const typeDonut = document.getElementById('typeDonutChart');
   const aiSummary = document.getElementById('aiSortingSummary');
+  const storageSummary = document.getElementById('storageUsageSummary');
   if (folderBars) folderBars.innerHTML = '<div class="stats-loading"><div class="spinner"></div></div>';
   if (typeDonut) typeDonut.innerHTML = '<div class="stats-loading"><div class="spinner"></div></div>';
   if (aiSummary) aiSummary.innerHTML = '<div class="stats-loading"><div class="spinner"></div></div>';
+  if (storageSummary) storageSummary.innerHTML = '<div class="stats-loading"><div class="spinner"></div></div>';
 }

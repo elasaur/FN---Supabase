@@ -131,6 +131,7 @@ function makeFolderCard(f, minimal) {
   const icon = folderIconHtml(f.emoji, 'folder-emoji');
   const pinDot  = f.pinned ? '<div class="pinned-dot"></div>' : '';
   const count   = f.file_count || 0;
+  const created = f.created_at ? `Created ${timeAgo(f.created_at)}` : 'Created date unavailable';
   const notePreview = renderFolderNotePreview(f);
   const actions = `
     <div class="folder-top-right" onclick="event.stopPropagation()">
@@ -156,6 +157,7 @@ function makeFolderCard(f, minimal) {
       ${icon}
       <div class="folder-name">${escHtml(f.name)}</div>
       <div class="folder-count">${count} file${count!==1?'s':''}</div>
+      <div class="folder-created">${escHtml(created)}</div>
       ${notePreview}
     </div>`;
 }
