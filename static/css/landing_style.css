@@ -159,6 +159,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
 
   padding: 14px 48px;
   background: rgba(247, 244, 240, 0.78);
@@ -170,9 +171,18 @@ nav {
 
 .nav-logo {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 10px;
   text-decoration: none;
+}
+
+.nav-logo-icon {
+  display: inline-flex;
+  width: 36px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
 }
 
 .logo-img {
@@ -180,6 +190,7 @@ nav {
   height: 40px;
   object-fit: contain;
   border-radius: 9px;
+  display: block;
 }
 
 .nav-logo-text {
@@ -187,6 +198,7 @@ nav {
   font-family: 'Fraunces', serif;
   font-size: 20px;
   font-weight: 800;
+  line-height: 1;
 }
 
 .nav-logo-sub {
@@ -198,7 +210,9 @@ nav {
 
 .nav-links {
   display: flex;
+  min-width: 0;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -271,7 +285,7 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   position: relative;
   z-index: 1;
 
-  min-height: 74vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -483,30 +497,23 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   z-index: 1;
   width: calc(100% - 150px);
   margin: 0 auto;
-
-  /* no spacing when no section is opened */
-  padding: 0;
+  padding: 10px 0 48px;
 }
 
 .info-panel {
-  display: none;
+  display: grid;
+  gap: 14px;
 
   min-height: auto;
   padding-top: 18px;
+  margin-bottom: 28px;
   scroll-margin-top: 122px;
 
   animation: fadeUp 0.45s ease both;
 }
 
-/* Only show info page after clicking nav link */
-.info-panel:target {
-  display: grid;
-  gap: 14px;
-}
-
-/* Add spacing only when About, Features, or Instructions is opened */
-.landing-info:has(.info-panel:target) {
-  padding: 10px 0 48px;
+.info-panel:last-child {
+  margin-bottom: 0;
 }
 
 /* =========================
@@ -1012,7 +1019,7 @@ footer span {
   }
 
   .hero {
-    min-height: 78vh;
+    min-height: 100vh;
     padding: 100px 22px 42px;
   }
 
@@ -1039,15 +1046,40 @@ footer span {
 @media (max-width: 640px) {
   nav {
     height: 66px;
-    padding: 14px 20px;
+    gap: 8px;
+    padding: 10px 12px;
   }
 
   .nav-links {
-    display: none;
+    display: flex;
+    gap: 3px;
+  }
+
+  .logo-img {
+    width: 30px;
+    height: 34px;
+  }
+
+  .nav-logo-icon {
+    width: 30px;
+    height: 34px;
+  }
+
+  .nav-logo {
+    gap: 7px;
+  }
+
+  .nav-logo-text {
+    font-size: 17px;
+  }
+
+  .nav-link {
+    padding: 6px 7px;
+    font-size: 0.68rem;
   }
 
   .hero {
-    min-height: 74vh;
+    min-height: 100vh;
     padding: 92px 18px 38px;
   }
 
@@ -1065,14 +1097,10 @@ footer span {
     margin-top: 18px;
   }
 
-    .landing-info {
+  .landing-info {
     width: min(100% - 28px, 1120px);
-    padding: 0;
-    }
-
-    .landing-info:has(.info-panel:target) {
     padding: 8px 0 40px;
-    }
+  }
 
   .info-panel {
     padding-top: 12px;

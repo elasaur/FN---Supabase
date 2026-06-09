@@ -62,17 +62,37 @@ function renderFoldersLoadError(err) {
 }
 
 function setFolderSort(mode, el) {
-  folderSortMode = mode;
+  if (mode === 'created' || mode === 'modified') {
+    const descMode = `${mode}-desc`;
+    const ascMode = `${mode}-asc`;
+    folderSortMode = folderSortMode === descMode ? ascMode : descMode;
+  } else {
+    folderSortMode = mode;
+  }
   syncFolderSortChips(el);
   renderFolderGrid();
 }
 
 function syncFolderSortChips(activeEl) {
   document.querySelectorAll('#page-folders .sort-chip').forEach(chip => {
+    const chipSort = chip.dataset.sort;
+    const isDateChip = chipSort === 'created' || chipSort === 'modified';
+    const isActive = isDateChip
+      ? folderSortMode.startsWith(`${chipSort}-`)
+      : chipSort === folderSortMode;
+
     chip.classList.toggle(
       'active',
-      chip === activeEl || chip.dataset.sort === folderSortMode
+      chip === activeEl || isActive
     );
+
+    if (isDateChip) {
+      const baseLabel = chipSort === 'created' ? 'Created Date' : 'Modified Date';
+      chip.textContent = isActive
+        ? `${baseLabel} ${folderSortMode.endsWith('-asc') ? '↑' : '↓'}`
+        : baseLabel;
+      chip.title = `${baseLabel}: click to sort ${folderSortMode.endsWith('-desc') && isActive ? 'oldest first' : 'newest first'}`;
+    }
   });
 }
 

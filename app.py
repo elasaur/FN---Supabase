@@ -636,12 +636,16 @@ def signup():
     email    = data.get('email', '').strip()
     password = data.get('password', '')
     confirm  = data.get('confirm', '')
+    terms_accepted = bool(data.get('terms_accepted'))
 
     if not name or not email or not password:
         return jsonify({'success': False, 'message': 'Please fill in all fields.'})
 
     if password != confirm:
         return jsonify({'success': False, 'message': 'Passwords do not match.'})
+
+    if not terms_accepted:
+        return jsonify({'success': False, 'message': 'Please agree to the Terms and Conditions before creating an account.'})
 
     password_message = password_validation_message(password)
     if password_message:

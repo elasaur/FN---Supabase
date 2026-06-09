@@ -77,14 +77,14 @@
 
 <!-- Signup Page -->
 <div class="auth-page" id="signupPage">
-  <div class="auth-card">
+  <div class="auth-card signup-card">
     <div class="auth-logo">
       <img src="{{ url_for('static', filename='images/logo.png') }}"
           alt="File Nest Logo"
           class="auth-logo-img">
       <div>
         <div class="logo-text" style="color: var(--accent);">File Nest</div>
-        <div class="logo-sub">Smart File Sorter</div>
+        <div class="logo-sub">AI-Assisted File Organization</div>
       </div>
     </div>
     <div class="auth-title">Create Account</div>
@@ -92,16 +92,16 @@
     <div class="modal-form">
       <div>
         <label class="form-label">Full Name</label>
-        <input class="form-input" placeholder="Maria Cruz" id="signupName">
+        <input class="form-input" placeholder="Maria Cruz" id="signupName" oninput="updateSignupSubmitState()">
       </div>
       <div>
         <label class="form-label">Email</label>
-        <input class="form-input" placeholder="maria@email.com" id="signupEmail">
+        <input class="form-input" placeholder="maria@email.com" id="signupEmail" oninput="updateSignupSubmitState()">
       </div>
       <div>
         <label class="form-label">Password</label>
         <input class="form-input" type="password" placeholder="••••••••" id="signupPassword" oninput="updateStrength(this)">
-        <div class="pw-strength" style="margin-top:6px;">
+        <div class="pw-strength">
           <div class="pw-bar"></div>
           <div class="pw-bar"></div>
           <div class="pw-bar"></div>
@@ -110,8 +110,18 @@
       </div>
       <div>
         <label class="form-label">Confirm Password</label>
-        <input class="form-input" type="password" placeholder="••••••••" id="signupConfirm">
+        <input class="form-input" type="password" placeholder="••••••••" id="signupConfirm" oninput="updateSignupSubmitState()">
       </div>
+      <label class="terms-check">
+        <input type="checkbox" id="signupTerms" onchange="updateSignupSubmitState()">
+        <span class="terms-box" aria-hidden="true"></span>
+        <span>
+          I agree to the
+          <button type="button" class="terms-link" onclick="event.preventDefault();event.stopPropagation();openTermsModal();">
+            Terms and Conditions
+          </button>.
+        </span>
+      </label>
       <div id="signupError" class="auth-error" style="display:none;"></div>
       <button id="signupSubmit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doSignup()" disabled>Create Account</button>
     </div>
@@ -177,6 +187,57 @@
     </div>
     <div class="auth-divider">Remember it? <span class="auth-link" onclick="showLogin()">Back to Login</span></div>
   </div>
+</div>
+
+<div class="terms-modal-bg" id="termsModal" onclick="if(event.target===this)closeTermsModal()">
+  <section class="terms-modal" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
+    <div class="terms-modal-head">
+      <div>
+        <div class="terms-kicker">File Nest</div>
+        <h2 id="termsTitle">Terms and Conditions</h2>
+      </div>
+      <button type="button" class="terms-close" onclick="closeTermsModal()" aria-label="Close Terms and Conditions">×</button>
+    </div>
+
+    <div class="terms-modal-body">
+      <p>
+        By creating a File Nest account, you agree to use the system responsibly for organizing,
+        storing, and managing your own files.
+      </p>
+      <h3>Account responsibility</h3>
+      <p>
+        You are responsible for keeping your login details secure and for all activity made
+        through your account. Use accurate account information and update it when needed.
+      </p>
+      <h3>File uploads and content</h3>
+      <p>
+        Only upload files you own or are allowed to manage. Do not upload harmful, illegal,
+        or unauthorized content. File Nest may store file metadata to support organization,
+        search, sorting, and dashboard features.
+      </p>
+      <h3>AI-assisted suggestions</h3>
+      <p>
+        File Nest may analyze supported filenames or readable file content to recommend folders.
+        Suggestions are provided as assistance only, and you remain responsible for reviewing
+        and confirming where each file should be saved.
+      </p>
+      <h3>Privacy and security</h3>
+      <p>
+        File Nest is designed to keep account access protected and files organized in private
+        storage. You should avoid sharing sensitive account access and should log out when using
+        a shared device.
+      </p>
+      <h3>Acceptance</h3>
+      <p>
+        Checking the Terms and Conditions box means you understand and accept these rules before
+        creating your account.
+      </p>
+    </div>
+
+    <div class="terms-modal-actions">
+      <button type="button" class="btn btn-primary" onclick="closeTermsModal()">Close</button>
+    </div>
+  </section>
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
@@ -260,12 +321,36 @@ function showReset() {
   document.getElementById('resetPage').classList.add('open');
 }
 
+function openTermsModal() {
+  document.getElementById('termsModal')?.classList.add('open');
+}
+
+function closeTermsModal() {
+  document.getElementById('termsModal')?.classList.remove('open');
+}
+
 // ── Password Strength Bar ────────────────────────────────────────────────────
 function updateStrength(inputEl) {
-  const buttonId = inputEl?.id === 'newPw'
-    ? 'resetSubmit'
-    : (inputEl?.id === 'signupPassword' ? 'signupSubmit' : '');
+  const buttonId = inputEl?.id === 'newPw' ? 'resetSubmit' : '';
   updatePasswordStrength(inputEl, buttonId);
+  if (inputEl?.id === 'signupPassword') updateSignupSubmitState();
+}
+
+function updateSignupSubmitState() {
+  const btn = document.getElementById('signupSubmit');
+  const name = document.getElementById('signupName')?.value.trim() || '';
+  const email = document.getElementById('signupEmail')?.value.trim() || '';
+  const password = document.getElementById('signupPassword')?.value || '';
+  const confirm = document.getElementById('signupConfirm')?.value || '';
+  const termsAccepted = document.getElementById('signupTerms')?.checked || false;
+  if (!btn || btn.classList.contains('is-loading')) return;
+  btn.disabled = !(
+    name &&
+    email &&
+    confirm &&
+    termsAccepted &&
+    passwordValidationErrors(password).length === 0
+  );
 }
 
 // ── Login ────────────────────────────────────────────────────────────────────
@@ -314,6 +399,7 @@ async function doSignup() {
   const email    = document.getElementById('signupEmail').value.trim();
   const password = document.getElementById('signupPassword').value.trim();
   const confirm  = document.getElementById('signupConfirm').value.trim();
+  const termsAccepted = document.getElementById('signupTerms').checked;
   const errEl    = document.getElementById('signupError');
   errEl.style.display = 'none';
 
@@ -333,13 +419,19 @@ async function doSignup() {
     errEl.style.display = 'block';
     return;
   }
+  if (!termsAccepted) {
+    errEl.textContent = 'Please agree to the Terms and Conditions before creating an account.';
+    errEl.style.display = 'block';
+    updateSignupSubmitState();
+    return;
+  }
 
   setAuthButtonLoading(btn, true, 'Creating...');
   try {
   const res  = await fetch('/signup', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ name, email, password, confirm }),
+    body:    JSON.stringify({ name, email, password, confirm, terms_accepted: termsAccepted }),
   });
   const data = await res.json();
 
@@ -361,6 +453,7 @@ async function doSignup() {
     errEl.style.display = 'block';
   } finally {
     setAuthButtonLoading(btn, false);
+    updateSignupSubmitState();
   }
 }
 
