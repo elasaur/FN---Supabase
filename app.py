@@ -65,6 +65,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 SESSION_TIMEOUT = timedelta(minutes=30)
+STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024
 DEFAULT_FOLDER_EMOJI = '📁'
 
 LOGIN_MAX_FAILED_ATTEMPTS = 3
@@ -330,10 +331,12 @@ def list_folders_with_counts(db, user_id, search=""):
     return rows
 
 
-def list_files_with_folder_metadata(db, user_id, folder_id=None, search="", sort="date"):
+def list_files_with_folder_metadata(db, user_id, folder_id=None, search="", sort="date", created_after=None):
     filters = {"user_id": pg_filter("eq", user_id)}
     if folder_id:
         filters["folder_id"] = pg_filter("eq", folder_id)
+    if created_after:
+        filters["created_at"] = pg_filter("gte", created_after)
 
     search = str(search or "").strip().lower()
     folders = {
@@ -364,6 +367,16 @@ def list_files_with_folder_metadata(db, user_id, folder_id=None, search="", sort
     else:
         rows.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
     return rows
+
+
+def get_user_storage_used_bytes(db, user_id):
+    total = 0
+    for item in db.select("files", {"user_id": pg_filter("eq", user_id)}, "file_size"):
+        try:
+            total += int(item.get("file_size") or 0)
+        except (TypeError, ValueError):
+            continue
+    return total
 
 
 def stats_chart_rows(db, user_id):
@@ -817,6 +830,8 @@ def api_stats():
         {"user_id": pg_filter("eq", uid), "ai_sorted": pg_filter("eq", True)},
         "id",
     ))
+    storage_used_bytes = get_user_storage_used_bytes(db, uid)
+    storage_remaining_bytes = max(STORAGE_LIMIT_BYTES - storage_used_bytes, 0)
 
     return jsonify({
         'total_folders': total_folders,
@@ -824,6 +839,9 @@ def api_stats():
         'recent_count':  recent_count,
         'ai_suggestions_accepted': ai_suggestions_accepted,
         'ai_sorted': ai_suggestions_accepted,
+        'storage_limit_bytes': STORAGE_LIMIT_BYTES,
+        'storage_used_bytes': storage_used_bytes,
+        'storage_remaining_bytes': storage_remaining_bytes,
     })
 
 
@@ -1018,8 +1036,16 @@ def api_get_files():
     folder_id = request.args.get('folder_id')
     search    = request.args.get('search', '').strip()
     sort      = request.args.get('sort', 'date')
+    recent_minutes = request.args.get('recent_minutes')
+    created_after = None
+    if recent_minutes:
+        try:
+            minutes = max(0, min(int(recent_minutes), 60 * 24))
+            created_after = (now_utc() - timedelta(minutes=minutes)).isoformat()
+        except (TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'Invalid recent_minutes value.'}), 400
 
-    rows = list_files_with_folder_metadata(db, uid, folder_id, search, sort)
+    rows = list_files_with_folder_metadata(db, uid, folder_id, search, sort, created_after)
     return jsonify([dict(r) for r in rows])
 
 
@@ -1175,6 +1201,8 @@ def api_upload():
     timestamp   = now_utc().strftime('%Y%m%d%H%M%S%f')
     stored_name = make_storage_path(uid, f'{timestamp}_{filename}')
     file_size   = uploaded_file_size(file)
+    if get_user_storage_used_bytes(db, uid) + file_size > STORAGE_LIMIT_BYTES:
+        return jsonify({'success': False, 'message': 'Storage limit reached. Delete files before uploading more.'})
 
     try:
         upload_file(file, stored_name)
@@ -1244,6 +1272,8 @@ def api_confirm_upload():
     timestamp   = now_utc().strftime('%Y%m%d%H%M%S%f')
     stored_name = make_storage_path(uid, f'{timestamp}_{filename}')
     file_size   = uploaded_file_size(file)
+    if get_user_storage_used_bytes(db, uid) + file_size > STORAGE_LIMIT_BYTES:
+        return jsonify({'success': False, 'message': 'Storage limit reached. Delete files before uploading more.'})
 
     try:
         upload_file(file, stored_name)

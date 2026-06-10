@@ -275,7 +275,7 @@ async function loadUploadFileList(sortMode) {
   if (sortMode) uploadSortMode = sortMode;
   const list    = document.getElementById('fileList');
   if (list) list.innerHTML = '<div style="text-align:center;padding:24px;"><div class="spinner"></div></div>';
-  const res = await fetch(`/api/files?sort=${uploadSortMode}&t=${Date.now()}`);
+  const res = await fetch(`/api/files?sort=${uploadSortMode}&recent_minutes=5&t=${Date.now()}`);
   uploadFiles = await res.json();
   sortUploadFilesCache();
   renderUploadFileList();
@@ -291,15 +291,15 @@ function sortUploadFilesCache() {
 function renderUploadFileList() {
   const list = document.getElementById('fileList');
   if (!list) return;
-  const files = uploadFiles;
+  const files = filterRecentUploadFiles(uploadFiles);
   const countEl = document.getElementById('filesCount');
   if (countEl) countEl.textContent = files.length;
   if (!files.length) {
-    list.innerHTML = `<div class="empty-state"><div class="es-icon">${filledSvgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files yet - upload one above to get started!</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">${filledSvgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No uploads from the last 5 minutes.</div></div>`;
     return;
   }
   list.innerHTML = files.map((f, idx) => `
-    <div class="file-item" style="animation-delay:${idx*0.04}s;">
+    <div class="file-item upload-file-card" role="button" tabindex="0" onclick="openUploadedFileFolder(${f.id})" onkeydown="handleUploadedFileCardKeydown(event, ${f.id})" style="animation-delay:${idx*0.04}s;">
       <div class="fi-icon">${getExtIcon(f.original_name)}</div>
       <div class="fi-info">
         <div class="fi-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
@@ -312,6 +312,22 @@ function renderUploadFileList() {
       <span class="fi-date">${timeAgo(f.created_at)}</span>
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileUpload(${f.id})`)}
     </div>`).join('');
+}
+
+function openUploadedFileFolder(fileId) {
+  const file = getCachedFile(fileId);
+  if (!file) return;
+  openFolderFiles(
+    file.folder_id,
+    file.folder_name || 'Folder',
+    file.folder_emoji || 'folder'
+  );
+}
+
+function handleUploadedFileCardKeydown(event, fileId) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  openUploadedFileFolder(fileId);
 }
 
 function sortFiles(mode, el) {

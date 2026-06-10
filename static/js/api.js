@@ -46,9 +46,18 @@ function getCachedFolder(folderId) {
   return allFolders.find(folder => sameId(folder.id, folderId)) || null;
 }
 
+function filterRecentUploadFiles(files, minutes = 5) {
+  const cutoff = Date.now() - minutes * 60 * 1000;
+  return (Array.isArray(files) ? files : []).filter(file => {
+    const created = parseAppDate(file.created_at)?.getTime();
+    return created && created >= cutoff;
+  });
+}
+
 function currentStatsFromCache() {
   const now = Date.now();
   const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const storageUsedBytes = allFiles.reduce((sum, file) => sum + Number(file.file_size || 0), 0);
   return {
     total_folders: allFolders.length,
     total_files: allFiles.length,
@@ -57,6 +66,9 @@ function currentStatsFromCache() {
       return created && now - created <= weekMs;
     }).length,
     ai_suggestions_accepted: allFiles.filter(file => Number(file.ai_sorted) === 1 || file.ai_sorted === true).length,
+    storage_limit_bytes: typeof STORAGE_LIMIT_BYTES === 'number' ? STORAGE_LIMIT_BYTES : 5 * 1024 * 1024 * 1024,
+    storage_used_bytes: storageUsedBytes,
+    storage_remaining_bytes: Math.max((typeof STORAGE_LIMIT_BYTES === 'number' ? STORAGE_LIMIT_BYTES : 5 * 1024 * 1024 * 1024) - storageUsedBytes, 0),
   };
 }
 
@@ -95,8 +107,9 @@ function renderDashboardFromCache() {
 }
 
 function renderStatsFromCache() {
-  if (typeof renderAiSortingSummary === 'function') renderAiSortingSummary(currentStatsFromCache());
-  if (typeof renderStorageUsage === 'function') renderStorageUsage(allFiles);
+  const stats = currentStatsFromCache();
+  if (typeof renderAiSortingSummary === 'function') renderAiSortingSummary(stats);
+  if (typeof renderStorageUsage === 'function') renderStorageUsage(stats);
   if (typeof renderFolderBars === 'function') renderFolderBars(chartDataFromCache());
   if (typeof renderTypeDonut === 'function') renderTypeDonut(allFiles);
 }
@@ -239,7 +252,7 @@ function syncCachesSilently() {
   ]).then(([folders, files]) => {
     allFolders = folders;
     allFiles = files;
-    uploadFiles = [...files];
+    uploadFiles = filterRecentUploadFiles(files);
     dashRecentFiles = [...files];
     allFilesLoaded = true;
     renderEverywhereFromCache();

@@ -146,6 +146,11 @@ img.rec-folder-icon {
 }
 @keyframes slideIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:none; } }
 .file-item:hover { border-color: var(--accent2); box-shadow: var(--shadow2); }
+.upload-file-card { cursor: pointer; }
+.upload-file-card:focus-visible {
+  outline: 3px solid var(--accent3);
+  outline-offset: 2px;
+}
 .fi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; padding: 6px; box-sizing: border-box; background: transparent !important; }
 .fi-icon .file-type-icon,
 .pred-file-icon .file-type-icon,

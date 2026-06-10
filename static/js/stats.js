@@ -11,22 +11,38 @@ async function loadStats() {
   const chartData = await chartRes.json();
   const files = await filesRes.json();
   allFiles = files;
-  uploadFiles = files;
+  uploadFiles = filterRecentUploadFiles(files);
   allFilesLoaded = true;
 
   renderAiSortingSummary(stats);
-  renderStorageUsage(files);
+  renderStorageUsage(stats);
   renderFolderBars(chartData);
   renderTypeDonut(files);
 }
 
-function renderStorageUsage(files) {
+function formatStorageRemaining(bytes, usedBytes) {
+  if (!usedBytes) return formatSize(bytes);
+  if (bytes >= 1024 * 1024 * 1024) {
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(3).replace(/0+$/, '').replace(/\.$/, '')} GB`;
+  }
+  return formatSize(bytes);
+}
+
+function renderStorageUsage(storage) {
   const el = document.getElementById('storageUsageSummary');
   if (!el) return;
 
-  const usedBytes = files.reduce((sum, file) => sum + Number(file.file_size || 0), 0);
-  const remainingBytes = Math.max(STORAGE_LIMIT_BYTES - usedBytes, 0);
-  const pct = STORAGE_LIMIT_BYTES ? (usedBytes / STORAGE_LIMIT_BYTES) * 100 : 0;
+  const files = Array.isArray(storage) ? storage : allFiles;
+  const usedBytes = Array.isArray(storage)
+    ? files.reduce((sum, file) => sum + Number(file.file_size || 0), 0)
+    : Number(storage.storage_used_bytes || 0);
+  const limitBytes = Array.isArray(storage)
+    ? STORAGE_LIMIT_BYTES
+    : Number(storage.storage_limit_bytes || STORAGE_LIMIT_BYTES);
+  const remainingBytes = Array.isArray(storage)
+    ? Math.max(limitBytes - usedBytes, 0)
+    : Number(storage.storage_remaining_bytes ?? Math.max(limitBytes - usedBytes, 0));
+  const pct = limitBytes ? (usedBytes / limitBytes) * 100 : 0;
   const displayPct = Math.min(pct, 100);
   const roundedPct = pct < 0.1 && usedBytes > 0 ? '<0.1' : Math.min(pct, 100).toFixed(1).replace(/\.0$/, '');
   const isNearLimit = pct >= 90;
@@ -36,15 +52,15 @@ function renderStorageUsage(files) {
     <div class="storage-summary">
       <div>
         <div class="storage-kicker">Default storage</div>
-        <div class="storage-value">${formatSize(usedBytes)} <span>used of 5 GB</span></div>
+        <div class="storage-value">${formatSize(usedBytes)} <span>used of ${formatSize(limitBytes)}</span></div>
       </div>
       <div class="storage-percent ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}">${roundedPct}%</div>
     </div>
-    <div class="storage-track" title="${formatSize(usedBytes)} used of 5 GB">
+    <div class="storage-track" title="${formatSize(usedBytes)} used of ${formatSize(limitBytes)}">
       <div class="storage-fill ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}" style="width:${displayPct}%;"></div>
     </div>
     <div class="storage-meta">
-      <span>${formatSize(remainingBytes)} remaining</span>
+      <span>${formatStorageRemaining(remainingBytes, usedBytes)} remaining</span>
       <span>${files.length} file${files.length === 1 ? '' : 's'} uploaded</span>
     </div>`;
 }

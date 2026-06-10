@@ -16,7 +16,7 @@ async function loadDashboard() {
 
   allFolders = folders;
   allFiles = files;
-  uploadFiles = files;
+  uploadFiles = filterRecentUploadFiles(files);
   allFilesLoaded = true;
 
   const pinned = allFolders.filter(f => f.pinned);
