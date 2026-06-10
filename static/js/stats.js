@@ -172,7 +172,7 @@ function renderAiSortingSummary(stats) {
         <div class="ai-summary-kicker">AI suggestions accepted</div>
         <div class="ai-summary-value">${aiPct}%</div>
       </div>
-      <span class="ai-summary-tag"><img class="ui-icon ui-icon-sm" src="${localIcon('custom-svg/dash-ai.svg')}" alt=""> Gemini + TextBlob</span>
+      <span class="ai-summary-tag textblob">${filledSvgIcon('textblob-logo.svg', 'ai-summary-tag-icon')} Gemini + TextBlob</span>
     </div>
     <div class="ai-summary-track" title="${accepted} of ${total} uploads followed the AI recommendation">
       <div class="ai-summary-fill" style="width:${aiPct}%;"></div>

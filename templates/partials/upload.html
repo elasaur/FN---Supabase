@@ -14,10 +14,17 @@
 
       <!-- Default state -->
       <div id="uploadDefault">
-        <div class="upload-icon-wrap">
-          <span class="upload-tile-icon upload-tile-lg" style="--upload-icon-color:var(--accent); --upload-icon-bg:var(--accent3);">
-            <span class="svg-icon filled-svg-icon upload-tile-svg icon-upload" aria-hidden="true"></span>
-          </span>
+        <div class="upload-zone-grid">
+          <div class="upload-icon-wrap">
+            <span class="upload-tile-icon upload-tile-lg" style="--upload-icon-color:var(--accent); --upload-icon-bg:var(--accent3);">
+              <span class="svg-icon filled-svg-icon upload-tile-svg icon-upload" aria-hidden="true"></span>
+            </span>
+          </div>
+          <div class="upload-mini-flow" aria-hidden="true">
+            <span class="upload-mini-icon" style="--upload-icon-color:var(--sky); --upload-icon-bg:var(--sky2);"><span class="svg-icon filled-svg-icon upload-tile-svg icon-file"></span></span>
+            <span class="upload-mini-icon" style="--upload-icon-color:var(--lavender); --upload-icon-bg:var(--lavender2);"><span class="svg-icon filled-svg-icon upload-tile-svg icon-dash-ai"></span></span>
+            <span class="upload-mini-icon" style="--upload-icon-color:var(--mint); --upload-icon-bg:var(--mint2);"><span class="svg-icon filled-svg-icon upload-tile-svg icon-folder"></span></span>
+          </div>
         </div>
         <div class="upload-title" id="uploadZoneTitle">Drag & drop your file here</div>
         <div class="upload-sub">or click to browse from your device</div>
@@ -49,8 +56,8 @@
     <!-- AI PREDICTION CARD -->
     <div class="prediction-card ai-prediction-card" id="predictionCard">
       <div class="pred-header">
-        <span class="pred-header-icon upload-tile-icon" style="--upload-icon-color:var(--mint); --upload-icon-bg:var(--mint2);">
-          <span class="svg-icon filled-svg-icon upload-tile-svg icon-folder" aria-hidden="true"></span>
+        <span class="pred-header-icon upload-tile-icon" style="--upload-icon-color:var(--lavender); --upload-icon-bg:var(--lavender2);">
+          <span class="svg-icon filled-svg-icon upload-tile-svg icon-dash-ai" aria-hidden="true"></span>
         </span>
         <div class="pred-header-copy"><div><div class="pred-header-title">AI Folder Prediction</div><div class="pred-header-sub" id="predEngineLabel">Analyzed by Gemini 2.5 Flash · Review and confirm below</div></div><span class="engine-tag" id="predEngineTag">Gemini</span></div>
       </div>
@@ -68,7 +75,7 @@
       <div class="keywords-row" id="keywordsRow">
         <span class="kw-label">
           <span class="upload-tile-icon upload-tile-xs" style="--upload-icon-color:var(--sky); --upload-icon-bg:var(--sky2);">
-            <span class="svg-icon filled-svg-icon upload-tile-svg icon-file" aria-hidden="true"></span>
+            <span class="svg-icon filled-svg-icon upload-tile-svg icon-keyword" aria-hidden="true"></span>
           </span>
           Keywords detected:
         </span>

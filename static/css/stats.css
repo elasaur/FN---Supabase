@@ -314,6 +314,15 @@
   align-items: center;
   gap: 5px;
 }
+.ai-summary-tag.textblob {
+  background: var(--sky2);
+  color: var(--sky);
+}
+.ai-summary-tag-icon {
+  width: 16px;
+  height: 16px;
+  --svg-icon-color: currentColor;
+}
 .ai-summary-track {
   height: 12px;
   border-radius: 999px;

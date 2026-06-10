@@ -9,9 +9,9 @@ function showPredictionCard(file, analysis) {
   const kwRow   = document.getElementById('keywordsRow');
   kwRow.innerHTML = `
     <span class="kw-label">
-      <img src="${localIcon('icons8-keyword-48.png')}"
-          alt=""
-          class="ui-icon ui-icon-sm">
+      <span class="upload-tile-icon upload-tile-xs" style="--upload-icon-color:var(--sky); --upload-icon-bg:var(--sky2);">
+        ${filledSvgIcon('keyword.svg', 'upload-tile-svg')}
+      </span>
       Keywords detected:
     </span>
   `;
@@ -48,9 +48,9 @@ function showPredictionCard(file, analysis) {
     recList.appendChild(notice);
   } else {
     const rankLabels  = [
-      `<img class="ui-icon ui-icon-sm" src="${localIcon('icons8-medal-48.png')}" alt=""> Best Match`,
-      `<img class="ui-icon ui-icon-sm" src="${localIcon('icons8-medal-second-place-48.png')}" alt=""> 2nd Match`,
-      `<img class="ui-icon ui-icon-sm" src="${localIcon('icons8-medal-third-place-48.png')}" alt=""> 3rd Match`
+      'Best Match',
+      '2nd Match',
+      '3rd Match'
     ];
     const rankClasses = ['rank-1', 'rank-2', 'rank-3', 'rank-other'];
     const rankColors = ['var(--yellow)', 'var(--sky)', 'var(--mint)'];

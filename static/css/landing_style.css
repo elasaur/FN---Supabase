@@ -594,6 +594,11 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   --section-icon-bg: var(--yellow2);
 }
 
+.section-kicker-icon.sky {
+  --section-icon-color: var(--sky);
+  --section-icon-bg: var(--sky2);
+}
+
 .spot-copy h2 {
   max-width: 660px;
 
@@ -688,6 +693,12 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   object-fit: contain;
 }
 
+.orbit-card .svg-icon {
+  width: 24px;
+  height: 24px;
+  --svg-icon-color: var(--orbit-icon-color, var(--accent));
+}
+
 .orbit-card span {
   color: var(--text2);
   font-size: 0.76rem;
@@ -721,18 +732,21 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   top: 14px;
   left: 16px;
   background: var(--lavender2);
+  --orbit-icon-color: var(--lavender);
 }
 
 .orbit-two {
   top: 28px;
   right: 18px;
   background: var(--sky2);
+  --orbit-icon-color: var(--sky);
 }
 
 .orbit-three {
   bottom: 18px;
   left: 70px;
   background: var(--mint2);
+  --orbit-icon-color: var(--mint);
 }
 
 /* =========================
@@ -816,6 +830,12 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   width: 22px;
   height: 22px;
   object-fit: contain;
+}
+
+.bento-icon .svg-icon {
+  width: 22px;
+  height: 22px;
+  --svg-icon-color: var(--icon-tone);
 }
 
 /* Orange icon background */
@@ -938,6 +958,24 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   object-fit: contain;
 }
 
+.instruction-note-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--yellow2);
+  border: 1.5px solid var(--yellow);
+  box-shadow: 0 6px 14px rgba(232, 184, 75, 0.2);
+}
+
+.instruction-note-icon .svg-icon {
+  width: 32px;
+  height: 32px;
+  --svg-icon-color: var(--yellow);
+}
+
 .instruction-note strong {
   color: var(--text);
   font-size: 0.98rem;
@@ -970,19 +1008,27 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
 }
 
 .timeline-number {
-  display: grid;
+  display: inline-flex;
   width: 50px;
   height: 50px;
-
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex-direction: column;
 
   border-radius: 15px;
   background: var(--accent3);
 
   color: var(--accent);
   font-family: 'Fraunces', serif;
-  font-size: 1rem;
+  font-size: 0.78rem;
   font-weight: 900;
+}
+
+.timeline-number .svg-icon {
+  width: 18px;
+  height: 18px;
+  --svg-icon-color: currentColor;
 }
 
 /* =========================

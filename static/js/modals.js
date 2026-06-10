@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const iconSlot = modal?.firstElementChild;
     if (!iconSlot) return;
     iconSlot.classList.add('modal-icon-center');
-    iconSlot.innerHTML = filledSvgIcon(icon, 'modal-svg-icon modal-warning-icon');
+    const badgeClass = id === 'sessionExpired' ? 'modal-alert-icon-bg session' : 'modal-alert-icon-bg';
+    iconSlot.innerHTML = `<span class="${badgeClass}">${filledSvgIcon(icon, 'modal-svg-icon modal-warning-icon')}</span>`;
     iconSlot.style.fontSize = '';
     if (id !== 'sessionExpired') iconSlot.style.textAlign = 'center';
   });

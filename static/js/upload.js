@@ -87,13 +87,13 @@ async function handleFiles(files) {
 
     if (engine === 'textblob') {
       if (engineTag) {
-        engineTag.textContent = 'TextBlob';
+        engineTag.innerHTML = `${filledSvgIcon('textblob-logo.svg', 'engine-tag-icon')} TextBlob`;
         engineTag.classList.add('textblob');
       }
       if (engineLabel) {
         engineLabel.textContent =
           'Analyzed by TextBlob - Review and confirm below';
-        engineLabel.style.color = '#a07b10';
+        engineLabel.style.color = 'var(--sky)';
       }
       showToast('Gemini API limit reached — using TextBlob instead', 'warn');
     } else {

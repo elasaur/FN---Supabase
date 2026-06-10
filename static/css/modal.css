@@ -17,15 +17,68 @@
   font-size: 1.32rem;
 }
 .modal-title.danger-title { justify-content: center; text-align: center; }
-.modal-title-icon { font-size: 1.25rem; vertical-align: middle; }
+.modal-title-icon-wrap {
+  --modal-title-icon-color: var(--accent);
+  --modal-title-icon-bg: var(--accent3);
+  width: 1.55em;
+  height: 1.55em;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.55em;
+  background: var(--modal-title-icon-bg);
+  border: 1px solid color-mix(in srgb, var(--modal-title-icon-color) 34%, transparent);
+}
+.modal-title-icon-wrap .modal-svg-icon {
+  width: 1em;
+  height: 1em;
+  --svg-icon-color: var(--modal-title-icon-color);
+}
+.modal-title-icon-wrap .icon-folder { --svg-icon-color: var(--mint); }
+.modal-title-icon-wrap .icon-edit { --svg-icon-color: var(--accent); }
+.modal-title-icon-wrap .icon-password { --svg-icon-color: var(--lavender); }
+.modal-title-icon-wrap .icon-warning { --svg-icon-color: var(--yellow); }
+.modal-title-icon-wrap:has(.icon-folder) {
+  --modal-title-icon-color: var(--mint);
+  --modal-title-icon-bg: var(--mint2);
+}
+.modal-title-icon-wrap:has(.icon-edit) {
+  --modal-title-icon-color: var(--accent);
+  --modal-title-icon-bg: var(--accent3);
+}
+.modal-title-icon-wrap:has(.icon-password) {
+  --modal-title-icon-color: var(--lavender);
+  --modal-title-icon-bg: var(--lavender2);
+}
+.modal-title-icon-wrap:has(.icon-warning) {
+  --modal-title-icon-color: var(--yellow);
+  --modal-title-icon-bg: var(--yellow2);
+}
+.modal-title-icon { font-size: 1.2rem; vertical-align: middle; }
 .delete-file-icon {
-  text-align: center;
-  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 .modal-icon-center {
   display: flex;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+}
+.modal-alert-icon-bg {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red2);
+  border: 1px solid color-mix(in srgb, var(--red) 34%, transparent);
+}
+.modal-alert-icon-bg.session {
+  background: var(--sky2);
+  border-color: color-mix(in srgb, var(--sky) 38%, transparent);
 }
 .modal-svg-icon {
   width: 42px;
@@ -33,9 +86,12 @@
   --svg-icon-color: var(--red);
 }
 .modal-warning-icon {
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
   animation: modalIconBounce .56s ease both;
+}
+.modal-alert-icon-bg.session .modal-warning-icon {
+  --svg-icon-color: var(--sky);
 }
 .modal-bg.open .modal-warning-icon,
 .modal-bg[style*="display: flex"] .modal-warning-icon {
@@ -145,10 +201,13 @@
 }
 .prediction-card.show { display: block; }
 .ai-prediction-card {
+  --prediction-color: var(--lavender);
+  --prediction-bg: var(--lavender2);
   border: 1.5px solid var(--border);
   box-shadow: var(--shadow2);
   background:
-    linear-gradient(180deg, rgba(237,232,248,0.55), rgba(255,255,255,0) 180px),
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--prediction-bg) 78%, transparent), transparent 220px),
+    linear-gradient(180deg, color-mix(in srgb, var(--prediction-bg) 58%, transparent), rgba(255,255,255,0) 190px),
     var(--surface);
 }
 .ai-prediction-card .pred-header {
@@ -172,7 +231,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--lavender2);
+  background: var(--prediction-bg);
+  color: var(--prediction-color);
+  border: 1.5px solid color-mix(in srgb, var(--prediction-color) 30%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--prediction-color) 16%, transparent);
   font-size: 1.55rem;
 }
 .ai-prediction-card .pred-file-row {
@@ -182,8 +244,8 @@
   padding: 14px;
 }
 .ai-prediction-card .keywords-row {
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--sky2) 48%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--sky) 24%, var(--border));
   border-radius: var(--radius-sm);
   padding: 10px 12px;
 }
@@ -208,9 +270,14 @@
   font-weight: 900;
 }
 .engine-tag.textblob {
-  background: var(--yellow2);
-  color: #a07b10;
-  border-color: var(--yellow);
+  background: var(--sky2);
+  color: var(--sky);
+  border-color: var(--sky);
+}
+.engine-tag-icon {
+  width: 14px;
+  height: 14px;
+  --svg-icon-color: currentColor;
 }
 .pred-header-sub { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
 .pred-confidence-pill {
@@ -233,9 +300,9 @@
   flex: 0 0 16px;
 }
 .kw-tag {
-  background: var(--lavender2); color: var(--lavender);
+  background: var(--sky2); color: var(--sky);
   font-size: 0.72rem; font-weight: 800; padding: 2px 10px; border-radius: 20px;
-  border: 1px solid var(--lavender); animation: fadeIn .3s ease both;
+  border: 1px solid var(--sky); animation: fadeIn .3s ease both;
 }
 
 .conf-bar-wrap { margin-bottom: 18px; }
@@ -273,7 +340,7 @@
   gap: 4px;
   font-size: 0.68rem; 
   font-weight: 800; 
-  padding: 2px 15px; 
+  padding: 2px 12px;
   border-radius: 20px;
   flex-shrink: 0; /* prevent badge from stretching into the check zone */
 }
