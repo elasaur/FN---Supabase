@@ -17,6 +17,40 @@
   .ui-icon-sm { width: 20px; height: 20px; }
   .ui-icon-lg { width: 32px; height: 32px; }
   .ui-icon-xl { width: 48px; height: 48px; }
+
+  .svg-icon {
+    --svg-icon-color: currentColor;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    flex: 0 0 auto;
+    background: var(--svg-icon-color);
+    mask: var(--svg-icon) center / contain no-repeat;
+    -webkit-mask: var(--svg-icon) center / contain no-repeat;
+    vertical-align: middle;
+  }
+
+  .icon-home { --svg-icon: url('/icons-pack/custom-svg/home.svg'); }
+  .icon-upload { --svg-icon: url('/icons-pack/custom-svg/upload.svg'); }
+  .icon-folder { --svg-icon: url('/icons-pack/custom-svg/folder.svg'); }
+  .icon-file { --svg-icon: url('/icons-pack/custom-svg/file.svg'); }
+  .icon-statistics { --svg-icon: url('/icons-pack/custom-svg/statistics.svg'); }
+  .icon-setting { --svg-icon: url('/icons-pack/custom-svg/setting.svg'); }
+  .icon-logout { --svg-icon: url('/icons-pack/custom-svg/logout.svg'); }
+  .icon-edit { --svg-icon: url('/icons-pack/custom-svg/edit.svg'); }
+  .icon-move { --svg-icon: url('/icons-pack/custom-svg/move.svg'); }
+  .icon-pin-folder { --svg-icon: url('/icons-pack/custom-svg/pin-folder.svg'); }
+  .icon-warning { --svg-icon: url('/icons-pack/custom-svg/warning.svg'); }
+  .icon-session-timeout { --svg-icon: url('/icons-pack/custom-svg/session-timeout.svg'); }
+  .icon-eye { --svg-icon: url('/icons-pack/custom-svg/eye.svg'); }
+  .icon-eye-slash { --svg-icon: url('/icons-pack/custom-svg/eye-slash.svg'); }
+  .icon-search { --svg-icon: url('/icons-pack/custom-svg/search.svg'); }
+  .icon-storage { --svg-icon: url('/icons-pack/custom-svg/storage.svg'); }
+  .icon-donut-chart { --svg-icon: url('/icons-pack/custom-svg/donut-chart.svg'); }
+  .icon-dash-folder { --svg-icon: url('/icons-pack/custom-svg/dash-folder.svg'); }
+  .icon-dash-file { --svg-icon: url('/icons-pack/custom-svg/dash-file.svg'); }
+  .icon-dash-calendar { --svg-icon: url('/icons-pack/custom-svg/dash-calendar.svg'); }
+  .icon-dash-ai { --svg-icon: url('/icons-pack/custom-svg/dash-ai.svg'); }
   
 :root {
   --bg: #f7f4f0;
@@ -123,6 +157,11 @@ body {
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
 .empty-state .es-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.empty-svg-icon {
+  width: 36px;
+  height: 36px;
+  --svg-icon-color: var(--text3);
+}
 .empty-state .es-text { font-weight: 700; font-size: 0.88rem; }
 
 /* ── CARD ── */

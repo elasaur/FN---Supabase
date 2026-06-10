@@ -22,6 +22,39 @@
   text-align: center;
   margin-bottom: 8px;
 }
+.modal-icon-center {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.modal-svg-icon {
+  width: 42px;
+  height: 42px;
+  --svg-icon-color: var(--red);
+}
+.modal-warning-icon {
+  width: 42px;
+  height: 42px;
+  animation: modalIconBounce .56s ease both;
+}
+.modal-bg.open .modal-warning-icon,
+.modal-bg[style*="display: flex"] .modal-warning-icon {
+  animation: modalIconBounce .56s ease both;
+}
+@keyframes modalIconBounce {
+  0% { transform: translateY(0) scale(1); }
+  28% { transform: translateY(-7px) scale(1.05); }
+  52% { transform: translateY(0) scale(.98); }
+  72% { transform: translateY(-3px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-svg-icon,
+  .modal-bg.open .modal-warning-icon,
+  .modal-bg[style*="display: flex"] .modal-warning-icon {
+    animation: none;
+  }
+}
 .delete-file-title {
   justify-content: center;
   text-align: center;
@@ -84,6 +117,7 @@
   height: 18px;
   display: block;
   pointer-events: none;
+  --svg-icon-color: var(--text2);
 }
 .modal-actions {
   display: flex;

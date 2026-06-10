@@ -39,6 +39,16 @@
 .nav-item:hover { background: var(--accent3); color: var(--accent); }
 .nav-item.active { background: var(--accent3); color: var(--accent); font-weight: 700; }
 .nav-item .icon { font-size: 1rem; width: 22px; text-align: center; flex-shrink: 0; }
+.nav-item .nav-icon {
+  width: 18px;
+  height: 18px;
+  --svg-icon-color: var(--text2);
+  transition: background .18s;
+}
+.nav-item:hover .nav-icon,
+.nav-item.active .nav-icon {
+  --svg-icon-color: var(--accent);
+}
 .nav-badge {
   margin-left: auto; background: var(--accent); color: #fff;
   font-size: 0.68rem; font-weight: 800; padding: 1px 7px; border-radius: 20px;
@@ -91,3 +101,12 @@
 .search-bar:focus-within { border-color: var(--accent); }
 .search-bar input { border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.85rem; color: var(--text); width: 100%; }
 .search-bar input::placeholder { color: var(--text3); }
+.topbar-search-icon {
+  width: 18px;
+  height: 18px;
+  --svg-icon-color: var(--text2);
+}
+.search-bar:hover .topbar-search-icon,
+.search-bar:focus-within .topbar-search-icon {
+  --svg-icon-color: var(--accent);
+}

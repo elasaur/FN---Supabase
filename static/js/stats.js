@@ -61,7 +61,7 @@ function renderFolderBars(chartData) {
           <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${Math.max(4, (d.count / maxCount) * 100)}%;background:${d.color};">${d.count > 0 ? d.count : ''}</div></div>
           <div class="chart-count">${d.count}</div>
         </div>`).join('')
-    : `<div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-bar-chart-50 (2).png')}" alt=""></div><div class="es-text">No data yet.</div></div>`;
+    : `<div class="empty-state"><div class="es-icon">${svgIcon('statistics.svg', 'empty-svg-icon')}</div><div class="es-text">No data yet.</div></div>`;
 }
 
 function renderTypeDonut(files) {
@@ -92,7 +92,7 @@ function renderTypeDonut(files) {
   if (!wrap) return;
 
   if (!extSorted.length) {
-    wrap.innerHTML = `<div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-bar-chart-50 (2).png')}" alt=""></div><div class="es-text">No data yet.</div></div>`;
+    wrap.innerHTML = `<div class="empty-state"><div class="es-icon">${svgIcon('donut-chart.svg', 'empty-svg-icon')}</div><div class="es-text">No data yet.</div></div>`;
     return;
   }
 

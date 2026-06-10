@@ -67,9 +67,24 @@ img.rec-folder-icon {
 .file-type-icon {
   width: 28px;
   height: 28px;
-  display: inline-block;
-  object-fit: contain;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   vertical-align: middle;
+}
+.file-type-tile {
+  background: var(--file-type-bg, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--file-type-bg, var(--border)) 72%, var(--border) 28%);
+  border-radius: 9px;
+  padding: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
+  box-sizing: border-box;
+}
+.file-type-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
 }
 .file-name-cell {
   display: inline-flex;

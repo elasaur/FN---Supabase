@@ -7,44 +7,59 @@ function getExt(name) {
 }
 
 function localIcon(file) {
-  const iconName = String(file).split('/').pop();
+  const iconPath = String(file)
+    .replace(/^\/?icons-pack\//, '')
+    .replace(/^\/+/, '')
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/');
   return typeof iconPackPath === 'function'
-    ? iconPackPath(iconName)
-    : `/icons-pack/${encodeURIComponent(iconName)}`;
+    ? iconPackPath(iconPath)
+    : `/icons-pack/${iconPath}`;
+}
+
+function svgIcon(file, className = '', label = '') {
+  const src = localIcon(`custom-svg/${file}`);
+  const aria = label
+    ? `role="img" aria-label="${escHtml(label)}"`
+    : 'aria-hidden="true"';
+  return `<span class="svg-icon ${className}" style="--svg-icon: url('${src}');" ${aria}></span>`;
 }
 
 function getExtIcon(name) {
   const icons = {
-    xml: [localIcon('icons8-docs-48.png'), 'xml-file'],
-    css: [localIcon('icons8-docs-48.png'), 'css-file'],
-    json: [localIcon('icons8-docs-48.png'), 'json-file'],
-    html: [localIcon('icons8-docs-48.png'), 'html-file'],
-    htm: [localIcon('icons8-docs-48.png'), 'html-file'],
-    csv: [localIcon('icons8-csv-48.png'), 'csv'],
-    xls: [localIcon('icons8-spreadsheet-file-48.png'), 'spreadsheet'],
-    xlsx: [localIcon('icons8-spreadsheet-file-48.png'), 'spreadsheet'],
-    doc: [localIcon('icons8-docs-48.png'), 'document'],
-    docx: [localIcon('icons8-docs-48.png'), 'document'],
-    pdf: [localIcon('icons8-pdf-48.png'), 'pdf'],
-    ppt: [localIcon('icons8-ppt-48.png'), 'presentation'],
-    pptx: [localIcon('icons8-ppt-48.png'), 'presentation'],
-    txt: [localIcon('icons8-txt-48.png'), 'text-file'],
-    jpg: [localIcon('icons8-image-48.png'), 'image'],
-    jpeg: [localIcon('icons8-image-48.png'), 'image'],
-    heic: [localIcon('icons8-image-48.png'), 'image'],
-    mkv: [localIcon('icons8-video-file-48.png'), 'video'],
-    mp4: [localIcon('icons8-video-file-48.png'), 'video'],
-    avi: [localIcon('icons8-video-file-48.png'), 'video'],
-    png: [localIcon('icons8-image-48.png'), 'image'],
-    gif: [localIcon('icons8-image-48.png'), 'image'],
-    wav: [localIcon('icons8-audio-file-48.png'), 'audio'],
-    mp3: [localIcon('icons8-audio-file-48.png'), 'audio'],
-    ttf: [localIcon('icons8-docs-48.png'), 'font-file'],
-    rar: [localIcon('icons8-archive-folder-48.png'), 'archive'],
-    zip: [localIcon('icons8-archive-folder-48.png'), 'archive'],
+    xml: ['005-txt.png', 'xml-file', '#fef7dd'],
+    css: ['005-txt.png', 'css-file', '#fef7dd'],
+    json: ['005-txt.png', 'json-file', '#fef7dd'],
+    html: ['005-txt.png', 'html-file', '#fef7dd'],
+    htm: ['005-txt.png', 'html-file', '#fef7dd'],
+    csv: ['004-csv.png', 'csv', '#d9f5ec'],
+    xls: ['001-xls.png', 'spreadsheet', '#d9f5ec'],
+    xlsx: ['001-xls.png', 'spreadsheet', '#d9f5ec'],
+    doc: ['012-doc.png', 'document', '#e0f4fb'],
+    docx: ['009-docx.png', 'document', '#e0f4fb'],
+    pdf: ['011-pdf.png', 'pdf', '#fde8e8'],
+    ppt: ['006-ppt.png', 'presentation', '#fde8de'],
+    pptx: ['006-ppt.png', 'presentation', '#fde8de'],
+    txt: ['005-txt.png', 'text-file', '#fef7dd'],
+    jpg: ['010-jpg.png', 'image', '#fce8f3'],
+    jpeg: ['010-jpg.png', 'image', '#fce8f3'],
+    heic: ['010-jpg.png', 'image', '#fce8f3'],
+    png: ['007-png.png', 'image', '#fce8f3'],
+    gif: ['007-png.png', 'image', '#fce8f3'],
+    mkv: ['003-mp4.png', 'video', '#ede8f8'],
+    mp4: ['003-mp4.png', 'video', '#ede8f8'],
+    avi: ['003-mp4.png', 'video', '#ede8f8'],
+    wav: ['002-mp3.png', 'audio', '#ede8f8'],
+    mp3: ['002-mp3.png', 'audio', '#ede8f8'],
+    ttf: ['005-txt.png', 'font-file', '#fef7dd'],
+    rar: ['008-zip.png', 'archive', '#f0f0f0'],
+    zip: ['008-zip.png', 'archive', '#f0f0f0'],
   };
-  const [src, alt] = icons[getExt(name)] || [localIcon('icons8-docs-48.png'), 'file'];
-  return `<img class="file-type-icon" width="48" height="48" src="${src}" alt="${alt}" loading="lazy">`;
+  const ext = getExt(name);
+  const [file, alt, bg] = icons[ext] || ['005-txt.png', 'file', '#f7f4f0'];
+  const src = localIcon(file);
+  return `<span class="file-type-icon file-type-tile" style="--file-type-bg:${bg};"><img class="file-type-img" src="${src}" alt="${alt}" loading="lazy"></span>`;
 }
 
 function formatSize(bytes) {

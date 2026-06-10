@@ -19,7 +19,30 @@
   align-items: stretch;
 }
 .stats-card-panel { padding: 24px; }
-.stats-card-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.stats-card-title {
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+.stats-title-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  background: var(--stats-title-bg, var(--accent3));
+}
+.stats-title-svg {
+  width: 20px;
+  height: 20px;
+  --svg-icon-color: var(--stats-title-color, var(--accent));
+}
 .stats-donut-card { min-height: 100%; }
 .storage-summary {
   display: grid;

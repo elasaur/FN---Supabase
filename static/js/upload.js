@@ -295,7 +295,7 @@ function renderUploadFileList() {
   const countEl = document.getElementById('filesCount');
   if (countEl) countEl.textContent = files.length;
   if (!files.length) {
-    list.innerHTML = `<div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-file-50.png')}" alt=""></div><div class="es-text">No files yet - upload one above to get started!</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">${svgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files yet - upload one above to get started!</div></div>`;
     return;
   }
   list.innerHTML = files.map((f, idx) => `

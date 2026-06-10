@@ -1,8 +1,13 @@
 // static/js/config.js
 
 function iconPackPath(file) {
-  const iconName = String(file).split('/').pop();
-  return `/icons-pack/${encodeURIComponent(iconName)}`;
+  const iconPath = String(file)
+    .replace(/^\/?icons-pack\//, '')
+    .replace(/^\/+/, '')
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/');
+  return `/icons-pack/${iconPath}`;
 }
 
 const EXT_ICONS = {

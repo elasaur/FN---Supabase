@@ -1,7 +1,9 @@
 // static/js/modals.js
 
 function openModal(id) {
-  document.getElementById('modal-' + id).classList.add('open');
+  const modal = document.getElementById('modal-' + id);
+  modal.classList.add('open');
+  restartModalIconAnimation(modal);
 }
 
 function closeModal(id) {
@@ -22,19 +24,28 @@ function handleSessionExpired() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const modalIcons = {
-    deleteAllFiles: localIcon('icons8-danger-48.png'),
-    deleteAccount: localIcon('icons8-danger-48.png'),
-    deleteFolder: localIcon('icons8-danger-48.png'),
-    deleteAllFolders: localIcon('icons8-danger-48.png'),
-    sessionExpired: localIcon('icons8-session-timeout-48.png'),
+    deleteAllFiles: 'warning.svg',
+    deleteAccount: 'warning.svg',
+    deleteFolder: 'warning.svg',
+    deleteAllFolders: 'warning.svg',
+    sessionExpired: 'session-timeout.svg',
   };
 
-  Object.entries(modalIcons).forEach(([id, src]) => {
+  Object.entries(modalIcons).forEach(([id, icon]) => {
     const modal = document.querySelector(`#modal-${id} .modal`);
     const iconSlot = modal?.firstElementChild;
     if (!iconSlot) return;
-    iconSlot.innerHTML = `<img class="ui-icon ui-icon-xl" src="${src}" alt="">`;
+    iconSlot.classList.add('modal-icon-center');
+    iconSlot.innerHTML = svgIcon(icon, 'modal-svg-icon modal-warning-icon');
     iconSlot.style.fontSize = '';
     if (id !== 'sessionExpired') iconSlot.style.textAlign = 'center';
   });
 });
+
+function restartModalIconAnimation(modal) {
+  modal?.querySelectorAll('.modal-warning-icon').forEach(icon => {
+    icon.style.animation = 'none';
+    icon.offsetHeight;
+    icon.style.animation = '';
+  });
+}

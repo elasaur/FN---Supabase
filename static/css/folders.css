@@ -171,17 +171,29 @@
   transition: background .1s, color .1s;
 }
 
+.folder-menu-dropdown .action-svg-icon {
+  width: 16px;
+  height: 16px;
+  --svg-icon-color: var(--text);
+  transition: background .1s;
+}
+
 .folder-menu-dropdown button:hover {
   background: var(--accent3);
   color: var(--accent);
 }
 
+.folder-menu-dropdown button:hover .action-svg-icon {
+  --svg-icon-color: var(--accent);
+}
+
 .folder-menu-dropdown button.danger {
-  color: #e53935;
+  color: var(--text, #3D1808);
 }
 
 .folder-menu-dropdown button.danger:hover {
   background: var(--red2);
+  color: var(--accent);
 }
 
 @keyframes menuPop {

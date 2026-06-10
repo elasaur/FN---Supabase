@@ -13,7 +13,10 @@ function showDeleteFolderModal(id, name) {
     `;
   }
 
-  document.getElementById('modal-deleteFolder').style.display = 'flex';
+  const modal = document.getElementById('modal-deleteFolder');
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  if (typeof restartModalIconAnimation === 'function') restartModalIconAnimation(modal);
 }
 
 function confirmDeleteFolder() {
@@ -26,7 +29,10 @@ function confirmDeleteFolder() {
 
 function hideDeleteFolderModal(modalId) {
   const modal = document.getElementById('modal-' + modalId);
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+  }
 }
 
 // Folders feature: list, sort, pin, open, edit, note, and delete folders.
@@ -54,7 +60,7 @@ function renderFoldersLoadError(err) {
   if (!el) return;
   el.innerHTML = `
     <div class="folders-load-error">
-      <div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-danger-48.png')}" alt=""></div>
+      <div class="es-icon">${svgIcon('warning.svg', 'empty-svg-icon')}</div>
       <div class="es-text">${escHtml(err.message || 'Could not load folders.')}</div>
       <button class="btn btn-ghost" onclick="loadFolders()">Try again</button>
     </div>
@@ -227,9 +233,9 @@ function showFloatingFolderMenu(e, button) {
     document.body.appendChild(menu);
   }
   menu.innerHTML = `
-    <button onclick=\"openEditModalFromEncoded(${id},'${encodeURIComponent(name)}','${encodeURIComponent(emoji)}','${encodeURIComponent(color)}','${encodeURIComponent(bg)}');closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-edit-48.png')}" alt=""> Edit</button>
-    <button onclick=\"togglePin(${id},${pinned});closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-pin-48.png')}" alt=""> ${pinned ? 'Unpin' : 'Pin'}</button>
-    ${!isDefault ? `<button class='danger' onclick=\"showDeleteFolderModal(${id},decodeURIComponent('${encodeURIComponent(name)}'));closeFolderMenus()\"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-delete-folder-50.png')}" alt=""> Delete</button>` : ''}
+    <button onclick=\"openEditModalFromEncoded(${id},'${encodeURIComponent(name)}','${encodeURIComponent(emoji)}','${encodeURIComponent(color)}','${encodeURIComponent(bg)}');closeFolderMenus()\">${svgIcon('edit.svg', 'action-svg-icon')} Edit</button>
+    <button onclick=\"togglePin(${id},${pinned});closeFolderMenus()\">${svgIcon('pin-folder.svg', 'action-svg-icon')} ${pinned ? 'Unpin' : 'Pin'}</button>
+    ${!isDefault ? `<button class='danger' onclick=\"showDeleteFolderModal(${id},decodeURIComponent('${encodeURIComponent(name)}'));closeFolderMenus()\">${svgIcon('delete.svg', 'action-svg-icon')} Delete</button>` : ''}
   `;
 
   menu.style.width = '168px';
@@ -288,7 +294,7 @@ function renderDashboardPinnedFoldersFromCache() {
   const pinned = allFolders.filter(f => Number(f.pinned) === 1 || f.pinned === true);
   pinnedEl.innerHTML = pinned.length
     ? pinned.map(f => makeFolderCard(f, true)).join('')
-    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-pin-50.png')}" alt=""></div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
+    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon">${svgIcon('pin-folder.svg', 'empty-svg-icon')}</div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
 }
 async function deleteFolder(id) {
   const res  = await fetch(`/api/folders/${id}`, { method:'DELETE' });
@@ -450,7 +456,7 @@ function renderCurrentFolderFilesFromCache() {
 
   if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
   if (!files.length) {
-    listEl.innerHTML = `<div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="${localIcon('icons8-file-50.png')}" alt=""></div><div class="es-text">No files in this folder yet.</div></div>`;
+    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">${svgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files in this folder yet.</div></div>`;
     return;
   }
   listEl.innerHTML = `

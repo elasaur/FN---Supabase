@@ -14,7 +14,11 @@
 
       <!-- Default state -->
       <div id="uploadDefault">
-        <div class="upload-icon-wrap"><img class="ui-icon ui-icon-xl" src="/icons-pack/icons8-upload-50.png" alt=""></div>
+        <div class="upload-icon-wrap">
+          <span class="upload-tile-icon upload-tile-lg" style="--upload-icon-color:var(--accent); --upload-icon-bg:var(--accent3);">
+            <span class="svg-icon upload-tile-svg icon-upload" aria-hidden="true"></span>
+          </span>
+        </div>
         <div class="upload-title" id="uploadZoneTitle">Drag & drop your file here</div>
         <div class="upload-sub">or click to browse from your device</div>
         <button class="browse-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Browse Files</button>
@@ -45,7 +49,9 @@
     <!-- AI PREDICTION CARD -->
     <div class="prediction-card ai-prediction-card" id="predictionCard">
       <div class="pred-header">
-        <span class="pred-header-icon"><img class="ui-icon ui-icon-lg" src="/icons-pack/icons8-gemini-ai-48.png" alt=""></span>
+        <span class="pred-header-icon upload-tile-icon" style="--upload-icon-color:var(--mint); --upload-icon-bg:var(--mint2);">
+          <span class="svg-icon upload-tile-svg icon-folder" aria-hidden="true"></span>
+        </span>
         <div class="pred-header-copy"><div><div class="pred-header-title">AI Folder Prediction</div><div class="pred-header-sub" id="predEngineLabel">Analyzed by Gemini 2.5 Flash · Review and confirm below</div></div><span class="engine-tag" id="predEngineTag">Gemini</span></div>
       </div>
 
@@ -60,7 +66,12 @@
 
       <!-- Keywords -->
       <div class="keywords-row" id="keywordsRow">
-        <span class="kw-label"><img class="ui-icon ui-icon-sm" src="/icons-pack/icons8-keyword-48.png" alt=""> Keywords detected:</span>
+        <span class="kw-label">
+          <span class="upload-tile-icon upload-tile-xs" style="--upload-icon-color:var(--sky); --upload-icon-bg:var(--sky2);">
+            <span class="svg-icon upload-tile-svg icon-file" aria-hidden="true"></span>
+          </span>
+          Keywords detected:
+        </span>
       </div>
 
       <!-- Confidence bar -->
@@ -117,40 +128,40 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
 
         <div class="guideline-card">
-          <div class="guideline-icon">
-            <img class="ui-icon ui-icon-lg" src="/icons-pack/icons8-upload-50.png" alt="">
+          <div class="guideline-icon upload-tile-icon" style="--upload-icon-color:var(--accent); --upload-icon-bg:var(--accent3);">
+            <span class="svg-icon upload-tile-svg icon-upload" aria-hidden="true"></span>
           </div>
           <div class="guideline-title">Upload Files</div>
           <div class="guideline-sub">Drag & drop or click to upload. One file at a time for best AI results.</div>
         </div>
 
         <div class="guideline-card">
-          <div class="guideline-icon">
-            <img class="ui-icon ui-icon-lg" src="/icons-pack/icons8-learning-48.png" alt="">
+          <div class="guideline-icon upload-tile-icon" style="--upload-icon-color:var(--sky); --upload-icon-bg:var(--sky2);">
+            <span class="svg-icon upload-tile-svg icon-file" aria-hidden="true"></span>
           </div>
           <div class="guideline-title">AI Reads File Content</div>
           <div class="guideline-sub">For PDF, DOCX, XLSX and PPTX, AI extracts and analyzes the actual document text.</div>
         </div>
 
         <div class="guideline-card">
-          <div class="guideline-icon">
-            <img class="ui-icon ui-icon-lg" src="/icons-pack/icons8-gemini-ai-48.png" alt="">
+          <div class="guideline-icon upload-tile-icon" style="--upload-icon-color:var(--mint); --upload-icon-bg:var(--mint2);">
+            <span class="svg-icon upload-tile-svg icon-folder" aria-hidden="true"></span>
           </div>
           <div class="guideline-title">AI Recommends Folder</div>
           <div class="guideline-sub">Gemini analyzes the content and suggests the 3 best matching folders ranked by confidence.</div>
         </div>
 
         <div class="guideline-card">
-          <div class="guideline-icon">
-            <img class="ui-icon ui-icon-lg" src="/icons-pack/icons8-editBlue-48 .png" alt="">
+          <div class="guideline-icon upload-tile-icon" style="--upload-icon-color:var(--lavender); --upload-icon-bg:var(--lavender2);">
+            <span class="svg-icon upload-tile-svg icon-folder" aria-hidden="true"></span>
           </div>
           <div class="guideline-title">Override Anytime</div>
           <div class="guideline-sub">Review and change the predicted folder before confirming — you're always in control.</div>
         </div>
 
         <div class="guideline-card">
-          <div class="guideline-icon">
-            <img class="ui-icon ui-icon-lg" src="/icons-pack/icons8-ruler-48.png" alt="">
+          <div class="guideline-icon upload-tile-icon" style="--upload-icon-color:var(--yellow); --upload-icon-bg:var(--yellow2);">
+            <span class="svg-icon upload-tile-svg icon-storage" aria-hidden="true"></span>
           </div>
           <div class="guideline-title">Max File Size: 50 MB</div>
           <div class="guideline-sub">Supported: PDF, DOCX, XLSX, PPTX, TXT, JPG, PNG, MP3, MP4 and more.</div>
@@ -171,7 +182,7 @@
         </div>
       </div>
       <div class="file-list" id="fileList">
-        <div class="empty-state"><div class="es-icon"><img class="ui-icon ui-icon-lg" src="/icons-pack/icons8-file-50.png" alt=""></div><div class="es-text">No files yet — upload one above to get started!</div></div>
+        <div class="empty-state"><div class="es-icon"><span class="svg-icon empty-svg-icon icon-file" aria-hidden="true"></span></div><div class="es-text">No files yet — upload one above to get started!</div></div>
       </div>
     </div>
   </div>
