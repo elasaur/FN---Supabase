@@ -24,7 +24,7 @@ async function loadDashboard() {
   pinnedEl.innerHTML = pinned.length
     ? pinned.map(f => makeFolderCard(f, true)).join('')
     : `<div class="empty-state" style="grid-column:1/-1;padding:20px;">
-    <div class="es-icon">${svgIcon('pin-folder.svg', 'empty-svg-icon')}</div>
+    <div class="es-icon">${filledSvgIcon('pin-folder.svg', 'empty-svg-icon')}</div>
     <div class="es-text">
         No pinned folders yet - pin one from the Folders page!
     </div>
@@ -76,7 +76,7 @@ function renderDashboardRecentUploads() {
   recEl.innerHTML = sorted.length
     ? sorted.slice(0,5).map(f => makeRecentItem(f)).join('')
     : `<div class="empty-state">
-      <div class="es-icon">${svgIcon('file.svg', 'empty-svg-icon')}</div>
+      <div class="es-icon">${filledSvgIcon('file.svg', 'empty-svg-icon')}</div>
       <div class="es-text">
           No files yet - upload one to get started!
       </div>

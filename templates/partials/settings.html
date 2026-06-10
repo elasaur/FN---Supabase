@@ -7,12 +7,12 @@
       </div>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-header"><img class="ui-icon" src="/icons-pack/icons8-profile-48.png" alt=""> Account Information</div>
-      <div class="settings-row"><div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-edit-user-48.png" alt=""></div><div class="settings-info"><div class="settings-label">Full Name</div><div class="settings-desc" id="settingsName">{{ user['name'] }}</div></div><button type="button" class="btn btn-ghost" style="font-size:0.78rem;padding:6px 14px;" onclick="openModal('editName')">Edit</button></div>
-      <div class="settings-row"><div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-mail-account-48.png" alt=""></div><div class="settings-info"><div class="settings-label">Email Address</div><div class="settings-desc" id="settingsEmail">{{ user['email'] }}</div></div><button type="button" class="btn btn-ghost" style="font-size:0.78rem;padding:6px 14px;" onclick="openModal('editEmail')">Edit</button></div>
+    <div class="settings-section account-section">
+      <div class="settings-header"><span class="svg-icon filled-svg-icon icon-account" aria-hidden="true"></span> Account Information</div>
+      <div class="settings-row"><div class="settings-icon"><span class="svg-icon filled-svg-icon icon-account" aria-hidden="true"></span></div><div class="settings-info"><div class="settings-label">Full Name</div><div class="settings-desc" id="settingsName">{{ user['name'] }}</div></div><button type="button" class="btn btn-ghost" style="font-size:0.78rem;padding:6px 14px;" onclick="openModal('editName')">Edit</button></div>
+      <div class="settings-row"><div class="settings-icon"><span class="svg-icon filled-svg-icon icon-mail" aria-hidden="true"></span></div><div class="settings-info"><div class="settings-label">Email Address</div><div class="settings-desc" id="settingsEmail">{{ user['email'] }}</div></div><button type="button" class="btn btn-ghost" style="font-size:0.78rem;padding:6px 14px;" onclick="openModal('editEmail')">Edit</button></div>
       <div class="settings-row">
-        <div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-membership-card-48.png" alt=""></div>
+        <div class="settings-icon"><span class="svg-icon filled-svg-icon icon-member-card" aria-hidden="true"></span></div>
         <div class="settings-info">
           <div class="settings-label">Member Since</div>
           <div class="settings-desc" id="memberSince">Loading...</div>
@@ -20,16 +20,16 @@
       </div>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-header"><img class="ui-icon" src="/icons-pack/icons8-security-shield-48.png" alt=""> Security</div>
-      <div class="settings-row"><div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-change%20password-48.png" alt=""></div><div class="settings-info"><div class="settings-label">Change Password</div><div class="settings-desc" id="settingsPassword">••••••••</div></div><button type="button" class="btn btn-ghost" style="font-size:0.78rem;padding:6px 14px;" onclick="openChangePasswordModal()">Change</button></div>
+    <div class="settings-section security-section">
+      <div class="settings-header"><span class="svg-icon filled-svg-icon icon-security" aria-hidden="true"></span> Security</div>
+      <div class="settings-row"><div class="settings-icon"><span class="svg-icon filled-svg-icon icon-password" aria-hidden="true"></span></div><div class="settings-info"><div class="settings-label">Change Password</div><div class="settings-desc" id="settingsPassword">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</div></div><button type="button" class="btn btn-ghost" style="font-size:0.78rem;padding:6px 14px;" onclick="openChangePasswordModal()">Change</button></div>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-header"><img class="ui-icon" src="/icons-pack/icons8-info-50.png" alt=""> Information</div>
+    <div class="settings-section info-section">
+      <div class="settings-header"><span class="svg-icon filled-svg-icon icon-info" aria-hidden="true"></span> Information</div>
 
       <div class="settings-row">
-        <div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-rocket-50.png" alt=""></div>
+        <div class="settings-icon"><span class="svg-icon filled-svg-icon icon-rocket" aria-hidden="true"></span></div>
         <div class="settings-info">
           <div class="settings-label">App Version</div>
           <div class="settings-desc">File Nest v1.0.0</div>
@@ -38,7 +38,7 @@
       </div>
 
       <div class="settings-row">
-        <div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-gemini-ai-50.png" alt=""></div>
+        <div class="settings-icon"><img class="ui-icon settings-gemini-logo" src="/icons-pack/custom-svg/dash-ai.svg" alt=""></div>
         <div class="settings-info">
           <div class="settings-label">Gemini AI</div>
           <div class="settings-desc">Gemini 2.5 Flash analyzes filenames and extracted content when available.</div>
@@ -47,7 +47,7 @@
       </div>
 
       <div class="settings-row">
-        <div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-brain-48.png" alt=""></div>
+        <div class="settings-icon"><span class="svg-icon filled-svg-icon icon-dash-ai" aria-hidden="true"></span></div>
         <div class="settings-info">
           <div class="settings-label">TextBlob</div>
           <div class="settings-desc">Used as the fallback analyzer when Gemini is unavailable or rate-limited.</div>
@@ -56,7 +56,7 @@
       </div>
 
       <div class="settings-row">
-        <div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-database-50.png" alt=""></div>
+        <div class="settings-icon"><span class="svg-icon filled-svg-icon icon-storage" aria-hidden="true"></span></div>
         <div class="settings-info">
           <div class="settings-label">Storage</div>
           <div class="settings-desc">Powered by Supabase database for secure data storage.</div>
@@ -64,7 +64,7 @@
       </div>
 
       <div class="settings-row">
-        <div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-cyber-security-50.png" alt=""></div>
+        <div class="settings-icon"><span class="svg-icon filled-svg-icon icon-security" aria-hidden="true"></span></div>
         <div class="settings-info">
           <div class="settings-label">Security</div>
           <div class="settings-desc">Built with secure authentication and file protection.</div>
@@ -73,7 +73,7 @@
       </div>
 
       <div class="settings-row">
-        <div class="settings-icon"><img class="ui-icon" src="/icons-pack/filetypes.png" alt=""></div>
+        <div class="settings-icon"><span class="svg-icon filled-svg-icon icon-file" aria-hidden="true"></span></div>
         <div class="settings-info">
           <div class="settings-label">Supported File Types</div>
           <div class="settings-desc">PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, MP3, MP4, ZIP, CSV.</div>
@@ -81,10 +81,10 @@
       </div>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-header"><img class="ui-icon" src="/icons-pack/icons8-danger-48.png" alt=""> Danger Zone</div>
-      <div class="settings-row"><div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-delete-file-50.png" alt=""></div><div class="settings-info"><div class="settings-label">Delete All Files</div><div class="settings-desc">Permanently remove all uploaded files</div></div><button class="btn" style="background:var(--red2);color:var(--red);font-size:0.78rem;padding:6px 14px;" onclick="deleteAllFiles()">Delete All</button></div>
-      <div class="settings-row"><div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-delete-folder-50.png" alt=""></div><div class="settings-info"><div class="settings-label">Delete All Folders</div><div class="settings-desc">Permanently remove all folders</div></div><button class="btn" style="background:var(--red2);color:var(--red);font-size:0.78rem;padding:6px 14px;" onclick="deleteAllFolders()">Delete All</button></div>
-      <div class="settings-row"><div class="settings-icon"><img class="ui-icon" src="/icons-pack/icons8-remove-user-50.png" alt=""></div><div class="settings-info"><div class="settings-label">Delete Account</div><div class="settings-desc">Permanently delete your File Nest account</div></div><button class="btn" style="background:var(--red2);color:var(--red);font-size:0.78rem;padding:6px 14px;" onclick="deleteAccount()">Delete Account</button></div>
+    <div class="settings-section danger-section">
+      <div class="settings-header"><span class="svg-icon filled-svg-icon icon-danger" aria-hidden="true"></span> Danger Zone</div>
+      <div class="settings-row"><div class="settings-icon"><span class="svg-icon filled-svg-icon icon-file" aria-hidden="true"></span></div><div class="settings-info"><div class="settings-label">Delete All Files</div><div class="settings-desc">Permanently remove all uploaded files</div></div><button class="btn" style="background:var(--red2);color:var(--red);font-size:0.78rem;padding:6px 14px;" onclick="deleteAllFiles()">Delete All</button></div>
+      <div class="settings-row"><div class="settings-icon"><span class="svg-icon filled-svg-icon icon-folder" aria-hidden="true"></span></div><div class="settings-info"><div class="settings-label">Delete All Folders</div><div class="settings-desc">Permanently remove all folders</div></div><button class="btn" style="background:var(--red2);color:var(--red);font-size:0.78rem;padding:6px 14px;" onclick="deleteAllFolders()">Delete All</button></div>
+      <div class="settings-row"><div class="settings-icon"><span class="svg-icon filled-svg-icon icon-account" aria-hidden="true"></span></div><div class="settings-info"><div class="settings-label">Delete Account</div><div class="settings-desc">Permanently delete your File Nest account</div></div><button class="btn" style="background:var(--red2);color:var(--red);font-size:0.78rem;padding:6px 14px;" onclick="deleteAccount()">Delete Account</button></div>
     </div>
   </div>

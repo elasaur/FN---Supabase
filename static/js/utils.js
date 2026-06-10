@@ -26,6 +26,30 @@ function svgIcon(file, className = '', label = '') {
   return `<span class="svg-icon ${className}" style="--svg-icon: url('${src}');" ${aria}></span>`;
 }
 
+function filledSvgIcon(file, className = '', label = '') {
+  const filledFiles = {
+    'dash-ai.svg': 'ai.svg',
+    'dash-calendar.svg': 'calendar.svg',
+    'dash-file.svg': 'file.svg',
+    'dash-folder.svg': 'folder.svg',
+    'donut-chart.svg': 'pie-chart.svg',
+    'pin-folder.svg': 'pin-folder.svg',
+    'session-timeout.svg': 'warning.svg',
+    'statistics.svg': 'statistics.svg',
+    'storage.svg': 'storage.svg',
+    'upload.svg': 'upload.svg',
+    'warning.svg': 'warning.svg',
+    'file.svg': 'file.svg',
+    'folder.svg': 'folder.svg',
+    'edit.svg': 'edit.svg',
+  };
+  const src = localIcon(`custom-svg/filled/${filledFiles[file] || file}`);
+  const aria = label
+    ? `role="img" aria-label="${escHtml(label)}"`
+    : 'aria-hidden="true"';
+  return `<span class="svg-icon filled-svg-icon ${className}" style="--svg-icon: url('${src}');" ${aria}></span>`;
+}
+
 function getExtIcon(name) {
   const icons = {
     xml: ['005-txt.png', 'xml-file', '#fef7dd'],

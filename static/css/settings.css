@@ -1,11 +1,30 @@
 /* ── SETTINGS ── */
 .settings-section {
+  --settings-icon-color: var(--accent);
+  --settings-icon-bg: var(--accent3);
   background: var(--surface);
   border-radius: var(--radius);
   border: 1.5px solid var(--border);
   padding: 20px 24px;
   margin-bottom: 20px;
   box-shadow: var(--shadow);
+}
+
+.settings-section.account-section {
+  --settings-icon-color: var(--pink);
+  --settings-icon-bg: var(--pink2);
+}
+.settings-section.security-section {
+  --settings-icon-color: var(--mint);
+  --settings-icon-bg: var(--mint2);
+}
+.settings-section.info-section {
+  --settings-icon-color: var(--lavender);
+  --settings-icon-bg: var(--lavender2);
+}
+.settings-section.danger-section {
+  --settings-icon-color: var(--red);
+  --settings-icon-bg: var(--red2);
 }
 
 .settings-header {
@@ -18,6 +37,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--settings-icon-color);
 }
 
 .settings-row {
@@ -36,11 +56,17 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: var(--bg);
+  background: var(--settings-icon-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: var(--settings-icon-color);
+}
+
+.settings-gemini-logo {
+  width: 22px;
+  height: 22px;
 }
 
 .settings-icon .material-symbols-rounded {

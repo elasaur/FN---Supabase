@@ -61,7 +61,7 @@ function renderFolderBars(chartData) {
           <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${Math.max(4, (d.count / maxCount) * 100)}%;background:${d.color};">${d.count > 0 ? d.count : ''}</div></div>
           <div class="chart-count">${d.count}</div>
         </div>`).join('')
-    : `<div class="empty-state"><div class="es-icon">${svgIcon('statistics.svg', 'empty-svg-icon')}</div><div class="es-text">No data yet.</div></div>`;
+    : `<div class="empty-state"><div class="es-icon">${filledSvgIcon('statistics.svg', 'empty-svg-icon')}</div><div class="es-text">No data yet.</div></div>`;
 }
 
 function renderTypeDonut(files) {
@@ -92,7 +92,7 @@ function renderTypeDonut(files) {
   if (!wrap) return;
 
   if (!extSorted.length) {
-    wrap.innerHTML = `<div class="empty-state"><div class="es-icon">${svgIcon('donut-chart.svg', 'empty-svg-icon')}</div><div class="es-text">No data yet.</div></div>`;
+    wrap.innerHTML = `<div class="empty-state"><div class="es-icon">${filledSvgIcon('donut-chart.svg', 'empty-svg-icon')}</div><div class="es-text">No data yet.</div></div>`;
     return;
   }
 
@@ -172,7 +172,7 @@ function renderAiSortingSummary(stats) {
         <div class="ai-summary-kicker">AI suggestions accepted</div>
         <div class="ai-summary-value">${aiPct}%</div>
       </div>
-      <span class="ai-summary-tag"><img class="ui-icon ui-icon-sm" src="${localIcon('icons8-gemini-ai-48.png')}" alt=""> Gemini + TextBlob</span>
+      <span class="ai-summary-tag"><img class="ui-icon ui-icon-sm" src="${localIcon('custom-svg/dash-ai.svg')}" alt=""> Gemini + TextBlob</span>
     </div>
     <div class="ai-summary-track" title="${accepted} of ${total} uploads followed the AI recommendation">
       <div class="ai-summary-fill" style="width:${aiPct}%;"></div>

@@ -32,7 +32,7 @@ function renderAllFilesTable() {
   const tbody = document.getElementById('allFilesTbody');
   if (!tbody) return;
   if (!allFiles.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">${svgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files yet - upload some to get started!</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">${filledSvgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files yet - upload some to get started!</div></div></td></tr>`;
     return;
   }
   tbody.innerHTML = allFiles.map(f => `

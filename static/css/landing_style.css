@@ -548,6 +548,9 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
 }
 
 .spot-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 10px;
 
   color: var(--accent);
@@ -555,6 +558,40 @@ body:has(#instructions:target) .nav-link[href="#instructions"] {
   font-weight: 900;
   letter-spacing: 0.13em;
   text-transform: uppercase;
+}
+
+.section-kicker-icon {
+  --section-icon-color: var(--accent);
+  --section-icon-bg: var(--accent3);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--section-icon-bg);
+  color: var(--section-icon-color);
+  border: 1px solid color-mix(in srgb, var(--section-icon-color) 35%, transparent);
+}
+
+.section-kicker-icon .svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.section-kicker-icon.accent {
+  --section-icon-color: var(--accent);
+  --section-icon-bg: var(--accent3);
+}
+
+.section-kicker-icon.mint {
+  --section-icon-color: var(--mint);
+  --section-icon-bg: var(--mint2);
+}
+
+.section-kicker-icon.yellow {
+  --section-icon-color: var(--yellow);
+  --section-icon-bg: var(--yellow2);
 }
 
 .spot-copy h2 {

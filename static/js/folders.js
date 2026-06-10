@@ -60,7 +60,7 @@ function renderFoldersLoadError(err) {
   if (!el) return;
   el.innerHTML = `
     <div class="folders-load-error">
-      <div class="es-icon">${svgIcon('warning.svg', 'empty-svg-icon')}</div>
+      <div class="es-icon">${filledSvgIcon('warning.svg', 'empty-svg-icon')}</div>
       <div class="es-text">${escHtml(err.message || 'Could not load folders.')}</div>
       <button class="btn btn-ghost" onclick="loadFolders()">Try again</button>
     </div>
@@ -294,7 +294,7 @@ function renderDashboardPinnedFoldersFromCache() {
   const pinned = allFolders.filter(f => Number(f.pinned) === 1 || f.pinned === true);
   pinnedEl.innerHTML = pinned.length
     ? pinned.map(f => makeFolderCard(f, true)).join('')
-    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon">${svgIcon('pin-folder.svg', 'empty-svg-icon')}</div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
+    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon">${filledSvgIcon('pin-folder.svg', 'empty-svg-icon')}</div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
 }
 async function deleteFolder(id) {
   const res  = await fetch(`/api/folders/${id}`, { method:'DELETE' });
@@ -456,7 +456,7 @@ function renderCurrentFolderFilesFromCache() {
 
   if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
   if (!files.length) {
-    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">${svgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files in this folder yet.</div></div>`;
+    listEl.innerHTML = `<div class="empty-state"><div class="es-icon">${filledSvgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files in this folder yet.</div></div>`;
     return;
   }
   listEl.innerHTML = `

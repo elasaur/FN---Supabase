@@ -51,6 +51,30 @@
   .icon-dash-file { --svg-icon: url('/icons-pack/custom-svg/dash-file.svg'); }
   .icon-dash-calendar { --svg-icon: url('/icons-pack/custom-svg/dash-calendar.svg'); }
   .icon-dash-ai { --svg-icon: url('/icons-pack/custom-svg/dash-ai.svg'); }
+
+  .filled-svg-icon.icon-upload { --svg-icon: url('/icons-pack/custom-svg/filled/upload.svg'); }
+  .filled-svg-icon.icon-folder,
+  .filled-svg-icon.icon-dash-folder { --svg-icon: url('/icons-pack/custom-svg/filled/folder.svg'); }
+  .filled-svg-icon.icon-file,
+  .filled-svg-icon.icon-dash-file { --svg-icon: url('/icons-pack/custom-svg/filled/file.svg'); }
+  .filled-svg-icon.icon-statistics,
+  .filled-svg-icon.icon-dash-statistics { --svg-icon: url('/icons-pack/custom-svg/filled/statistics.svg'); }
+  .filled-svg-icon.icon-storage { --svg-icon: url('/icons-pack/custom-svg/filled/storage.svg'); }
+  .filled-svg-icon.icon-donut-chart { --svg-icon: url('/icons-pack/custom-svg/filled/pie-chart.svg'); }
+  .filled-svg-icon.icon-dash-calendar { --svg-icon: url('/icons-pack/custom-svg/filled/calendar.svg'); }
+  .filled-svg-icon.icon-dash-ai { --svg-icon: url('/icons-pack/custom-svg/filled/ai.svg'); }
+  .filled-svg-icon.icon-pin-folder { --svg-icon: url('/icons-pack/custom-svg/filled/pin-folder.svg'); }
+  .filled-svg-icon.icon-warning { --svg-icon: url('/icons-pack/custom-svg/filled/warning.svg'); }
+  .filled-svg-icon.icon-session-timeout { --svg-icon: url('/icons-pack/custom-svg/filled/warning.svg'); }
+  .filled-svg-icon.icon-edit { --svg-icon: url('/icons-pack/custom-svg/filled/edit.svg'); }
+  .filled-svg-icon.icon-account { --svg-icon: url('/icons-pack/custom-svg/filled/account.svg'); }
+  .filled-svg-icon.icon-mail { --svg-icon: url('/icons-pack/custom-svg/filled/mail.svg'); }
+  .filled-svg-icon.icon-member-card { --svg-icon: url('/icons-pack/custom-svg/filled/member-card.svg'); }
+  .filled-svg-icon.icon-security { --svg-icon: url('/icons-pack/custom-svg/filled/security.svg'); }
+  .filled-svg-icon.icon-password { --svg-icon: url('/icons-pack/custom-svg/filled/password.svg'); }
+  .filled-svg-icon.icon-info { --svg-icon: url('/icons-pack/custom-svg/filled/info.svg'); }
+  .filled-svg-icon.icon-rocket { --svg-icon: url('/icons-pack/custom-svg/filled/rocket.svg'); }
+  .filled-svg-icon.icon-danger { --svg-icon: url('/icons-pack/custom-svg/filled/danger.svg'); }
   
 :root {
   --bg: #f7f4f0;

@@ -2,7 +2,7 @@
 <!-- Create Folder -->
 <div class="modal-bg" id="modal-createFolder" onclick="if(event.target===this)closeModal('createFolder')">
   <div class="modal">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-folder" aria-hidden="true"></span> Create New Folder</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-folder" aria-hidden="true"></span> Create New Folder</div>
     <div class="modal-form">
       <div><label class="form-label">Folder Name</label><input class="form-input" id="cf-name" placeholder="e.g. Tax Documents"/></div>
       <div><label class="form-label">Folder Emoji</label><input class="form-input" id="cf-emoji" placeholder="e.g. 📁" maxlength="8" value="📁"/></div>
@@ -21,7 +21,7 @@
 <!-- Edit Folder -->
 <div class="modal-bg" id="modal-editFolder" onclick="if(event.target===this)closeModal('editFolder')">
   <div class="modal">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Edit Folder</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Edit Folder</div>
     <div class="modal-form">
       <div><label class="form-label">Folder Name</label><input class="form-input" id="rf-name"/></div>
       <div><label class="form-label">Folder Emoji</label><input class="form-input" id="rf-emoji" placeholder="e.g. 📁" maxlength="8"/></div>
@@ -41,7 +41,7 @@
 <!-- Change Name -->
 <div class="modal-bg" id="modal-editName" onclick="if(event.target===this)closeModal('editName')">
   <div class="modal">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Edit Name</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Edit Name</div>
     <div class="modal-form">
       <div><label class="form-label">Full Name</label><input class="form-input" id="editNameInput" value="{{ user['name'] }}"/></div>
       <div class="modal-actions">
@@ -55,7 +55,7 @@
 <!-- Email Address -->
 <div class="modal-bg" id="modal-editEmail" onclick="if(event.target===this)closeModal('editEmail')">
   <div class="modal">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Edit Email</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Edit Email</div>
     <div class="modal-form">
       <div><label class="form-label">Email Address</label><input class="form-input" id="editEmailInput" value="{{ user['email'] }}"/></div>
       <div class="modal-actions">
@@ -69,7 +69,7 @@
 <!-- Change Password -->
 <div class="modal-bg" id="modal-editPassword" onclick="if(event.target===this)closeModal('editPassword')">
   <div class="modal">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-setting" aria-hidden="true"></span> Change Password</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-password" aria-hidden="true"></span> Change Password</div>
     <form class="modal-form" onsubmit="event.preventDefault();savePassword(this.querySelector('[type=submit]'));">
       <div><label class="form-label">Current Password</label><input class="form-input" id="editPasswordCurrent" type="password" placeholder="••••••••" autocomplete="current-password" required oninput="updateSettingsPasswordFormState()"></div>
       <div>
@@ -95,7 +95,7 @@
 <!-- Change Password: Sent Step -->
 <div class="modal-bg" id="modal-passwordResetSent" onclick="if(event.target===this)closeModal('passwordResetSent')">
   <div class="modal">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-warning" aria-hidden="true"></span> Check Your Email</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-warning" aria-hidden="true"></span> Check Your Email</div>
     <div class="modal-form">
       <p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin:0;">
         We sent a password reset link to <strong id="passwordResetSentEmail">{{ user['email'] }}</strong>. Open the link to set your new password.
@@ -111,7 +111,7 @@
 <!-- Rename File -->
 <div class="modal-bg" id="modal-renameFile" onclick="if(event.target===this)closeModal('renameFile')">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Rename File</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-edit" aria-hidden="true"></span> Rename File</div>
     <div class="modal-form">
       <div>
         <label class="form-label">File Name</label>
@@ -128,7 +128,7 @@
 <!-- Move File -->
 <div class="modal-bg" id="modal-moveFile" onclick="if(event.target===this)closeModal('moveFile')">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-title"><span class="svg-icon modal-svg-icon icon-move" aria-hidden="true"></span> Move File</div>
+    <div class="modal-title"><span class="svg-icon filled-svg-icon modal-svg-icon icon-folder" aria-hidden="true"></span> Move File</div>
     <div class="modal-form">
       <div>
         <label class="form-label">Destination Folder</label>
@@ -146,7 +146,7 @@
 <div class="modal-bg" id="modal-deleteFile" onclick="if(event.target===this)closeModal('deleteFile')">
   <div class="modal delete-file-modal" style="max-width: 400px;">
     <div class="delete-file-icon">
-      <span class="svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span>
+      <span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span>
     </div>
     <div class="modal-title danger-title delete-file-title">Delete File?</div>
     <p class="delete-file-subtitle" id="deleteFileMsg">
@@ -162,7 +162,7 @@
 <!-- ── DELETE ALL FILES CONFIRMATION MODAL ── -->
 <div class="modal-bg" id="modal-deleteAllFiles">
   <div class="modal" style="max-width: 400px;">
-    <div class="modal-icon-center"><span class="svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
+    <div class="modal-icon-center"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
     <div class="modal-title danger-title">Delete All Files?</div>
     <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
       This will permanently delete <strong>all your uploaded files</strong>.
@@ -185,7 +185,7 @@
 <!-- ── DELETE ACCOUNT CONFIRMATION MODAL ── -->
 <div class="modal-bg" id="modal-deleteAccount">
   <div class="modal" style="max-width: 400px;">
-    <div class="modal-icon-center"><span class="svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
+    <div class="modal-icon-center"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
     <div class="modal-title danger-title">Delete Account?</div>
     <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
       This will permanently delete your <strong>account, all files, and all folders</strong>.
@@ -208,7 +208,7 @@
 <!-- Delete Folder -->
 <div class="modal-bg" id="modal-deleteFolder">
   <div class="modal" style="max-width: 400px;">
-    <div class="modal-icon-center"><span class="svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
+    <div class="modal-icon-center"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
     <div class="modal-title danger-title">Delete Folder?</div>
     <p id="deleteFolderMsg" style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;"></p>
     <div class="modal-actions">
@@ -221,7 +221,7 @@
 <!-- ── DELETE ALL FOLDERS CONFIRMATION MODAL ── -->
 <div class="modal-bg" id="modal-deleteAllFolders">
   <div class="modal" style="max-width: 400px;">
-    <div class="modal-icon-center"><span class="svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
+    <div class="modal-icon-center"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></div>
     <div class="modal-title danger-title">Delete All Folders?</div>
     <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
       This will permanently delete every non-default folder and
@@ -247,7 +247,7 @@
   <div class="modal" style="max-width: 400px;">
     
     <div style="text-align:center; margin-bottom: 8px;">
-      <span class="svg-icon modal-svg-icon modal-warning-icon icon-session-timeout" aria-hidden="true"></span>
+      <span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-session-timeout" aria-hidden="true"></span>
     </div>
     
     <div class="modal-title" style="justify-content:center;text-align:center;">
