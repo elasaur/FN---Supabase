@@ -366,38 +366,40 @@
   height: auto;
   min-height: 0;
   overflow: hidden;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 14px;
+  padding: 16px;
+  box-shadow: none;
 }
 .folder-note-fields {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .folder-note-title-input {
   width: 100%;
-  min-height: 42px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface2);
+  min-height: 38px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 1rem;
-  font-weight: 750;
+  font-size: 1.02rem;
+  font-weight: 850;
   outline: 0;
-  padding: 10px 12px;
+  padding: 6px 0 9px;
 }
 .folder-note-title-input::placeholder {
   color: var(--text3);
-  font-weight: 700;
+  font-weight: 750;
 }
 .folder-note-title-input:focus {
-  border-color: var(--accent2);
-  background: #fff;
+  border-color: var(--accent);
+  background: transparent;
 }
 .folder-detail-panel-head {
   display: flex;
@@ -407,19 +409,24 @@
   padding: 2px 0 12px;
 }
 .folder-detail-note .folder-detail-panel-head {
-  padding: 0 0 12px;
+  padding: 0 0 10px;
   border-bottom: 0;
 }
 .folder-detail-panel-title {
-  font-weight: 900;
-  font-size: 0.92rem;
+  font-weight: 850;
+  font-size: 0.9rem;
   color: var(--text);
 }
 .folder-detail-panel-sub {
   margin-top: 2px;
-  color: var(--text3);
-  font-size: 0.74rem;
-  font-weight: 750;
+  width: fit-content;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 .folder-files-shell {
   display: flex;
@@ -542,41 +549,50 @@
 .folder-note-toolbar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px;
-  border: 1.5px solid var(--border);
-  border-bottom: 0;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--surface2);
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .folder-note-toolbar button {
-  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  min-width: 30px;
+  min-height: 30px;
   border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--surface);
+  border-radius: 8px;
+  background: transparent;
   color: var(--text2);
   cursor: pointer;
   font: inherit;
   font-size: 0.74rem;
   font-weight: 900;
-  padding: 5px 9px;
+  padding: 0;
+}
+.folder-note-toolbar .note-toolbar-icon {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 .folder-note-toolbar button:hover {
   border-color: var(--accent2);
+  background: var(--surface);
   color: var(--accent);
 }
 .folder-note-editor {
   flex: 1;
   min-height: 0;
   max-height: none;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: #fff;
   color: var(--text);
-  padding: 18px;
+  padding: 14px;
 }
 .folder-note-editor:focus-within {
-  border-color: var(--accent2);
+  border-color: var(--accent);
 }
 
 .note-footer {
@@ -585,7 +601,7 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: auto;
-  padding: 14px 0 0;
+  padding: 12px 0 0;
   border-top: 0;
   background: transparent;
   color: var(--text3);
@@ -601,8 +617,8 @@
 #page-folder-detail .folder-detail-back {
   min-height: 28px;
   border-radius: 999px;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
+  border: 1px solid var(--border);
+  background: transparent;
   color: var(--text2);
   box-shadow: none;
   font-size: 0.72rem;

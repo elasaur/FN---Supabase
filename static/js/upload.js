@@ -299,7 +299,7 @@ function renderUploadFileList() {
     return;
   }
   list.innerHTML = files.map((f, idx) => `
-    <div class="file-item upload-file-card" role="button" tabindex="0" onclick="openUploadedFileFolder(${f.id})" onkeydown="handleUploadedFileCardKeydown(event, ${f.id})" style="animation-delay:${idx*0.04}s;">
+    <div class="file-item file-folder-link upload-file-card" role="button" tabindex="0" onclick="openFileFolder(${f.id})" onkeydown="handleFileFolderKeydown(event, ${f.id})" style="animation-delay:${idx*0.04}s;">
       <div class="fi-icon">${getExtIcon(f.original_name)}</div>
       <div class="fi-info">
         <div class="fi-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
@@ -312,22 +312,6 @@ function renderUploadFileList() {
       <span class="fi-date">${timeAgo(f.created_at)}</span>
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileUpload(${f.id})`)}
     </div>`).join('');
-}
-
-function openUploadedFileFolder(fileId) {
-  const file = getCachedFile(fileId);
-  if (!file) return;
-  openFolderFiles(
-    file.folder_id,
-    file.folder_name || 'Folder',
-    file.folder_emoji || 'folder'
-  );
-}
-
-function handleUploadedFileCardKeydown(event, fileId) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  event.preventDefault();
-  openUploadedFileFolder(fileId);
 }
 
 function sortFiles(mode, el) {

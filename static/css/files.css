@@ -146,8 +146,8 @@ img.rec-folder-icon {
 }
 @keyframes slideIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:none; } }
 .file-item:hover { border-color: var(--accent2); box-shadow: var(--shadow2); }
-.upload-file-card { cursor: pointer; }
-.upload-file-card:focus-visible {
+.file-folder-link { cursor: pointer; }
+.file-folder-link:focus-visible {
   outline: 3px solid var(--accent3);
   outline-offset: 2px;
 }

@@ -467,7 +467,7 @@ function renderCurrentFolderFilesFromCache() {
           const folderBg = f.folder_bg || 'var(--accent3)';
           const folderColor = f.folder_color || 'var(--accent)';
           return `
-    <div class="folder-file-row">
+    <div class="folder-file-row file-folder-link" role="button" tabindex="0" onclick="openFileFolder(${f.id})" onkeydown="handleFileFolderKeydown(event, ${f.id})">
       <div class="folder-file-icon">${getExtIcon(f.original_name)}</div>
       <div class="folder-file-main">
         <div class="folder-file-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>

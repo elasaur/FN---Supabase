@@ -20,6 +20,11 @@ function setNoteEditorBody(body, editorEl) {
   if (!editor.children.length) appendTextEditorLine(editor, '');
 }
 
+function setFolderNoteDirty() {
+  if (typeof folderNoteDirty !== 'undefined') folderNoteDirty = true;
+  if (typeof updateFolderNoteActions === 'function') updateFolderNoteActions();
+}
+
 function appendNoteEditorLine(editor, rawLine) {
   const line = String(rawLine || '');
   const trimmed = line.trimStart();
@@ -74,6 +79,7 @@ function createNoteEditable(text, placeholder) {
   const span = document.createElement('span');
   span.className = 'note-editable';
   span.contentEditable = 'true';
+  span.setAttribute('role', 'textbox');
   span.spellcheck = true;
   span.dataset.placeholder = placeholder || '';
   setEditableMarkdown(span, text || '');
@@ -161,6 +167,7 @@ function handleNoteEditorKeydown(e) {
 function handleNoteEditorInput(e) {
   const editable = e.target.closest?.('.note-editable');
   if (!editable) return;
+  setFolderNoteDirty();
   const line = editable.closest('.note-editor-line');
   const editor = line?.closest('.note-body-editor') || getNoteEditor();
   if (!line || !editor || line.dataset.type !== 'text') return;
@@ -186,7 +193,24 @@ function handleNoteEditorPaste(e) {
   if (!editable) return;
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-  document.execCommand('insertText', false, text);
+  const lines = text.split(/\r?\n/);
+  if (lines.length <= 1) {
+    document.execCommand('insertText', false, text);
+    setFolderNoteDirty();
+    return;
+  }
+
+  const line = editable.closest('.note-editor-line');
+  const editor = line?.closest('.note-body-editor') || getNoteEditor();
+  if (!line || !editor) return;
+  editable.textContent = lines.shift() || '';
+  let afterLine = line;
+  lines.forEach(rawLine => {
+    appendNoteEditorLineAfter(editor, rawLine, afterLine);
+    afterLine = afterLine.nextElementSibling || afterLine;
+  });
+  focusEditable(afterLine);
+  setFolderNoteDirty();
 }
 
 function handleNoteEditorChange(e) {
@@ -194,6 +218,45 @@ function handleNoteEditorChange(e) {
   const line = e.target.closest('.note-check-line');
   if (!line) return;
   line.classList.toggle('checked', e.target.checked);
+  setFolderNoteDirty();
+}
+
+function appendNoteEditorLineAfter(editor, rawLine, afterLine) {
+  const beforeCount = editor.children.length;
+  appendNoteEditorLine(editor, rawLine);
+  const line = editor.children[editor.children.length - 1];
+  if (!line || editor.children.length === beforeCount) return null;
+  if (afterLine?.nextSibling) {
+    editor.insertBefore(line, afterLine.nextSibling);
+  }
+  return line;
+}
+
+function getActiveNoteLine(editor) {
+  const activeLine = document.activeElement?.closest?.('.note-editor-line');
+  if (activeLine && editor.contains(activeLine)) return activeLine;
+  return editor.querySelector('.note-editor-line') || appendTextEditorLine(editor, '');
+}
+
+function toggleNoteLineType(type) {
+  const editor = getNoteEditor();
+  if (!editor) return;
+  const line = getActiveNoteLine(editor);
+  const currentType = line?.dataset?.type || 'text';
+  const text = serializeEditableMarkdown(line?.querySelector('.note-editable'));
+  let nextLine;
+
+  if (type === 'bullet' && currentType !== 'bullet') {
+    nextLine = appendBulletEditorLine(editor, text, line);
+  } else if (type === 'check' && currentType !== 'check') {
+    nextLine = appendChecklistEditorLine(editor, text, false, line);
+  } else {
+    nextLine = appendTextEditorLine(editor, text, line);
+  }
+
+  line?.remove();
+  focusEditable(nextLine);
+  setFolderNoteDirty();
 }
 
 function focusEditable(line) {

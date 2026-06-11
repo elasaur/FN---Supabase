@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import threading
 import uuid
 from functools import wraps
@@ -137,6 +138,21 @@ def now_utc():
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def clean_display_filename(filename):
+    name = os.path.basename(str(filename or '')).replace('\x00', '').strip()
+    name = re.sub(r'[\r\n\t/\\]+', ' ', name)
+    name = re.sub(r'\s+', ' ', name)
+    name = re.sub(r'\s+([.])', r'\1', name).strip(' .')
+    return name[:160]
+
+
+def safe_storage_filename(filename):
+    safe_name = secure_filename(filename or '')
+    if safe_name:
+        return safe_name
+    return f'file_{uuid.uuid4().hex}'
 
 
 def password_validation_message(password):
@@ -1092,7 +1108,7 @@ def api_rename_file(file_id):
     db  = get_db()
     uid = get_current_user_id()
     data = request.get_json(silent=True) or {}
-    new_name = secure_filename((data.get('name') or '').strip())
+    new_name = clean_display_filename(data.get('name') or '')
 
     if not new_name:
         return jsonify({'success': False, 'message': 'Please enter a file name.'})
@@ -1137,9 +1153,10 @@ def api_analyze():
         finish_analyze_request(uid, analyze_token)
         return jsonify({'success': False, 'message': 'File type not supported.'})
 
-    filename  = secure_filename(file.filename)
+    filename  = clean_display_filename(file.filename)
+    safe_name = safe_storage_filename(filename)
     timestamp = now_utc().strftime('%Y%m%d%H%M%S%f')
-    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f'__temp_{timestamp}_{filename}')
+    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f'__temp_{timestamp}_{safe_name}')
     file.save(temp_path)
 
     db  = get_db()
@@ -1196,10 +1213,17 @@ def api_upload():
     if not folder:
         return jsonify({'success': False, 'message': 'Invalid folder.'})
 
-    filename    = secure_filename(file.filename)
+    if not file or file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected.'})
+
+    filename    = clean_display_filename(file.filename)
+    if not filename or not allowed_file(filename):
+        return jsonify({'success': False, 'message': 'File type not supported.'})
+
+    safe_name   = safe_storage_filename(filename)
     ext         = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
     timestamp   = now_utc().strftime('%Y%m%d%H%M%S%f')
-    stored_name = make_storage_path(uid, f'{timestamp}_{filename}')
+    stored_name = make_storage_path(uid, f'{timestamp}_{safe_name}')
     file_size   = uploaded_file_size(file)
     if get_user_storage_used_bytes(db, uid) + file_size > STORAGE_LIMIT_BYTES:
         return jsonify({'success': False, 'message': 'Storage limit reached. Delete files before uploading more.'})
@@ -1267,10 +1291,17 @@ def api_confirm_upload():
     if not folder:
         return jsonify({'success': False, 'message': 'Invalid folder.'})
 
-    filename    = secure_filename(file.filename)
+    if not file or file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected.'})
+
+    filename    = clean_display_filename(file.filename)
+    if not filename or not allowed_file(filename):
+        return jsonify({'success': False, 'message': 'File type not supported.'})
+
+    safe_name   = safe_storage_filename(filename)
     ext         = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
     timestamp   = now_utc().strftime('%Y%m%d%H%M%S%f')
-    stored_name = make_storage_path(uid, f'{timestamp}_{filename}')
+    stored_name = make_storage_path(uid, f'{timestamp}_{safe_name}')
     file_size   = uploaded_file_size(file)
     if get_user_storage_used_bytes(db, uid) + file_size > STORAGE_LIMIT_BYTES:
         return jsonify({'success': False, 'message': 'Storage limit reached. Delete files before uploading more.'})

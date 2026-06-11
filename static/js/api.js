@@ -46,6 +46,23 @@ function getCachedFolder(folderId) {
   return allFolders.find(folder => sameId(folder.id, folderId)) || null;
 }
 
+function openFileFolder(fileId) {
+  const file = getCachedFile(fileId);
+  if (!file) return;
+  openFolderFiles(
+    file.folder_id,
+    file.folder_name || 'Folder',
+    file.folder_emoji || 'folder'
+  );
+}
+
+function handleFileFolderKeydown(event, fileId) {
+  if (event.target.closest('button, a, input, select, textarea')) return;
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  openFileFolder(fileId);
+}
+
 function filterRecentUploadFiles(files, minutes = 5) {
   const cutoff = Date.now() - minutes * 60 * 1000;
   return (Array.isArray(files) ? files : []).filter(file => {

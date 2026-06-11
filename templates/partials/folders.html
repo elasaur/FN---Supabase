@@ -53,6 +53,14 @@
         </div>
         <div class="folder-note-fields">
           <input id="folderNoteTitle" class="folder-note-title-input" type="text" placeholder="Title" aria-label="Note title">
+          <div class="folder-note-toolbar" aria-label="Note formatting">
+            <button type="button" onmousedown="event.preventDefault()" onclick="toggleNoteLineType('bullet')" title="Bullet list" aria-label="Bullet list">
+              <span class="material-symbols-rounded note-toolbar-icon" aria-hidden="true">format_list_bulleted</span>
+            </button>
+            <button type="button" onmousedown="event.preventDefault()" onclick="toggleNoteLineType('check')" title="Checklist" aria-label="Checklist">
+              <span class="material-symbols-rounded note-toolbar-icon" aria-hidden="true">checklist</span>
+            </button>
+          </div>
           <div id="folderNoteEditor" class="note-body-editor folder-note-editor" aria-label="Folder note"></div>
         </div>
         <div class="note-footer">

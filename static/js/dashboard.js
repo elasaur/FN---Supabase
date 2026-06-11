@@ -85,7 +85,7 @@ function renderDashboardRecentUploads() {
 
 function makeRecentItem(f) {
   return `
-    <div class="recent-item">
+    <div class="recent-item file-folder-link" role="button" tabindex="0" onclick="openFileFolder(${f.id})" onkeydown="handleFileFolderKeydown(event, ${f.id})">
       <div class="recent-file-icon">${getExtIcon(f.original_name)}</div>
       <div class="recent-meta">
         <div class="recent-name">${escHtml(f.original_name)}${newFileBadge(f.created_at)}</div>
