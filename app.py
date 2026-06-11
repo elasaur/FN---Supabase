@@ -67,6 +67,10 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 SESSION_TIMEOUT = timedelta(minutes=30)
 STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024
 DEFAULT_FOLDER_EMOJI = '📁'
+IMPORTANT_FOLDER_NAME = 'Important Folder'
+IMPORTANT_FOLDER_EMOJI = '🚩'
+IMPORTANT_FOLDER_COLOR = '#e87a7a'
+IMPORTANT_FOLDER_BG = '#fde8e8'
 
 LOGIN_MAX_FAILED_ATTEMPTS = 3
 LOGIN_LOCKOUT_DURATION = timedelta(hours=24)
@@ -312,6 +316,83 @@ def select_default_folder(db, user_id, select="*"):
         {"user_id": pg_filter("eq", user_id), "is_default": pg_filter("eq", True)},
         select,
     ))
+
+
+def ensure_important_default_folder(db, user_id):
+    default_folder = select_default_folder(db, user_id, "id,name")
+
+    if not default_folder:
+        existing_important = first(db.select(
+            "folders",
+            {
+                "user_id": pg_filter("eq", user_id),
+                "name": pg_filter("eq", IMPORTANT_FOLDER_NAME),
+            },
+            "id",
+        ))
+        if existing_important:
+            update_folder_compat(db, existing_important["id"], user_id, {
+                "emoji": IMPORTANT_FOLDER_EMOJI,
+                "color": IMPORTANT_FOLDER_COLOR,
+                "bg": IMPORTANT_FOLDER_BG,
+                "is_default": True,
+                "updated_at": now_utc().isoformat(),
+            })
+            db.commit()
+            return
+
+        create_folder_record(
+            db,
+            user_id,
+            IMPORTANT_FOLDER_NAME,
+            IMPORTANT_FOLDER_EMOJI,
+            IMPORTANT_FOLDER_COLOR,
+            IMPORTANT_FOLDER_BG,
+            True,
+            False,
+        )
+        db.commit()
+        return
+
+    if str(default_folder.get("name") or "").lower() == "uncategorized":
+        existing_important = first(db.select(
+            "folders",
+            {
+                "user_id": pg_filter("eq", user_id),
+                "name": pg_filter("eq", IMPORTANT_FOLDER_NAME),
+            },
+            "id",
+        ))
+        if existing_important and str(existing_important.get("id")) != str(default_folder["id"]):
+            return
+
+        update_folder_compat(db, default_folder["id"], user_id, {
+            "name": IMPORTANT_FOLDER_NAME,
+            "emoji": IMPORTANT_FOLDER_EMOJI,
+            "color": IMPORTANT_FOLDER_COLOR,
+            "bg": IMPORTANT_FOLDER_BG,
+            "updated_at": now_utc().isoformat(),
+        })
+        db.commit()
+
+
+def update_folder_compat(db, folder_id, user_id, payload):
+    try:
+        return db.update(
+            "folders",
+            {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", user_id)},
+            payload,
+        )
+    except RuntimeError as exc:
+        if "updated_at" not in payload or not is_folder_updated_at_schema_error(exc):
+            raise
+        payload = dict(payload)
+        payload.pop("updated_at", None)
+        return db.update(
+            "folders",
+            {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", user_id)},
+            payload,
+        )
 
 
 def select_file(db, file_id, user_id, select="*"):
@@ -645,9 +726,7 @@ def index():
             db.insert('users', {'id': user_id, 'name': name, 'email': auth_user.get('email') or email})
             db.commit()
             user = select_user(db, user_id)
-        if not select_default_folder(db, user_id, "id"):
-            create_folder_record(db, user_id, 'Uncategorized', '📂', '#e8b84b', '#f7f4f0', True, False)
-            db.commit()
+        ensure_important_default_folder(db, user_id)
 
         session.clear()
         session['user_id'] = user_id
@@ -729,9 +808,7 @@ def signup():
         session.permanent = True
 
     # Signup flow: each new account starts with one default folder.
-    if not select_default_folder(db, auth_user['id'], "id"):
-        create_folder_record(db, auth_user['id'], 'Uncategorized', '📂', '#e8b84b', '#f7f4f0', True, False)
-        db.commit()
+    ensure_important_default_folder(db, auth_user['id'])
 
     return jsonify({'success': True, 'confirm_email': not bool(auth.get('access_token'))})
 
@@ -836,8 +913,8 @@ def perform_reset():
         return jsonify({'success': False, 'message': 'Open the Supabase reset link from your email, then set the new password.'})
 
     result = update_user_password(access_token, new_pw)
-    if result.get('error') or result.get('msg'):
-        return jsonify({'success': False, 'message': result.get('msg') or result.get('error_description') or 'Unable to update password.'})
+    if result.get('error') or result.get('msg') or result.get('message'):
+        return jsonify({'success': False, 'message': result.get('msg') or result.get('message') or result.get('error_description') or 'Unable to update password.'})
     return jsonify({'success': True})
 
 
@@ -858,11 +935,12 @@ def dashboard():
         session_expires_at=expires_at.isoformat() if expires_at else '',
     )
 
-
+# Refreshes the authenticated session activity timestamp for client-side user activity.
 @app.route('/api/session/activity', methods=['POST'])
 @login_required
 def api_session_activity():
     expires_at = current_session_expires_at()
+
     return jsonify({
         'success': True,
         'session_expires_at': expires_at.isoformat() if expires_at else '',

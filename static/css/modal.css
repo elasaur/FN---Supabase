@@ -402,7 +402,7 @@
 }
 .folder-option:hover { border-color: var(--rc-color, var(--accent)); color: var(--rc-color, var(--accent)); }
 .folder-option.selected { background: var(--rc-color, var(--accent)); color: #fff; border-color: var(--rc-color, var(--accent)); }
-.uncategorized-notice { background: var(--yellow2); border: 1px solid var(--yellow); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.78rem; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+.prediction-notice { background: var(--yellow2); border: 1px solid var(--yellow); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.78rem; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
 
 /* New folder panel */
 .new-folder-toggle {

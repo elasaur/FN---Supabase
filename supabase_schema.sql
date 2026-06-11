@@ -53,6 +53,23 @@ alter table public.folders add column if not exists updated_at timestamptz not n
 update public.folders set note_body = '' where note_body is null;
 alter table public.folders alter column note_body set default '';
 
+update public.folders f
+set
+  name = 'Important Folder',
+  emoji = '🚩',
+  color = '#e87a7a',
+  bg = '#fde8e8',
+  updated_at = now()
+where f.is_default = true
+  and lower(f.name) = 'uncategorized'
+  and not exists (
+    select 1
+    from public.folders existing
+    where existing.user_id = f.user_id
+      and existing.name = 'Important Folder'
+      and existing.id <> f.id
+  );
+
 create index if not exists idx_folders_user on public.folders(user_id);
 create index if not exists idx_files_user on public.files(user_id);
 create index if not exists idx_files_folder on public.files(folder_id);

@@ -70,17 +70,6 @@ def _runtime_env_flag(name: str) -> bool:
     return _runtime_env_value(name).strip().lower() in {"1", "true", "yes", "on"}
 
 
-# Extension category map: non-text files can be sorted without an AI call.
-
-EXT_CATEGORY_MAP = {
-    "jpg":  ("Photos",   "📸", "#9b87d4", "#ede8f8"),
-    "jpeg": ("Photos",   "📸", "#9b87d4", "#ede8f8"),
-    "png":  ("Photos",   "📸", "#9b87d4", "#ede8f8"),
-    "mp4":  ("Videos",   "🎬", "#7ec8e3", "#e0f4fb"),
-    "mp3":  ("Audio",    "🎶", "#f5a7c7", "#fce8f3"),
-    "zip":  ("Archives", "🗂️", "#e8b84b", "#fef7dd"),
-}
-
 _GENERIC_FOLDER_NAMES = {"documents", "files", "misc", "general", "uploads", "other"}
 
 _EMOJI_COLORS = {
@@ -298,7 +287,7 @@ def _repair_json(raw: str) -> str:
                 start = None
 
     if complete_objects:
-        print(f"⚠️  JSON repaired: salvaged {len(complete_objects)} object(s).")
+        print(f"WARNING: JSON repaired: salvaged {len(complete_objects)} object(s).")
         return json.dumps(complete_objects)
 
     raise ValueError("Could not repair malformed JSON from Gemini.")
@@ -498,7 +487,7 @@ def _textblob_fallback_suggestions(
     text: str,
     existing_folders: List[str],
 ) -> List[Dict]:
-    print("🔡 TextBlob fallback: analysing filename and content...")
+    print("TextBlob fallback: analysing filename and content...")
     try:
         combined = f"{clean_filename_text(filename)} {text}".strip()
         raw_words = re.findall(r"[A-Za-z][A-Za-z0-9\-]{2,}", combined.lower())
@@ -569,7 +558,7 @@ def _textblob_fallback_suggestions(
         return suggestions[:3]
 
     except Exception as e:
-        print(f"⚠️  TextBlob fallback error: {e}")
+        print(f"WARNING: TextBlob fallback error: {e}")
         return _textblob_default_suggestions(existing_folders)
 
 
@@ -715,28 +704,8 @@ def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
     file_type, raw_text = detect_and_extract(path, filename)
 
     if file_type == "non-text":
-        if ext in EXT_CATEGORY_MAP:
-            cat_name, emoji, color, bg = EXT_CATEGORY_MAP[ext]
-            existing = next(
-                (f for f in existing_folder_names if cat_name.lower() == f.lower()), None
-            )
-            top = {
-                "folder": existing or cat_name, "emoji": emoji, "color": color, "bg": bg,
-                "confidence": 90.0, "is_new": existing is None,
-                "reason": f".{ext} file identified as {cat_name}.",
-            }
-            ranked = [top] + [
-                {"folder": "Uncategorized", "emoji": "📂", "color": "#b09e94", "bg": "#f7f4f0",
-                 "confidence": 30.0, "is_new": True, "reason": "Default fallback folder."}
-                for _ in range(2)
-            ]
-            return {
-                "file_type": "non-text", "extension": ext, "word_count": 0,
-                "keywords": [], "ranked": ranked, "top_folder": top,
-                "no_match": False, "text_preview": "",
-            }
+        # Non-text files have no extracted body, so Gemini/TextBlob use the filename.
         raw_text = clean_filename_text(filename)
-        file_type = "text"
 
     if file_type == "empty" or not raw_text.strip():
         raw_text = clean_filename_text(filename)

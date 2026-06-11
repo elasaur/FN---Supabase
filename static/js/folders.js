@@ -1,6 +1,7 @@
 // Folder deletion modal state.
 let folderToDeleteId = null;
 
+// Opens the delete-folder confirmation modal for the selected folder.
 function showDeleteFolderModal(id, name) {
   folderToDeleteId = id;
 
@@ -19,6 +20,7 @@ function showDeleteFolderModal(id, name) {
   if (typeof restartModalIconAnimation === 'function') restartModalIconAnimation(modal);
 }
 
+// Confirms the pending folder deletion and closes the confirmation modal.
 function confirmDeleteFolder() {
   if (folderToDeleteId !== null) {
     deleteFolder(folderToDeleteId);
@@ -27,6 +29,7 @@ function confirmDeleteFolder() {
   hideDeleteFolderModal('deleteFolder');
 }
 
+// Hides a delete modal by its modal id suffix.
 function hideDeleteFolderModal(modalId) {
   const modal = document.getElementById('modal-' + modalId);
   if (modal) {
@@ -36,6 +39,7 @@ function hideDeleteFolderModal(modalId) {
 }
 
 // Folders feature: list, sort, pin, open, edit, note, and delete folders.
+// Loads folders from the API and renders the folder grid.
 async function loadFolders() {
   setFoldersLoading();
   try {
@@ -49,12 +53,14 @@ async function loadFolders() {
   }
 }
 
+// Shows a loading state in the folder grid.
 function setFoldersLoading() {
   const el = document.getElementById('allFoldersList');
   if (!el) return;
   el.innerHTML = '<div class="section-loading" role="status" aria-live="polite"><div class="spinner" aria-label="Loading folders"></div></div>';
 }
 
+// Shows the folder loading error state with a retry button.
 function renderFoldersLoadError(err) {
   const el = document.getElementById('allFoldersList');
   if (!el) return;
@@ -67,7 +73,9 @@ function renderFoldersLoadError(err) {
   `;
 }
 
+// Updates the active folder sort mode and rerenders the grid.
 function setFolderSort(mode, el) {
+  // Date columns toggle direction each time the same chip is clicked.
   if (mode === 'created' || mode === 'modified') {
     const descMode = `${mode}-desc`;
     const ascMode = `${mode}-asc`;
@@ -79,6 +87,7 @@ function setFolderSort(mode, el) {
   renderFolderGrid();
 }
 
+// Keeps folder sort chips visually aligned with the active sort mode.
 function syncFolderSortChips(activeEl) {
   document.querySelectorAll('#page-folders .sort-chip').forEach(chip => {
     const chipSort = chip.dataset.sort;
@@ -94,6 +103,7 @@ function syncFolderSortChips(activeEl) {
 
     if (isDateChip) {
       const baseLabel = chipSort === 'created' ? 'Created Date' : 'Modified Date';
+      // Date chip labels include the active direction indicator.
       chip.textContent = isActive
         ? `${baseLabel} ${folderSortMode.endsWith('-asc') ? '↑' : '↓'}`
         : baseLabel;
@@ -102,6 +112,7 @@ function syncFolderSortChips(activeEl) {
   });
 }
 
+// Renders all folders, sorted and with pinned folders first.
 function renderFolderGrid() {
   const el = document.getElementById('allFoldersList');
   if (!el) return;
@@ -110,6 +121,8 @@ function renderFolderGrid() {
   const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
   const byCount = (a, b) => Number(b.file_count || 0) - Number(a.file_count || 0);
   const byPinned = (a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
+
+  // Modified folders use updated_at first, then note_updated_at, then created_at.
   const folderDateValue = (folder, field) => {
     const value = field === 'updated_at'
       ? (folder.updated_at || folder.note_updated_at || folder.created_at)
@@ -126,6 +139,7 @@ function renderFolderGrid() {
   };
   const bySelectedMode = sorters[folderSortMode] || byName;
 
+  // Keep pinned folders first, then apply selected sorting, then use name as fallback.
   sorted.sort((a, b) => byPinned(a, b) || bySelectedMode(a, b) || byName(a, b));
 
   syncFolderSortChips();
@@ -133,6 +147,7 @@ function renderFolderGrid() {
   el.innerHTML += `<div class="add-folder-card" onclick="openCreateFolderModal()"><div class="plus">＋</div><div style="font-weight:700;font-size:0.85rem;">New Folder</div></div>`;
 }
 
+// Builds the HTML for one folder card.
 function makeFolderCard(f, minimal) {
   const icon = folderIconHtml(f.emoji, 'folder-emoji');
   const pinDot  = f.pinned ? '<div class="pinned-dot"></div>' : '';
@@ -170,6 +185,7 @@ function makeFolderCard(f, minimal) {
     </div>`;
 }
 
+// Opens a folder card using encoded values from inline HTML handlers.
 function openFolderCard(folderId, encodedName, encodedEmoji) {
   openFolderFiles(
     folderId,
@@ -178,10 +194,12 @@ function openFolderCard(folderId, encodedName, encodedEmoji) {
   );
 }
 
+// Renders a short preview of the folder note for the folder card.
 function renderFolderNotePreview(folder) {
   const body = String(folder.note_body || '').trim();
   if (!body) return '<div class="fc-note-preview fc-note-empty">No note yet.</div>';
 
+  // Only preview the first two non-empty lines to keep folder cards compact.
   const lines = body
     .split(/\r?\n/)
     .map(line => line.trim())
@@ -189,6 +207,7 @@ function renderFolderNotePreview(folder) {
     .slice(0, 2);
 
   const preview = lines.map(line => {
+    // Checklist markers affect preview styling, then get removed from visible text.
     const done = /^\[[xX]\]\s*/.test(line);
     const pending = /^(\[\]|\[ \])\s*/.test(line);
     const text = stripFolderNoteMarkdown(line.replace(/^(\[[xX]\]|\[\]|\[ \])\s*/, ''));
@@ -199,15 +218,19 @@ function renderFolderNotePreview(folder) {
   return `<div class="fc-note-preview">${preview}</div>`;
 }
 
+// Removes lightweight note markdown before showing preview text.
 function stripFolderNoteMarkdown(value) {
   return String(value || '')
     .replace(/^#\s+/, '')
     .replace(/\*\*([^*]+(?:\*(?!\*)[^*]*)*)\*\*/g, '$1');
 }
 
+// Splits the saved folder note into title and body fields.
 function splitFolderNoteBody(value) {
   const lines = String(value || '').split(/\r?\n/);
   const firstLine = lines[0] || '';
+
+  // A leading "# " line is treated as the note title.
   if (/^#\s+/.test(firstLine)) {
     return {
       title: firstLine.replace(/^#\s+/, '').trim(),
@@ -217,14 +240,17 @@ function splitFolderNoteBody(value) {
   return { title: '', body: String(value || '') };
 }
 
+// Combines the note title and body into the stored note format.
 function composeFolderNoteBody(title, body) {
   const cleanTitle = String(title || '').trim();
   const cleanBody = String(body || '').replace(/^\n+/, '');
   return cleanTitle ? `# ${cleanTitle}${cleanBody ? `\n${cleanBody}` : ''}` : cleanBody;
 }
 
+// Shows the floating menu for a folder card action button.
 function showFloatingFolderMenu(e, button) {
   e.stopPropagation();
+
   const data = button.dataset;
   const id = Number(data.folderId);
   const name = data.folderName || '';
@@ -234,6 +260,7 @@ function showFloatingFolderMenu(e, button) {
   const color = data.folderColor || COLOR_OPTIONS[0].val;
   const bg = data.folderBg || COLOR_OPTIONS[0].bg;
   closeFolderMenus();
+
   // Floating action menu for edit, pin, and delete commands.
   let menu = document.getElementById('floating-folder-menu');
   if (!menu) {
@@ -242,6 +269,7 @@ function showFloatingFolderMenu(e, button) {
     menu.className = 'folder-menu-dropdown open';
     document.body.appendChild(menu);
   }
+
   menu.innerHTML = `
     <button onclick=\"openEditModalFromEncoded(${id},'${encodeURIComponent(name)}','${encodeURIComponent(emoji)}','${encodeURIComponent(color)}','${encodeURIComponent(bg)}');closeFolderMenus()\">${svgIcon('edit.svg', 'action-svg-icon')} Edit</button>
     <button onclick=\"togglePin(${id},${pinned});closeFolderMenus()\">${svgIcon('pin-folder.svg', 'action-svg-icon')} ${pinned ? 'Unpin' : 'Pin'}</button>
@@ -249,6 +277,7 @@ function showFloatingFolderMenu(e, button) {
   `;
 
   menu.style.width = '168px';
+
   // Keep the menu anchored to the clicked options button.
   const rect = button.getBoundingClientRect();
   menu.style.position = 'absolute';
@@ -258,6 +287,7 @@ function showFloatingFolderMenu(e, button) {
   menu.style.display = 'block';
 }
 
+// Removes the floating folder menu if it exists.
 function closeFolderMenus() {
   const menu = document.getElementById('floating-folder-menu');
   if (menu) menu.remove();
@@ -271,26 +301,31 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// Toggles a folder pin state with optimistic UI and rollback on failure.
 async function togglePin(id, currentPinned) {
   const nextPinned = currentPinned ? 0 : 1;
   const folder = allFolders.find(item => Number(item.id) === Number(id));
   const previousPinned = folder ? folder.pinned : currentPinned;
 
+  // Optimistically update local cache so the UI responds immediately.
   if (folder) folder.pinned = nextPinned;
   renderFolderGrid();
   renderDashboardPinnedFoldersFromCache();
 
   try {
     const res = await fetch(`/api/folders/${id}`, {
-      method:'PUT', headers:{'Content-Type':'application/json'},
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pinned: nextPinned }),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message || 'Could not update pin.');
+
     if (folder) folder.updated_at = data.updated_at || new Date().toISOString();
     showToast(nextPinned ? 'Folder pinned.' : 'Folder unpinned.', 'success');
     syncCachesSilently();
   } catch (err) {
+    // Restore previous local state when the API update fails.
     if (folder) folder.pinned = previousPinned;
     renderFolderGrid();
     renderDashboardPinnedFoldersFromCache();
@@ -298,16 +333,21 @@ async function togglePin(id, currentPinned) {
   }
 }
 
+// Renders pinned folders on the dashboard from the local folder cache.
 function renderDashboardPinnedFoldersFromCache() {
   const pinnedEl = document.getElementById('dashPinnedFolders');
   if (!pinnedEl) return;
+
   const pinned = allFolders.filter(f => Number(f.pinned) === 1 || f.pinned === true);
+
   pinnedEl.innerHTML = pinned.length
     ? pinned.map(f => makeFolderCard(f, true)).join('')
     : `<div class="empty-state" style="grid-column:1/-1;padding:20px;"><div class="es-icon">${filledSvgIcon('pin-folder.svg', 'empty-svg-icon')}</div><div class="es-text">No pinned folders yet - pin one from the Folders page!</div></div>`;
 }
+
+// Deletes a folder and updates local caches after success.
 async function deleteFolder(id) {
-  const res  = await fetch(`/api/folders/${id}`, { method:'DELETE' });
+  const res = await fetch(`/api/folders/${id}`, { method: 'DELETE' });
   const data = await res.json();
 
   if (data.success) {
@@ -319,38 +359,54 @@ async function deleteFolder(id) {
   }
 }
 
+// Opens the folder detail page and loads files for that folder.
 async function openFolderFiles(folderId, folderName, emoji) {
   const folder = getCachedFolder(folderId) || { id: folderId, name: folderName, emoji, note_body: '' };
   currentFolderFilesContext = { id: folderId, name: folderName, emoji };
+
   const title = document.getElementById('folderFilesTitle');
   if (title) title.innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(folderName)}`;
+
   const detailPage = document.getElementById('page-folder-detail');
   if (detailPage) detailPage.style.setProperty('--folder-color', folder.color || COLOR_OPTIONS[0].val);
+
   navigate('folder-detail');
+
   const topbar = document.getElementById('topbarTitle');
   if (topbar) topbar.textContent = 'All Folders';
+
   renderFolderNoteTab(folder);
+
+  // Use cached files when available; otherwise show loading while fetching once.
   if (allFilesLoaded) {
     renderCurrentFolderFilesFromCache();
     return;
   }
+
   const countEl = document.getElementById('folderFilesCount');
   if (countEl) countEl.textContent = 'Loading...';
+
   const listEl = document.getElementById('folderFilesList');
   listEl.innerHTML = '<div class="folder-files-loading"><div class="spinner"></div></div>';
+
   await loadAllFiles();
   renderCurrentFolderFilesFromCache();
 }
 
+// Loads the selected folder note into the title and editor fields.
 function renderFolderNoteTab(folder) {
   const folderNoteBody = String(folder?.note_body || '');
   folderNoteDirty = false;
+
+  // Stored notes keep the title as a markdown-style first line.
   const noteParts = splitFolderNoteBody(folderNoteBody);
   const titleInput = document.getElementById('folderNoteTitle');
+
   if (titleInput) {
     bindFolderNoteTitle(titleInput);
     titleInput.value = noteParts.title;
   }
+
   const editor = document.getElementById('folderNoteEditor');
   if (editor) {
     bindFolderNoteEditor(editor);
@@ -360,13 +416,16 @@ function renderFolderNoteTab(folder) {
       editor.textContent = noteParts.body;
     }
   }
+
   const saved = document.getElementById('folderNoteSavedAt');
   if (saved) {
     saved.textContent = folder?.note_updated_at ? `Last saved ${timeAgo(folder.note_updated_at)}` : 'Not saved yet';
   }
+
   updateFolderNoteActions();
 }
 
+// Registers the folder note title input dirty-state handler once.
 function bindFolderNoteTitle(input) {
   if (input.dataset.folderNoteTitleBound) return;
   input.dataset.folderNoteTitleBound = '1';
@@ -376,52 +435,65 @@ function bindFolderNoteTitle(input) {
   });
 }
 
+// Registers the folder note editor handlers once.
 function bindFolderNoteEditor(editor) {
   if (editor.dataset.folderNoteBound) return;
   editor.dataset.folderNoteBound = '1';
   if (typeof getNoteEditor === 'function') getNoteEditor(editor);
 }
 
+// Enables or disables note action buttons based on dirty state.
 function updateFolderNoteActions() {
   const save = document.getElementById('folderNoteSaveBtn');
   const cancel = document.getElementById('folderNoteCancelBtn');
+
   if (save) {
     save.disabled = !folderNoteDirty;
     save.classList.toggle('is-dirty', folderNoteDirty);
   }
+
   if (cancel) cancel.disabled = !folderNoteDirty;
 }
 
+// Saves the current folder note to the API and updates the local cache.
 async function saveFolderNote(folderId, btn) {
   const editor = document.getElementById('folderNoteEditor');
   const titleInput = document.getElementById('folderNoteTitle');
+
+  // Use the rich note serializer when loaded; otherwise fall back to plain text.
   const editorBody = typeof serializeNoteEditorBody === 'function'
     ? serializeNoteEditorBody(editor)
     : String(editor?.textContent || '');
   const body = composeFolderNoteBody(titleInput?.value, editorBody);
   let data = null;
+
   await withButtonLoading(btn, 'Saving...', async () => {
     data = await apiPut(`/api/folders/${folderId}/note`, { note_body: body });
   });
+
   if (!data?.success) {
     showToast(data?.message || 'Could not save folder note.', 'error');
     return;
   }
+
   updateCachedFolder(folderId, {
     note_body: data.note_body,
     note_updated_at: data.note_updated_at,
     updated_at: data.updated_at || data.note_updated_at,
   });
   folderNoteDirty = false;
+
   renderFolderNoteTab(getCachedFolder(folderId));
   showToast('Folder note saved.', 'success');
 }
 
+// Restores the note editor to the last saved folder note.
 function cancelFolderNote() {
   if (!currentFolderFilesContext) return;
   renderFolderNoteTab(getCachedFolder(currentFolderFilesContext.id));
 }
 
+// Decodes folder values from inline HTML handlers before opening edit modal.
 function openEditModalFromEncoded(id, name, emoji, color, bg) {
   openEditModal(
     id,
@@ -432,22 +504,34 @@ function openEditModalFromEncoded(id, name, emoji, color, bg) {
   );
 }
 
+// Renders the currently opened folder's files from the local file cache.
 function renderCurrentFolderFilesFromCache() {
   if (!currentFolderFilesContext || !document.getElementById('page-folder-detail')?.classList.contains('active')) return;
+
   const listEl = document.getElementById('folderFilesList');
   const countEl = document.getElementById('folderFilesCount');
   if (!listEl) return;
 
   const files = allFiles.filter(f => Number(f.folder_id) === Number(currentFolderFilesContext.id));
-  if (folderFilesSortMode === 'name') files.sort((a,b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
-  if (folderFilesSortMode === 'type') files.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
-  if (folderFilesSortMode === 'date') files.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+
+  // Sort only the filtered list for the currently opened folder.
+  if (folderFilesSortMode === 'name') {
+    files.sort((a, b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
+  }
+  if (folderFilesSortMode === 'type') {
+    files.sort((a, b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
+  }
+  if (folderFilesSortMode === 'date') {
+    files.sort((a, b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+  }
 
   if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
+
   if (!files.length) {
     listEl.innerHTML = `<div class="empty-state"><div class="es-icon">${filledSvgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files in this folder yet.</div></div>`;
     return;
   }
+
   listEl.innerHTML = `
       <div class="folder-files-list">
         ${files.map(f => {
@@ -474,6 +558,7 @@ function renderCurrentFolderFilesFromCache() {
     `;
 }
 
+// Updates folder-detail file sort mode and rerenders the file list.
 function setFolderFilesSort(mode, el) {
   folderFilesSortMode = mode;
   document.querySelectorAll('.folder-files-sort .sort-chip').forEach(c => c.classList.remove('active'));
@@ -481,6 +566,7 @@ function setFolderFilesSort(mode, el) {
   renderCurrentFolderFilesFromCache();
 }
 
+// Deletes a file from the folder detail context.
 async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
   deleteFileById(fileId);
 }
@@ -489,6 +575,7 @@ async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
 let cfModalColor = COLOR_OPTIONS[0];
 let rfModalColor = COLOR_OPTIONS[0];
 
+// Opens the create-folder modal with default values.
 function openCreateFolderModal() {
   document.getElementById('cf-name').value = '';
   document.getElementById('cf-emoji').value = '📁';
@@ -497,6 +584,7 @@ function openCreateFolderModal() {
   openModal('createFolder');
 }
 
+// Creates a folder from the create-folder modal form.
 async function submitCreateFolder() {
   const btn = window.event?.currentTarget;
   const name = document.getElementById('cf-name').value.trim();
@@ -518,8 +606,8 @@ async function submitCreateFolder() {
         name,
         emoji,
         color: cfModalColor.val,
-        bg: cfModalColor.bg
-      })
+        bg: cfModalColor.bg,
+      }),
     });
 
     const data = await res.json();
@@ -543,6 +631,7 @@ async function submitCreateFolder() {
   }
 }
 
+// Opens the edit-folder modal with the selected folder values.
 function openEditModal(id, name, emoji, color, bg) {
   const selectedColor = COLOR_OPTIONS.find(c => c.val === color) || COLOR_OPTIONS[0];
   rfModalColor = selectedColor;
@@ -558,18 +647,22 @@ function openEditModal(id, name, emoji, color, bg) {
   buildFolderModalColorPicker('rf-colorPicker', onColorChange, selectedColor);
 }
 
+// Builds color swatches for create/edit folder modals.
 function buildFolderModalColorPicker(containerId, onChange, selected) {
   const el = document.getElementById(containerId);
+
+  // Inline handlers keep the existing swatch behavior used by the modal markup.
   el.innerHTML = COLOR_OPTIONS.map(c => `
     <div class="color-swatch ${selected && selected.val === c.val ? 'active' : ''}"
          style="background:${c.val};"
-         onclick="this.parentElement.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+         onclick="this.parentElement.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
                   this.classList.add('active');
                   (${onChange.toString()})(${JSON.stringify(c)})">
     </div>
   `).join('');
 }
 
+// Saves edits from the edit-folder modal.
 async function submitEditFolder() {
   const btn = window.event?.currentTarget;
   const id = document.getElementById('rf-id').value;
@@ -592,8 +685,8 @@ async function submitEditFolder() {
         name,
         emoji,
         color: rfModalColor.val,
-        bg: rfModalColor.bg
-      })
+        bg: rfModalColor.bg,
+      }),
     });
 
     const data = await res.json();
@@ -619,6 +712,7 @@ async function submitEditFolder() {
   }
 }
 
+// Deletes a file from whichever folder is currently open.
 async function deleteFileFromCurrentFolder(fileId) {
   if (!currentFolderFilesContext) return;
   await deleteFileFromModal(

@@ -56,6 +56,9 @@
 <!-- Login Page -->
 <div class="auth-page open" id="loginPage">
   <div class="auth-card">
+    <a class="auth-back-btn" href="{{ url_for('landing') }}" aria-label="Back to Home">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+    </a>
     <div class="auth-logo">
       <img src="{{ url_for('static', filename='images/logo.png') }}"
           alt="File Nest Logo"
@@ -89,6 +92,9 @@
 <!-- Signup Page -->
 <div class="auth-page" id="signupPage">
   <div class="auth-card signup-card">
+    <button type="button" class="auth-back-btn" onclick="showLogin()" aria-label="Back to Login">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+    </button>
     <div class="auth-logo">
       <img src="{{ url_for('static', filename='images/logo.png') }}"
           alt="File Nest Logo"
@@ -143,6 +149,9 @@
 <!-- Forgot Password Page -->
 <div class="auth-page" id="forgotPage">
   <div class="auth-card">
+    <button type="button" class="auth-back-btn" onclick="showLogin()" aria-label="Back to Login">
+      <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+    </button>
     <div class="auth-logo">
       <img src="{{ url_for('static', filename='images/logo.png') }}"
            alt="File Nest Logo" class="auth-logo-img">
@@ -200,7 +209,7 @@
   </div>
 </div>
 
-<div class="terms-modal-bg" id="termsModal" onclick="if(event.target===this)closeTermsModal()">
+<div class="terms-modal-bg" id="termsModal">
   <section class="terms-modal" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
     <div class="terms-modal-head">
       <div>

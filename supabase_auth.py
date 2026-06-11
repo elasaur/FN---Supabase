@@ -152,7 +152,11 @@ def update_user_password(access_token: str, new_password: str) -> dict:
         json={"password": new_password},
         timeout=10,
     )
-    return _json_or_empty(resp)
+    data = _json_or_empty(resp)
+    if resp.status_code >= 400:
+        data.setdefault("error", f"supabase_update_password_failed_{resp.status_code}")
+        data.setdefault("msg", data.get("message") or "Unable to update password.")
+    return data
 
 
 def admin_update_user_password(user_id: str, new_password: str) -> dict:

@@ -203,7 +203,7 @@ async function confirmUpload() {
     }
     if (!chosenName && defaultFolder) {
       toastType = 'warn';
-      toastMessage = 'No folder selected. Saved to Uncategorized.';
+      toastMessage = 'No folder selected. Saved to Important Folder.';
     }
 
     const formData = new FormData();
@@ -235,7 +235,7 @@ async function confirmUpload() {
     document.getElementById('predictionCard').classList.remove('show');
     const savedFolder = data.folder || getCachedFolder(targetFolderId);
     if (savedFolder && !getCachedFolder(savedFolder.id)) allFolders.push(savedFolder);
-    const savedFolderName = savedFolder?.name || chosenName || 'Uncategorized';
+    const savedFolderName = savedFolder?.name || chosenName || 'Important Folder';
     showToast(`"${data.file?.original_name || 'File'}" saved to ${savedFolderName}.`, 'success');
 
     currentFile = null; currentAnalysis = null; selectedFolderObj = null;

@@ -2,6 +2,7 @@
 // --- Global Search Modal ---
 let lastSearchVal = '';
 let searchRequestId = 0;
+let searchFetchTimer = null;
 
 function closeSearchModal() {
   const modal = document.getElementById('searchModalDropdown');
@@ -10,34 +11,40 @@ function closeSearchModal() {
 
 function showSearchModal(files, folders, searchVal) {
   closeSearchModal();
+
   const bar = document.querySelector('.search-bar');
   if (!bar) return;
+
   const modal = document.createElement('div');
   modal.className = 'search-modal';
   modal.id = 'searchModalDropdown';
+
   let html = '<div class="search-modal-list">';
+
   if (!files.length && !folders.length) {
     html += `<div class="search-modal-empty">No results for "${escHtml(searchVal)}"</div>`;
   } else {
     folders.forEach(f => {
-      html += `<div class="search-modal-item" data-type="folder" data-id="${f.id}">
+      html += `<div class="search-modal-item" data-type="folder" data-id="${f.id}" data-name="${escHtml(f.name)}" data-emoji="${escHtml(f.emoji || 'folder')}" role="button" tabindex="0">
         <span class="search-modal-icon" data-icon="${escHtml(f.emoji)}">${folderIconHtml(f.emoji, '')}</span>
         <span class="search-modal-label">${escHtml(f.name)}</span>
         <span class="search-modal-tag folder">Folder</span>
       </div>`;
     });
+
     files.forEach(f => {
-      html += `<div class="search-modal-item" data-type="file" data-id="${f.id}">
+      html += `<div class="search-modal-item" data-type="file" data-id="${f.id}" data-folder-id="${f.folder_id || ''}" data-folder-name="${escHtml(f.folder_name || 'Folder')}" data-folder-emoji="${escHtml(f.folder_emoji || 'folder')}" role="button" tabindex="0">
         <span class="search-modal-icon">${getExtIcon(f.original_name)}</span>
         <span class="search-modal-label">${escHtml(f.original_name)}</span>
         <span class="search-modal-tag file">File</span>
       </div>`;
     });
   }
+
   html += '</div>';
   modal.innerHTML = html;
+
   // Position modal below search bar, left-aligned and matching width
-  const barRect = bar.getBoundingClientRect();
   modal.style.position = 'absolute';
   modal.style.left = bar.offsetLeft + 'px';
   modal.style.top = (bar.offsetTop + bar.offsetHeight + 4) + 'px';
@@ -48,25 +55,47 @@ function showSearchModal(files, folders, searchVal) {
   modal.style.marginTop = '0';
   bar.parentElement.appendChild(modal);
 
-  // Click handler for navigation
+  // Select on pointerdown so input blur cannot remove the dropdown before navigation.
   modal.querySelectorAll('.search-modal-item').forEach(item => {
-    item.addEventListener('click', async function() {
-      const type = this.getAttribute('data-type');
-      const id = this.getAttribute('data-id');
-      closeSearchModal();
-      if (type === 'folder') {
-        const label = this.querySelector('.search-modal-label')?.textContent || '';
-        const emoji = this.querySelector('.search-modal-icon')?.dataset.icon || 'folder';
-        navigate('folders', document.getElementById('nav-folders'));
-        await loadFolders();
-        await openFolderFiles(Number(id), label, emoji);
-      } else if (type === 'file') {
-        navigate('files', document.getElementById('nav-files'));
-        await loadAllFiles();
-        highlightFileRow(Number(id));
-      }
+    item.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      selectSearchResult(item);
+    });
+    item.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      selectSearchResult(item);
     });
   });
+}
+
+async function selectSearchResult(item) {
+  const type = item.getAttribute('data-type');
+  const id = Number(item.getAttribute('data-id'));
+
+  closeSearchModal();
+
+  if (type === 'folder') {
+    const label = item.getAttribute('data-name') || item.querySelector('.search-modal-label')?.textContent || '';
+    const emoji = item.getAttribute('data-emoji') || item.querySelector('.search-modal-icon')?.dataset.icon || 'folder';
+
+    await openFolderFiles(id, label, emoji);
+    return;
+  }
+
+  if (type === 'file') {
+    const folderId = Number(item.getAttribute('data-folder-id'));
+    const folderName = item.getAttribute('data-folder-name') || 'Folder';
+    const folderEmoji = item.getAttribute('data-folder-emoji') || 'folder';
+
+    await loadAllFiles();
+    if (folderId) {
+      await openFolderFiles(folderId, folderName, folderEmoji);
+      return;
+    }
+
+    openFileFolder(id);
+  }
 }
 
 function showSearchLoading(searchVal) {
@@ -98,6 +127,7 @@ function getLocalSearchResults(searchVal) {
   const folders = Array.isArray(allFolders)
     ? allFolders.filter(folder => String(folder.name || '').toLowerCase().includes(term))
     : [];
+
   return { files, folders };
 }
 
@@ -115,6 +145,7 @@ async function onGlobalSearch(val, forceModal) {
   const searchVal = String(val || '').trim();
   lastSearchVal = searchVal;
   const requestId = ++searchRequestId;
+  clearTimeout(searchFetchTimer);
 
   if (!searchVal) {
     closeSearchModal();
@@ -123,37 +154,51 @@ async function onGlobalSearch(val, forceModal) {
 
   const localResults = getLocalSearchResults(searchVal);
   const hasLocalCache = (Array.isArray(allFiles) && allFiles.length) || (Array.isArray(allFolders) && allFolders.length);
+
   if (hasLocalCache) {
     showSearchModal(localResults.files, localResults.folders, searchVal);
-    return;
+  } else {
+    showSearchLoading(searchVal);
   }
 
-  showSearchLoading(searchVal);
-
-  try {
-    const [filesRes, foldersRes] = await Promise.all([
-      fetch(`/api/files?sort=${typeof allFilesSortMode === 'string' ? allFilesSortMode : 'date'}&search=${encodeURIComponent(searchVal)}`),
-      fetch(`/api/folders?search=${encodeURIComponent(searchVal)}`)
-    ]);
-    const files = await filesRes.json();
-    const folders = await foldersRes.json();
-    if (requestId !== searchRequestId || searchVal !== lastSearchVal) return;
-    showSearchModal(
-      Array.isArray(files) ? files : [],
-      Array.isArray(folders) ? folders : [],
-      searchVal
-    );
-  } catch (err) {
-    if (requestId === searchRequestId) {
-      showSearchModal([], [], searchVal);
+  searchFetchTimer = setTimeout(async function() {
+    try {
+      const [filesRes, foldersRes] = await Promise.all([
+        fetch(`/api/files?sort=${typeof allFilesSortMode === 'string' ? allFilesSortMode : 'date'}&search=${encodeURIComponent(searchVal)}`),
+        fetch(`/api/folders?search=${encodeURIComponent(searchVal)}`)
+      ]);
+      const files = await filesRes.json();
+      const folders = await foldersRes.json();
+      if (requestId !== searchRequestId || searchVal !== lastSearchVal) return;
+      showSearchModal(
+        Array.isArray(files) ? files : [],
+        Array.isArray(folders) ? folders : [],
+        searchVal
+      );
+    } catch (err) {
+      if (requestId === searchRequestId && !hasLocalCache) {
+        showSearchModal([], [], searchVal);
+      }
     }
-  }
+  }, hasLocalCache ? 180 : 0);
 }
 
 // Register input and keydown handlers for global search bar
 document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('globalSearch');
   if (searchInput) {
+    const searchBar = document.querySelector('.search-bar');
+
+    if (searchBar) {
+      searchBar.addEventListener('click', function() {
+        searchInput.focus();
+
+        if (searchInput.value.trim()) {
+          onGlobalSearch(searchInput.value, true);
+        }
+      });
+    }
+
     searchInput.addEventListener('input', function() {
       onGlobalSearch(searchInput.value);
     });
@@ -165,8 +210,13 @@ document.addEventListener('DOMContentLoaded', function() {
         closeSearchModal();
       }
     });
-    searchInput.addEventListener('blur', function() {
-      setTimeout(closeSearchModal, 200);
+
+    document.addEventListener('pointerdown', function(e) {
+      if (e.target.closest('.search-bar') || e.target.closest('#searchModalDropdown')) {
+        return;
+      }
+
+      closeSearchModal();
     });
   }
 });
