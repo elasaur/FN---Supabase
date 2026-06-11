@@ -333,7 +333,16 @@
   line-height: 1;
   vertical-align: middle;
 }
-.rec-name { font-weight: 800; font-size: 0.88rem; flex: 1; }
+.rec-name {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+  font-weight: 800;
+  font-size: 0.88rem;
+  flex: 1;
+}
 .rec-rank-badge { 
   display: inline-flex;
   align-items: center;
@@ -393,7 +402,6 @@
 }
 .folder-option:hover { border-color: var(--rc-color, var(--accent)); color: var(--rc-color, var(--accent)); }
 .folder-option.selected { background: var(--rc-color, var(--accent)); color: #fff; border-color: var(--rc-color, var(--accent)); }
-.ai-pick { background: var(--lavender); color: #fff; font-size: 0.62rem; font-weight: 900; padding: 1px 6px; border-radius: 10px; margin-left: 5px; }
 .uncategorized-notice { background: var(--yellow2); border: 1px solid var(--yellow); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.78rem; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
 
 /* New folder panel */

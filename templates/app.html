@@ -58,6 +58,7 @@
     name: {{ (user['name'] or '')|tojson }},
     email: {{ (user['email'] or '')|tojson }}
   };
+  window.FILE_NEST_SESSION_EXPIRES_AT = {{ (session_expires_at or '')|tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/config.js') }}"></script>
 <script src="{{ url_for('static', filename='js/state.js') }}"></script>

@@ -35,9 +35,7 @@ async function loadDashboard() {
 }
 
 function displayGivenNames(fullName) {
-  const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length <= 2) return parts[0] || 'there';
-  return parts.slice(0, 2).join(' ');
+  return String(fullName || '').trim() || 'there';
 }
 
 function philippineGreeting() {

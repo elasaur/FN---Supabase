@@ -18,10 +18,12 @@ let folderNoteBody = '';
 let folderNoteDirty = false;
 let fileToMoveId = null;
 let fileToRenameId = null;
+let fileToDeleteId = null;
 
 let pickedColor = COLOR_OPTIONS[0];
 let pickedEmoji = '📁';
 let cfPickedColor = COLOR_OPTIONS[0];
 let cfModalColor = COLOR_OPTIONS[0];
+let rfModalColor = COLOR_OPTIONS[0];
 
 let aiEnabled = localStorage.getItem('aiEnabled') !== 'false';

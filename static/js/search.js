@@ -132,13 +132,17 @@ async function onGlobalSearch(val, forceModal) {
 
   try {
     const [filesRes, foldersRes] = await Promise.all([
-      fetch(`/api/files?sort=${window.allFilesSortMode || 'date'}&search=${encodeURIComponent(searchVal)}`),
+      fetch(`/api/files?sort=${typeof allFilesSortMode === 'string' ? allFilesSortMode : 'date'}&search=${encodeURIComponent(searchVal)}`),
       fetch(`/api/folders?search=${encodeURIComponent(searchVal)}`)
     ]);
     const files = await filesRes.json();
     const folders = await foldersRes.json();
     if (requestId !== searchRequestId || searchVal !== lastSearchVal) return;
-    showSearchModal(files, folders, searchVal);
+    showSearchModal(
+      Array.isArray(files) ? files : [],
+      Array.isArray(folders) ? folders : [],
+      searchVal
+    );
   } catch (err) {
     if (requestId === searchRequestId) {
       showSearchModal([], [], searchVal);
@@ -155,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     searchInput.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
-        console.log('[DEBUG] Enter pressed in search bar, value:', searchInput.value);
         onGlobalSearch(searchInput.value, true);
       }
       if (e.key === 'Escape') {

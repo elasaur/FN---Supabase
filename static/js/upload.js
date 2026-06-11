@@ -1,6 +1,13 @@
 // Upload analysis feature: validate files, call AI analysis, and show suggestions.
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1024 * 1024);
+const ALLOWED_UPLOAD_EXTENSIONS = new Set([
+  'pdf', 'docx', 'doc', 'xlsx', 'xls',
+  'pptx', 'ppt', 'txt',
+  'jpg', 'jpeg', 'png',
+  'mp3', 'mp4',
+  'zip', 'csv',
+]);
 let activeAnalyzeRequestId = 0;
 let activeAnalyzeController = null;
 let uploadSaveInFlight = false;
@@ -25,6 +32,14 @@ function validateUploadSize(file) {
   return false;
 }
 
+function validateUploadExtension(file) {
+  const ext = String(file?.name || '').split('.').pop().toLowerCase();
+  if (file?.name?.includes('.') && ALLOWED_UPLOAD_EXTENSIONS.has(ext)) return true;
+  showToast('File type not supported.', 'error');
+  clearPendingUploadState();
+  return false;
+}
+
 function onDragOver(e)  { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag-over'); }
 function onDragLeave(e) { document.getElementById('uploadZone').classList.remove('drag-over'); }
 function onDrop(e) {
@@ -38,6 +53,7 @@ async function handleFiles(files) {
 
   const file = files[0];
   if (!validateUploadSize(file)) return;
+  if (!validateUploadExtension(file)) return;
   activeAnalyzeController?.abort();
   activeAnalyzeController = new AbortController();
   const requestId = ++activeAnalyzeRequestId;
@@ -87,7 +103,7 @@ async function handleFiles(files) {
 
     if (engine === 'textblob') {
       if (engineTag) {
-        engineTag.innerHTML = `${filledSvgIcon('textblob-logo.svg', 'engine-tag-icon')} TextBlob`;
+        engineTag.textContent = 'TextBlob';
         engineTag.classList.add('textblob');
       }
       if (engineLabel) {
@@ -142,6 +158,7 @@ function setUploadLoadingText(title, subtitle) {
 function setUploadStep(active) {
   [1, 2, 3].forEach(n => {
     const el = document.getElementById(`step${n}`);
+    if (!el) return;
     el.classList.remove('active', 'done', 'pending');
     if (n < active)       el.classList.add('done');
     else if (n === active) el.classList.add('active');
@@ -167,70 +184,42 @@ async function confirmUpload() {
   setButtonLoading(btn, true, 'Saving...');
   document.getElementById('predictionCard').classList.add('saving');
 
-  let folderId = null;
-  let aiSorted = false;
   let toastMessage = '';
   let toastType = 'success';
 
   try {
-    if (selectedFolderObj) {
-      const name = selectedFolderObj.folder || selectedFolderObj.name;
-      // Existing folder selected from the picker.
-      if (selectedFolderObj._db_id) {
-        folderId = selectedFolderObj._db_id;
-        aiSorted = false;
-      } else {
-        // AI suggested a folder name; reuse an existing match when possible.
-        let existing = allFolders.find(f => f.name.toLowerCase() === name.toLowerCase());
-        // Create the AI-suggested folder when no existing folder matches.
-        if (!existing) {
-          const res = await fetch('/api/folders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name,
-              emoji: selectedFolderObj.emoji || '📁',
-              color: selectedFolderObj.color || '#7ec8e3',
-              bg:    selectedFolderObj.bg    || '#e0f4fb',
-            }),
-          });
-          const d = await res.json();
-          if (d.success) {
-            allFolders.push(d.folder);
-            existing = d.folder;
-            toastMessage = `Folder "${name}" created.`;
-          } else {
-            toastType = 'error';
-            toastMessage = d.message || 'Could not create folder.';
-            return;
-          }
-        }
+    const chosenFolder = selectedFolderObj;
+    const chosenName = chosenFolder ? (chosenFolder.folder || chosenFolder.name || '') : '';
+    const existingFolder = chosenName
+      ? allFolders.find(f => String(f.name || '').toLowerCase() === chosenName.toLowerCase())
+      : null;
+    const defaultFolder = allFolders.find(f => f.is_default);
+    const targetFolderId = chosenFolder?._db_id || existingFolder?.id || (!chosenName ? defaultFolder?.id : null);
 
-        folderId = existing.id;
-        aiSorted = true;
-      }
+    if (!targetFolderId && !chosenName) {
+      toastType = 'warn';
+      toastMessage = 'Please select a folder.';
+      return;
     }
-    // Last resort: use the default folder when the user did not pick one.
-    if (!folderId) {
-      const unc = allFolders.find(f => f.is_default);
-      if (unc) {
-        folderId = unc.id;
-        toastType = 'warn';
-        toastMessage = 'No folder selected. Saved to Uncategorized.';
-      } else {
-        toastType = 'warn';
-        toastMessage = 'Please select a folder.';
-        return;
-      }
+    if (!chosenName && defaultFolder) {
+      toastType = 'warn';
+      toastMessage = 'No folder selected. Saved to Uncategorized.';
     }
 
     const formData = new FormData();
-    formData.append('file',      currentFile);
-    formData.append('folder_id', folderId);
-    formData.append('ai_sorted', aiSorted ? '1' : '0');
-    formData.append('keywords',  (currentAnalysis?.keywords || []).join(','));
+    formData.append('file', currentFile);
+    if (targetFolderId) {
+      formData.append('folder_id', targetFolderId);
+    } else {
+      formData.append('folder_name', chosenName);
+      formData.append('folder_emoji', chosenFolder?.emoji || 'folder');
+      formData.append('folder_color', chosenFolder?.color || '#7ec8e3');
+      formData.append('folder_bg',    chosenFolder?.bg    || '#e0f4fb');
+    }
+    formData.append('ai_sorted', chosenFolder && !chosenFolder._db_id ? '1' : '0');
+    formData.append('keywords', (currentAnalysis?.keywords || []).join(','));
 
-    const res  = await fetch('/api/upload', { method:'POST', body:formData });
+    const res = await fetch('/api/confirm-upload', { method: 'POST', body: formData });
     const data = await res.json().catch(() => ({
       success: false,
       message: res.status === 413
@@ -244,16 +233,18 @@ async function confirmUpload() {
     }
 
     document.getElementById('predictionCard').classList.remove('show');
-    const folderName = selectedFolderObj
-      ? (selectedFolderObj.folder || selectedFolderObj.name)
-      : 'Uncategorized';
-    showToast(`"${data.file?.original_name || 'File'}" saved to ${folderName}.`, 'success');
+    const savedFolder = data.folder || getCachedFolder(targetFolderId);
+    if (savedFolder && !getCachedFolder(savedFolder.id)) allFolders.push(savedFolder);
+    const savedFolderName = savedFolder?.name || chosenName || 'Uncategorized';
+    showToast(`"${data.file?.original_name || 'File'}" saved to ${savedFolderName}.`, 'success');
 
     currentFile = null; currentAnalysis = null; selectedFolderObj = null;
     document.getElementById('fileInput').value = '';
-    addCachedFile(data.file, folderId);
+    addCachedFile(data.file, savedFolder?.id || targetFolderId);
     syncCachesSilently();
     toastMessage = '';
+    return;
+
   } finally {
     uploadSaveInFlight = false;
     resetUploadZone();

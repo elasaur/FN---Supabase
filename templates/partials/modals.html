@@ -67,7 +67,7 @@
 </div>
 
 <!-- Change Password -->
-<div class="modal-bg" id="modal-editPassword" onclick="if(event.target===this)closeModal('editPassword')">
+<div class="modal-bg" id="modal-editPassword">
   <div class="modal">
     <div class="modal-title"><span class="modal-title-icon-wrap"><span class="svg-icon filled-svg-icon modal-svg-icon icon-password" aria-hidden="true"></span></span> Change Password</div>
     <form class="modal-form" onsubmit="event.preventDefault();savePassword(this.querySelector('[type=submit]'));">
@@ -190,8 +190,8 @@
     <div class="modal-icon-center"><span class="modal-alert-icon-bg"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></span></div>
     <div class="modal-title danger-title">Delete Account?</div>
     <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
-      This will permanently delete your <strong>account, all files, and all folders</strong>.
-      There is no way to recover your data after this. Do you want to proceed?
+      This will deactivate your account and sign you out. Your files and folders will be kept for recovery.
+      Do you want to proceed?
     </p>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('deleteAccount')">
@@ -200,7 +200,7 @@
       <button class="btn btn-primary"
               style="background:var(--red); box-shadow:none;"
               onclick="confirmDeleteAccount()">
-        Yes, delete account
+        Yes, deactivate account
       </button>
     </div>
   </div>

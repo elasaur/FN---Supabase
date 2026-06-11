@@ -40,7 +40,6 @@ from supabase_auth import (
     update_user_password,
     admin_update_user_password,
     update_user_metadata,
-    admin_delete_user,
     reset_password_for_email,
 )
 
@@ -244,6 +243,11 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if not session_is_active():
             return auth_failure('Session expired. Please log in again.')
+        db = get_db()
+        user = select_user_with_deleted_at(db, session.get('user_id'))
+        if user_is_soft_deleted(user):
+            clear_auth_session()
+            return auth_failure('Account deleted.')
 
         # Session management: refresh activity for the sliding timeout window.
         session['last_activity'] = now_utc().isoformat()
@@ -273,6 +277,24 @@ def first(rows):
 
 def select_user(db, user_id, select="*"):
     return first(db.select("users", {"id": pg_filter("eq", user_id)}, select))
+
+
+def user_is_soft_deleted(user):
+    return bool(user and user.get("deleted_at"))
+
+
+def is_missing_deleted_at_column(exc):
+    message = str(exc)
+    return "deleted_at" in message and ("42703" in message or "column users.deleted_at does not exist" in message)
+
+
+def select_user_with_deleted_at(db, user_id):
+    try:
+        return select_user(db, user_id, "id,deleted_at")
+    except RuntimeError as exc:
+        if is_missing_deleted_at_column(exc):
+            return select_user(db, user_id, "id")
+        raise
 
 
 def select_folder(db, folder_id, user_id, select="*"):
@@ -591,7 +613,7 @@ def index():
     if request.method == 'POST':
         data = request.get_json(silent=True) or {}
         email = normalize_login_email(data.get('email', ''))
-        password = data.get('password', '').strip()
+        password = data.get('password', '')
 
         if not email or not password:
             return jsonify({'success': False, 'message': 'Please fill in all fields.'})
@@ -612,12 +634,17 @@ def index():
 
         db = get_db()
         user = select_user(db, user_id)
+        if user_is_soft_deleted(user):
+            try:
+                sign_out(auth['access_token'])
+            except Exception:
+                app.logger.exception('Supabase sign-out failed for soft-deleted account.')
+            return jsonify({'success': False, 'message': 'This account has been deactivated.'}), 403
         if not user:
             db.insert('users', {'id': user_id, 'name': name, 'email': auth_user.get('email') or email})
             db.commit()
             user = select_user(db, user_id)
-        default_folder = select_default_folder(db, user_id, "id")
-        if not default_folder:
+        if not select_default_folder(db, user_id, "id"):
             create_folder_record(db, user_id, 'Uncategorized', '📂', '#e8b84b', '#f7f4f0', True, False)
             db.commit()
 
@@ -659,7 +686,7 @@ def instructions():
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     name     = data.get('name', '').strip()
     email    = data.get('email', '').strip()
@@ -701,8 +728,9 @@ def signup():
         session.permanent = True
 
     # Signup flow: each new account starts with one default folder.
-    create_folder_record(db, auth_user['id'], 'Uncategorized', '📂', '#e8b84b', '#f7f4f0', True, False)
-    db.commit()
+    if not select_default_folder(db, auth_user['id'], "id"):
+        create_folder_record(db, auth_user['id'], 'Uncategorized', '📂', '#e8b84b', '#f7f4f0', True, False)
+        db.commit()
 
     return jsonify({'success': True, 'confirm_email': not bool(auth.get('access_token'))})
 
@@ -822,7 +850,12 @@ def dashboard():
 
     user = select_user(db, uid)
 
-    return render_template('app.html', user=user)
+    expires_at = current_session_expires_at()
+    return render_template(
+        'app.html',
+        user=user,
+        session_expires_at=expires_at.isoformat() if expires_at else '',
+    )
 
 
 # Dashboard stats API: cards and AI sorting summary.
@@ -875,7 +908,7 @@ def api_get_folders():
 @app.route('/api/folders', methods=['POST'])
 @login_required
 def api_create_folder():
-    data  = request.get_json()
+    data  = request.get_json(silent=True) or {}
     name  = data.get('name',  '').strip()
     emoji = data.get('emoji', DEFAULT_FOLDER_EMOJI).strip() or DEFAULT_FOLDER_EMOJI
     color = data.get('color', '#e8855a')
@@ -908,7 +941,7 @@ def api_update_folder(folder_id):
     if not folder:
         return jsonify({'success': False, 'message': 'Folder not found.'})
 
-    data   = request.get_json()
+    data   = request.get_json(silent=True) or {}
     name   = data.get('name',   folder['name']).strip()
     emoji  = data.get('emoji',  folder['emoji'])
     color  = data.get('color',  folder['color'])
@@ -1089,8 +1122,11 @@ def api_delete_file(file_id):
 def api_move_file(file_id):
     db        = get_db()
     uid       = get_current_user_id()
-    data      = request.get_json()
+    data      = request.get_json(silent=True) or {}
     folder_id = data.get('folder_id')
+
+    if not folder_id:
+        return jsonify({'success': False, 'message': 'Please choose a folder.'})
 
     f      = select_file(db, file_id, uid)
     folder = select_folder(db, folder_id, uid)
@@ -1138,22 +1174,20 @@ def api_analyze():
 
     # AI analysis flow: keep the session active during longer Gemini work.
     session['last_activity'] = now_utc().isoformat()
-    uid = get_current_user_id()
-    analyze_token = begin_analyze_request(uid)
 
     if 'file' not in request.files:
-        finish_analyze_request(uid, analyze_token)
         return jsonify({'success': False, 'message': 'No file provided.'})
 
     file = request.files['file']
     if not file or file.filename == '':
-        finish_analyze_request(uid, analyze_token)
         return jsonify({'success': False, 'message': 'No file selected.'})
-    if not allowed_file(file.filename):
-        finish_analyze_request(uid, analyze_token)
+
+    filename = clean_display_filename(file.filename)
+    if not filename or not allowed_file(filename):
         return jsonify({'success': False, 'message': 'File type not supported.'})
 
-    filename  = clean_display_filename(file.filename)
+    uid = get_current_user_id()
+    analyze_token = begin_analyze_request(uid)
     safe_name = safe_storage_filename(filename)
     timestamp = now_utc().strftime('%Y%m%d%H%M%S%f')
     temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f'__temp_{timestamp}_{safe_name}')
@@ -1395,7 +1429,7 @@ def api_delete_all_folders():
         return jsonify({'success': False, 'message': 'Default folder not found.'})
 
     default_folder_id = str(default_folder['id'])
-    user_files = db.select("files", {"user_id": f"eq.{uid}"}, "id,folder_id,stored_name")
+    user_files = db.select("files", {"user_id": pg_filter("eq", uid)}, "id,folder_id,stored_name")
     files_to_delete = [
         item for item in user_files
         if str(item.get("folder_id")) != default_folder_id
@@ -1435,7 +1469,7 @@ def api_get_user():
 @app.route('/api/user', methods=['PUT'])
 @login_required
 def api_update_user():
-    data  = request.get_json()
+    data  = request.get_json(silent=True) or {}
     uid   = get_current_user_id()
     db    = get_db()
 
@@ -1470,7 +1504,7 @@ def api_update_user():
 @app.route('/api/user/password', methods=['PUT'])
 @login_required
 def api_change_password():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     current_pw = data.get('current_password', '')
     new_pw     = data.get('new_password', '')
@@ -1538,24 +1572,30 @@ def api_change_password():
 def api_delete_account():
     db  = get_db()
     uid = get_current_user_id()
-
-    files = db.select("files", {"user_id": pg_filter("eq", uid)}, "stored_name")
+    deleted_at = now_utc().isoformat()
 
     try:
-        delete_files([f['stored_name'] for f in files])
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
-
-    # Account deletion: remove metadata after Storage deletion succeeds.
-    db.delete("files", {"user_id": pg_filter("eq", uid)})
-    db.delete("folders", {"user_id": pg_filter("eq", uid)})
-    db.delete("users", {"id": pg_filter("eq", uid)})
+        db.update("users", {"id": pg_filter("eq", uid)}, {"deleted_at": deleted_at})
+    except RuntimeError as exc:
+        if is_missing_deleted_at_column(exc):
+            return jsonify({
+                'success': False,
+                'message': 'Soft delete is not ready yet. Run the updated Supabase schema to add users.deleted_at.',
+            }), 400
+        raise
     db.commit()
-    admin_delete_user(uid)
+    access_token = session.get('access_token')
+    if access_token:
+        try:
+            sign_out(access_token)
+        except Exception:
+            app.logger.exception('Supabase sign-out failed after soft delete.')
+    try:
+        session.clear()
+    finally:
+        session.modified = True
 
-    session.clear()
-
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'soft_deleted': True, 'deleted_at': deleted_at})
 
 
 if __name__ == '__main__':

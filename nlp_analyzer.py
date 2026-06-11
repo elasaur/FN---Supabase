@@ -331,30 +331,24 @@ def ask_gemini_suggestions(
         },
     }
 
-    prompt = f"""You are a smart file organizer. Suggest exactly 3 folder names for this file.
+    prompt = f"""Suggest exactly 3 folders for this file. Return ONLY a JSON array, no other text.
 
-## File Information
-- **Filename:** {filename}
-- **Readable name:** {filename_context}
-- **File type:** .{ext}
+File: {filename} (.{ext})
+Name: {filename_context}
+Content: {text[:500] if text.strip() else "(none - use filename/type)"}
+Existing folders: {existing_folders_str}
 
-## Extracted Content (first ~800 characters)
-{text[:800] if text.strip() else "(No readable text — use filename and file type to infer.)"}
+Rules:
+- Specific names only (no: Documents, Files, Misc, General, Uploads, Other)
+- Reuse existing folders when relevant (is_new: false, exact name)
+- Vary: (1) most specific, (2) broader, (3) alternative angle
+- Title Case, 2-4 words, no special characters
+- Confidence: 85-100 strong, 65-84 good, 40-64 reasonable
+- Reason: <=8 words (e.g. "Contains ISTQB and testing content.")
+- One emoji per folder
 
-## User's Existing Folders
-{existing_folders_str}
+[{{"folder_name":"...","emoji":"...","is_new":true,"confidence":85,"reason":"..."}},...]"""
 
-## Rules
-1. Be specific — no generic names like "Documents", "Files", "Misc", "General".
-   Good examples: "Q3 Financial Reports", "Python Projects", "Medical Records"
-2. Reuse existing folders when relevant (set is_new: false, copy exact name).
-3. Vary suggestions: (1) most specific, (2) broader category, (3) alternative angle.
-4. Folder name style: Title Case, 2–4 words, no special characters.
-5. Confidence 0–100: 85–100 = strong match, 65–84 = good, 40–64 = reasonable.
-6. Reason: max 8 words. E.g. "Contains ISTQB and software testing content."
-7. Emoji: single emoji representing the folder topic.
-
-Return ONLY a JSON array with exactly 3 objects. No extra text."""
 
     try:
         if _runtime_env_flag("DISABLE_GEMINI"):
@@ -421,6 +415,7 @@ Return ONLY a JSON array with exactly 3 objects. No extra text."""
                 "bg":         _bg_for_emoji(emoji),
                 "confidence": float(confidence),
                 "is_new":     is_new,
+                "ai_source":  "gemini",
                 "reason":     str(item.get("reason", "")).strip() or "Suggested based on file content.",
             })
 
@@ -746,7 +741,7 @@ def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
     if file_type == "empty" or not raw_text.strip():
         raw_text = clean_filename_text(filename)
 
-    limited_text = raw_text[:1500]
+    limited_text = raw_text[:500]
     ranked = ask_gemini_suggestions(filename, limited_text, existing_folder_names)
 
     ai_status = "textblob" if any(s.get("ai_source") == "textblob" for s in ranked) else "gemini"

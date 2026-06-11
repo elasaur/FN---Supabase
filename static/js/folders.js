@@ -139,6 +139,8 @@ function makeFolderCard(f, minimal) {
   const count   = f.file_count || 0;
   const created = f.created_at ? `Created ${timeAgo(f.created_at)}` : 'Created date unavailable';
   const notePreview = renderFolderNotePreview(f);
+  const encodedName = encodeURIComponent(f.name || '');
+  const encodedEmoji = encodeURIComponent(f.emoji || 'folder');
   const actions = `
     <div class="folder-top-right" onclick="event.stopPropagation()">
       <div class="folder-badge">${count}</div>
@@ -157,7 +159,7 @@ function makeFolderCard(f, minimal) {
       </div>
     </div>`;
   return `
-    <div class="folder-card" style="--folder-color:${f.color};" onclick="openFolderFiles(${f.id},'${escHtml(f.name)}','${f.emoji}')">
+    <div class="folder-card" style="--folder-color:${f.color};" onclick="openFolderCard(${f.id},'${encodedName}','${encodedEmoji}')">
       ${pinDot}
       ${actions}
       ${icon}
@@ -166,6 +168,14 @@ function makeFolderCard(f, minimal) {
       <div class="folder-created">${escHtml(created)}</div>
       ${notePreview}
     </div>`;
+}
+
+function openFolderCard(folderId, encodedName, encodedEmoji) {
+  openFolderFiles(
+    folderId,
+    decodeURIComponent(encodedName || ''),
+    decodeURIComponent(encodedEmoji || 'folder')
+  );
 }
 
 function renderFolderNotePreview(folder) {
@@ -380,16 +390,7 @@ function bindFolderNoteTitle(input) {
 function bindFolderNoteEditor(editor) {
   if (editor.dataset.folderNoteBound) return;
   editor.dataset.folderNoteBound = '1';
-  editor.addEventListener('keydown', handleNoteEditorKeydown);
-  editor.addEventListener('input', () => {
-    folderNoteDirty = true;
-    updateFolderNoteActions();
-  });
-  editor.addEventListener('paste', handleNoteEditorPaste);
-  editor.addEventListener('change', () => {
-    folderNoteDirty = true;
-    updateFolderNoteActions();
-  });
+  if (typeof getNoteEditor === 'function') getNoteEditor(editor);
 }
 
 function updateFolderNoteActions() {

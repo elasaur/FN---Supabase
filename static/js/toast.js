@@ -1,16 +1,3 @@
-// function showToast(msg, type = 'info') {
-//   const wrap = document.getElementById('toastContainer');
-//   if (!wrap) return;
-//   const t = document.createElement('div');
-//   t.className = `toast ${type}`;
-//   t.textContent = msg;
-//   wrap.appendChild(t);
-//   setTimeout(() => {
-//     t.classList.add('out');
-//     setTimeout(() => t.remove(), 300);
-//   }, 3200);
-// }
-
 let toastAudioContext = null;
 let toastAudioUnlocked = false;
 
@@ -86,12 +73,22 @@ function getToastType(type) {
   return TOAST_TYPES.has(aliased) ? aliased : 'info';
 }
 
-function showToast(msg, type = 'info') {
-  const wrap = document.getElementById('toastContainer');
-  if (!wrap) return;
+function getToastContainer() {
+  let wrap = document.getElementById('toastContainer');
+  if (wrap) return wrap;
+  wrap = document.createElement('div');
+  wrap.id = 'toastContainer';
+  wrap.className = 'toast-container';
+  document.body.appendChild(wrap);
+  return wrap;
+}
 
+function showToast(msg, type = 'info') {
+  const wrap = getToastContainer();
   const toastType = getToastType(type);
   const message = getToastMessage(msg);
+
+  playToastSound(toastType);
 
   const t = document.createElement('div');
   t.className = `toast ${toastType}`;
@@ -101,8 +98,6 @@ function showToast(msg, type = 'info') {
   wrap.appendChild(t);
 
   if (wrap.children.length > 4) wrap.firstElementChild?.remove();
-
-  window.requestAnimationFrame(() => playToastSound(toastType));
 
   window.setTimeout(() => {
     t.classList.add('out');

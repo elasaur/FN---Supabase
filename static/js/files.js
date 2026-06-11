@@ -1,5 +1,4 @@
 // All files feature: list, sort, rename, move, download, and delete files.
-let fileToDeleteId = null;
 
 async function loadAllFiles(search) {
   let url = `/api/files?sort=${allFilesSortMode}`;
@@ -37,7 +36,7 @@ function renderAllFilesTable() {
   }
   tbody.innerHTML = allFiles.map(f => `
     <tr class="file-folder-link" data-file-id="${f.id}" role="button" tabindex="0" onclick="openFileFolder(${f.id})" onkeydown="handleFileFolderKeydown(event, ${f.id})">
-      <td><span class="file-name-cell">${getExtIcon(f.original_name)} <span class="file-name-text" style="font-weight:700;">${escHtml(f.original_name)}</span>${newFileBadge(f.created_at)}${f.ai_sorted?' <span style="font-size:0.65rem;background:var(--lavender2);color:var(--lavender);padding:1px 6px;border-radius:8px;font-weight:800;">AI</span>':''}</span></td>
+      <td><span class="file-name-cell">${getExtIcon(f.original_name)} <span class="file-name-text" style="font-weight:700;">${escHtml(f.original_name)}</span>${newFileBadge(f.created_at)}</span></td>
       <td><span style="font-size:0.72rem;background:var(--bg);padding:2px 8px;border-radius:6px;font-weight:700;color:var(--text2);">${getExt(f.original_name).toUpperCase()||'—'}</span></td>
       <td><span class="file-folder-tag" style="background:${f.folder_bg};color:${f.folder_color};">${folderIconHtml(f.folder_emoji, 'file-folder-icon')} ${escHtml(f.folder_name)}</span></td>
       <td style="color:var(--text3);font-size:0.82rem;">${formatSize(f.file_size)}</td>
@@ -107,8 +106,6 @@ async function submitRenameFile() {
   const btn = window.event?.currentTarget;
   const input = document.getElementById('renameFileInput');
   const name = (input?.value || '').trim();
-  let toastMessage = '';
-  let toastType = 'success';
 
   if (!name) {
     showToast('Please enter a file name.', 'warn');
@@ -124,19 +121,17 @@ async function submitRenameFile() {
     });
     const data = await res.json();
     if (!data.success) {
-      toastType = 'error';
-      toastMessage = data.message || 'Could not rename file.';
+      showToast(data.message || 'Could not rename file.', 'error');
       return;
     }
 
     closeModal('renameFile');
     renameCachedFile(fileToRenameId, data.name || name);
     fileToRenameId = null;
-    toastMessage = 'File renamed.';
+    showToast('File renamed.', 'success');
     syncCachesSilently();
   } finally {
     setButtonLoading(btn, false);
-    if (toastMessage) showToast(toastMessage, toastType);
   }
 }
 
@@ -161,8 +156,6 @@ async function submitMoveFile() {
   if (!fileToMoveId) return;
   const btn = window.event?.currentTarget;
   const folderId = document.getElementById('moveFileFolder').value;
-  let toastMessage = '';
-  let toastType = 'success';
   setButtonLoading(btn, true, 'Moving...');
   try {
     const res = await fetch(`/api/files/${fileToMoveId}/move`, {
@@ -172,18 +165,16 @@ async function submitMoveFile() {
     });
     const data = await res.json();
     if (!data.success) {
-      toastType = 'error';
-      toastMessage = data.message || 'Could not move file.';
+      showToast(data.message || 'Could not move file.', 'error');
       return;
     }
     closeModal('moveFile');
     moveCachedFile(fileToMoveId, folderId);
     fileToMoveId = null;
-    toastMessage = 'File moved.';
+    showToast('File moved.', 'success');
     syncCachesSilently();
   } finally {
     setButtonLoading(btn, false);
-    if (toastMessage) showToast(toastMessage, toastType);
   }
 }
 
@@ -213,8 +204,6 @@ async function deleteFileById(id, button, confirmed = false) {
     return;
   }
   const btn = button || window.event?.currentTarget;
-  let toastMessage = '';
-  let toastType = 'warn';
   setButtonLoading(btn, true, 'Deleting...');
   try {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
@@ -222,14 +211,12 @@ async function deleteFileById(id, button, confirmed = false) {
     if (data.success) {
       closeModal('deleteFile');
       removeCachedFile(id);
-      toastMessage = 'File deleted.';
+      showToast('File deleted.', 'warn');
       syncCachesSilently();
     } else {
-      toastType = 'error';
-      toastMessage = data.message;
+      showToast(data.message, 'error');
     }
   } finally {
     setButtonLoading(btn, false);
-    if (toastMessage) showToast(toastMessage, toastType);
   }
 }

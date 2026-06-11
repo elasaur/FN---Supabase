@@ -329,7 +329,7 @@ async function confirmDeleteAllFolders() {
   if (toastMessage) showToast(toastMessage, toastType);
 }
 
-// Account deletion: remove Storage, metadata, Auth user, and local tokens.
+// Account deletion: soft-delete the account and clear local tokens.
 async function deleteAccount() {
   openModal('deleteAccount');
 }

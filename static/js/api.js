@@ -37,6 +37,10 @@ function sameId(a, b) {
   return Number(a) === Number(b);
 }
 
+function hasOwnValue(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj || {}, key);
+}
+
 function getCachedFile(fileId) {
   return [...allFiles, ...uploadFiles, ...dashRecentFiles]
     .find(file => sameId(file.id, fileId)) || null;
@@ -206,17 +210,17 @@ function updateCachedFolder(folderId, changes) {
   [allFiles, uploadFiles, dashRecentFiles].forEach(list => {
     list.forEach(file => {
       if (sameId(file.folder_id, folderId)) {
-        if (Object.hasOwn(changes, 'name')) file.folder_name = changes.name;
-        if (Object.hasOwn(changes, 'emoji')) file.folder_emoji = changes.emoji;
-        if (Object.hasOwn(changes, 'color')) file.folder_color = changes.color;
-        if (Object.hasOwn(changes, 'bg')) file.folder_bg = changes.bg;
+        if (hasOwnValue(changes, 'name')) file.folder_name = changes.name;
+        if (hasOwnValue(changes, 'emoji')) file.folder_emoji = changes.emoji;
+        if (hasOwnValue(changes, 'color')) file.folder_color = changes.color;
+        if (hasOwnValue(changes, 'bg')) file.folder_bg = changes.bg;
       }
     });
   });
 
   if (currentFolderFilesContext && sameId(currentFolderFilesContext.id, folderId)) {
-    if (Object.hasOwn(changes, 'name')) currentFolderFilesContext.name = changes.name;
-    if (Object.hasOwn(changes, 'emoji')) currentFolderFilesContext.emoji = changes.emoji;
+    if (hasOwnValue(changes, 'name')) currentFolderFilesContext.name = changes.name;
+    if (hasOwnValue(changes, 'emoji')) currentFolderFilesContext.emoji = changes.emoji;
     const title = document.getElementById('folderFilesTitle');
     if (title) {
       title.innerHTML = `${folderIconHtml(currentFolderFilesContext.emoji, 'modal-title-icon')} ${escHtml(currentFolderFilesContext.name)}`;

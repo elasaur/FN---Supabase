@@ -2,12 +2,16 @@
 document.addEventListener('DOMContentLoaded', async () => {
   window.initialDataLoaded = false;
   updateDashboardGreeting?.();
-  await Promise.allSettled([
-    loadDashboard(),
-    loadFolders(),
-    loadAllFiles(),
-    loadStats(),
-    loadUploadFileList(),
-  ]);
-  window.initialDataLoaded = true;
+  try {
+    await loadDashboard();
+    if (typeof renderFolderGrid === 'function') renderFolderGrid();
+    if (typeof sortAllFilesCache === 'function') sortAllFilesCache();
+    if (typeof renderAllFilesTable === 'function') renderAllFilesTable();
+    if (typeof renderUploadFileList === 'function') renderUploadFileList();
+    if (typeof renderStatsFromCache === 'function') renderStatsFromCache();
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Could not load dashboard data.', 'error');
+  } finally {
+    window.initialDataLoaded = true;
+  }
 });

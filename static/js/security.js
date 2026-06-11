@@ -42,7 +42,10 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
   }
 
   function scheduleInitialExpiry() {
-    scheduleSessionExpiry(new Date(Date.now() + SESSION_TIMEOUT_MS).toISOString());
+    scheduleSessionExpiry(
+      window.FILE_NEST_SESSION_EXPIRES_AT
+      || new Date(Date.now() + SESSION_TIMEOUT_MS).toISOString()
+    );
   }
 
   window.fetch = async function guardedFetch(input, init) {

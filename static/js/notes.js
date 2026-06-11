@@ -140,6 +140,7 @@ function handleNoteEditorKeydown(e) {
 
   if (e.key === 'Enter') {
     e.preventDefault();
+    setFolderNoteDirty();
     const isEmptyListItem = (line.dataset.type === 'check' || line.dataset.type === 'bullet')
       && editable.textContent.trim() === '';
     if (isEmptyListItem) {
@@ -158,6 +159,7 @@ function handleNoteEditorKeydown(e) {
 
   if (e.key === 'Backspace' && editable.textContent === '' && editor.children.length > 1) {
     e.preventDefault();
+    setFolderNoteDirty();
     const previous = line.previousElementSibling || line.nextElementSibling;
     line.remove();
     focusEditable(previous);

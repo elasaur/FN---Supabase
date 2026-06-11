@@ -47,16 +47,12 @@ function showPredictionCard(file, analysis) {
     notice.textContent = '⚠️ Could not detect folder. Please pick one below or create a new folder.';
     recList.appendChild(notice);
   } else {
-    const rankLabels  = [
-      'Best Match',
-      '2nd Match',
-      '3rd Match'
-    ];
     const rankClasses = ['rank-1', 'rank-2', 'rank-3', 'rank-other'];
     const rankColors = ['var(--yellow)', 'var(--sky)', 'var(--mint)'];
 
     ranked.slice(0, 3).forEach((r, idx) => {
       const isSelected = idx === 0;
+      const confidence = Math.max(0, Math.min(100, Math.round(Number(r.confidence) || 0)));
       const card = document.createElement('div');
       card.className = 'rec-card' + (isSelected ? ' selected' : '');
       card.style.setProperty('--rc-color', r.color);
@@ -72,7 +68,7 @@ function showPredictionCard(file, analysis) {
         <div class="rec-top">
           <span class="rec-emoji">${folderIconHtml(r.emoji, 'rec-folder-icon')}</span>
           <span class="rec-name">${escHtml(r.folder)}${newBadge}</span>
-          <span class="rec-rank-badge ${rankClasses[idx]||'rank-other'}">${rankLabels[idx]||`#${idx+1}`}</span>
+          <span class="rec-rank-badge ${rankClasses[idx]||'rank-other'}">${confidence}%</span>
         </div>
         <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px;font-style:italic;">
           ${escHtml(r.reason || '')}
@@ -85,6 +81,7 @@ function showPredictionCard(file, analysis) {
           const chk = c.querySelector('.rec-select-check');
           if (chk) chk.textContent = '';
         });
+        document.querySelectorAll('.folder-option').forEach(b => b.classList.remove('selected'));
         card.classList.add('selected');
         card.querySelector('.rec-select-check').textContent = '✓';
         selectedFolderObj = r;
@@ -111,7 +108,8 @@ function showPredictionCard(file, analysis) {
 
   if (ranked.length) {
     const top = ranked[0];
-    showToast(`Best match: ${top.folder}${top.is_new ? ' (new folder)' : ''}`, 'info');
+    const confidence = Math.max(0, Math.min(100, Math.round(Number(top.confidence) || 0)));
+    showToast(`AI suggestion: ${top.folder} (${confidence}%)${top.is_new ? ' (new folder)' : ''}`, 'info');
   } else {
     showToast('No match found. Please pick a folder manually.', 'warn');
   }
@@ -129,6 +127,11 @@ function buildAllFoldersPicker(analysis) {
     btn.style.setProperty('--rc-color', f.color);
     btn.innerHTML = `${folderIconHtml(f.emoji, 'folder-option-icon')} ${escHtml(f.name)}`;
     btn.onclick = () => {
+      document.querySelectorAll('.rec-card').forEach(card => {
+        card.classList.remove('selected');
+        const chk = card.querySelector('.rec-select-check');
+        if (chk) chk.textContent = '';
+      });
       document.querySelectorAll('.folder-option').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedFolderObj = { folder:f.name, emoji:f.emoji, color:f.color, bg:f.bg, _db_id:f.id };
