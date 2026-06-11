@@ -70,9 +70,10 @@ DEFAULT_FOLDER_EMOJI = '📁'
 
 LOGIN_MAX_FAILED_ATTEMPTS = 3
 LOGIN_LOCKOUT_DURATION = timedelta(hours=24)
-LOGIN_ATTEMPTS_FILE = os.path.join(os.path.dirname(__file__), 'login_attempts.json')
+LOGIN_ATTEMPTS_FILE = os.path.join(app.instance_path, 'login_attempts.json')
 ANALYZE_REQUEST_DIR = os.path.join(UPLOAD_FOLDER, '.analyze_requests')
 ANALYZE_REQUEST_LOCK = threading.Lock()
+os.makedirs(app.instance_path, exist_ok=True)
 os.makedirs(ANALYZE_REQUEST_DIR, exist_ok=True)
 
 # Rate limiting configuration
@@ -856,6 +857,16 @@ def dashboard():
         user=user,
         session_expires_at=expires_at.isoformat() if expires_at else '',
     )
+
+
+@app.route('/api/session/activity', methods=['POST'])
+@login_required
+def api_session_activity():
+    expires_at = current_session_expires_at()
+    return jsonify({
+        'success': True,
+        'session_expires_at': expires_at.isoformat() if expires_at else '',
+    })
 
 
 # Dashboard stats API: cards and AI sorting summary.

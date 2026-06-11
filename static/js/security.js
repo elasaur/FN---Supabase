@@ -1,11 +1,14 @@
 // static/js/security.js
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+const SESSION_ACTIVITY_SYNC_MS = 5 * 60 * 1000;
 
 (function secureSession() {
   const originalFetch = window.fetch.bind(window);
   let idleTimer = null;
   let expired = false;
+  let nextActivitySyncAt = 0;
+  let activitySyncInFlight = false;
 
   function clearTokenCache() {
     try {
@@ -48,6 +51,32 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
     );
   }
 
+  async function syncServerActivity() {
+    if (expired || activitySyncInFlight) return;
+    const now = Date.now();
+    if (now < nextActivitySyncAt) return;
+    nextActivitySyncAt = now + SESSION_ACTIVITY_SYNC_MS;
+    activitySyncInFlight = true;
+
+    try {
+      const response = await originalFetch('/api/session/activity', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      const sessionExpiresAt = response.headers.get('X-Session-Expires-At');
+      if (response.status === 401) {
+        showExpiredSession();
+      } else if (sessionExpiresAt) {
+        scheduleSessionExpiry(sessionExpiresAt);
+      }
+    } catch (_) {
+      nextActivitySyncAt = Date.now() + 60 * 1000;
+    } finally {
+      activitySyncInFlight = false;
+    }
+  }
+
   window.fetch = async function guardedFetch(input, init) {
     const response = await originalFetch(input, init);
     const sessionExpiresAt = response.headers.get('X-Session-Expires-At');
@@ -63,6 +92,10 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
     }
     return response;
   };
+
+  ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach(eventName => {
+    document.addEventListener(eventName, syncServerActivity, { passive: true });
+  });
 
   scheduleInitialExpiry();
 })();

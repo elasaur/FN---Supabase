@@ -1,4 +1,6 @@
 // Prediction card feature: render AI folder suggestions and manual choices.
+let cfPickedColor = COLOR_OPTIONS[0];
+
 function showPredictionCard(file, analysis) {
   document.getElementById('predFileIcon').innerHTML = getExtIcon(file.name);
   document.getElementById('predFileName').textContent = file.name;
@@ -155,14 +157,14 @@ function toggleNewFolder() {
     panel.classList.add('show');
     const emojiInput = document.getElementById('nfEmoji');
     if (emojiInput) emojiInput.value = '📁';
-    pickedEmoji = '📁';
-    buildColorPicker('colorPicker', c => { cfPickedColor = c; });
+    cfPickedColor = COLOR_OPTIONS[0];
+    buildPredictionColorPicker('colorPicker', c => { cfPickedColor = c; });
   } else {
     panel.classList.remove('show');
   }
 }
 
-function buildColorPicker(containerId, onPick, selected) {
+function buildPredictionColorPicker(containerId, onPick, selected) {
   const cp = document.getElementById(containerId);
   if (!cp) return;
   cp.innerHTML = '';

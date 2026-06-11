@@ -31,6 +31,7 @@ backups/
 # Uploads / User Files
 # ===============================
 uploads/
+instance/
 
 # ===============================
 # Logs

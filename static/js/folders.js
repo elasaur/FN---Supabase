@@ -324,8 +324,6 @@ async function openFolderFiles(folderId, folderName, emoji) {
   currentFolderFilesContext = { id: folderId, name: folderName, emoji };
   const title = document.getElementById('folderFilesTitle');
   if (title) title.innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(folderName)}`;
-  const subtitle = document.getElementById('folderDetailSubtitle');
-  if (subtitle) subtitle.textContent = 'Files and folder note.';
   const detailPage = document.getElementById('page-folder-detail');
   if (detailPage) detailPage.style.setProperty('--folder-color', folder.color || COLOR_OPTIONS[0].val);
   navigate('folder-detail');
@@ -344,17 +342,8 @@ async function openFolderFiles(folderId, folderName, emoji) {
   renderCurrentFolderFilesFromCache();
 }
 
-function setFolderFilesTab(tab, el) {
-  document.querySelectorAll('.folder-files-tab').forEach(button => {
-    button.classList.toggle('active', button === el || button.dataset.tab === tab);
-  });
-  document.querySelectorAll('.folder-files-panel').forEach(panel => {
-    panel.classList.toggle('active', panel.dataset.panel === tab);
-  });
-}
-
 function renderFolderNoteTab(folder) {
-  folderNoteBody = String(folder?.note_body || '');
+  const folderNoteBody = String(folder?.note_body || '');
   folderNoteDirty = false;
   const noteParts = splitFolderNoteBody(folderNoteBody);
   const titleInput = document.getElementById('folderNoteTitle');
@@ -423,7 +412,6 @@ async function saveFolderNote(folderId, btn) {
     note_updated_at: data.note_updated_at,
     updated_at: data.updated_at || data.note_updated_at,
   });
-  folderNoteBody = data.note_body || '';
   folderNoteDirty = false;
   renderFolderNoteTab(getCachedFolder(folderId));
   showToast('Folder note saved.', 'success');
@@ -498,12 +486,14 @@ async function deleteFileFromModal(fileId, folderId, folderName, emoji) {
 }
 
 // Folder modal feature: create and edit folder names, icons, and colors.
+let cfModalColor = COLOR_OPTIONS[0];
+let rfModalColor = COLOR_OPTIONS[0];
 
 function openCreateFolderModal() {
   document.getElementById('cf-name').value = '';
   document.getElementById('cf-emoji').value = '📁';
   cfModalColor = COLOR_OPTIONS[0];
-  buildColorPicker('cf-colorPicker', c => { cfModalColor = c; });
+  buildFolderModalColorPicker('cf-colorPicker', c => { cfModalColor = c; });
   openModal('createFolder');
 }
 
@@ -565,10 +555,10 @@ function openEditModal(id, name, emoji, color, bg) {
 
   // Build color choices after the modal DOM is visible.
   const onColorChange = r => { rfModalColor = r; };
-  buildColorPicker('rf-colorPicker', onColorChange, selectedColor);
+  buildFolderModalColorPicker('rf-colorPicker', onColorChange, selectedColor);
 }
 
-function buildColorPicker(containerId, onChange, selected) {
+function buildFolderModalColorPicker(containerId, onChange, selected) {
   const el = document.getElementById(containerId);
   el.innerHTML = COLOR_OPTIONS.map(c => `
     <div class="color-swatch ${selected && selected.val === c.val ? 'active' : ''}"
