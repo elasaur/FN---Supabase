@@ -311,16 +311,16 @@ def select_default_folder(db, user_id, select="*"):
 
 def ensure_important_default_folder(db, user_id):
     default_folder = select_default_folder(db, user_id, "id,name")
+    existing_important = first(db.select(
+        "folders",
+        {
+            "user_id": pg_filter("eq", user_id),
+            "name": pg_filter("eq", IMPORTANT_FOLDER_NAME),
+        },
+        "id,is_default",
+    ))
 
     if not default_folder:
-        existing_important = first(db.select(
-            "folders",
-            {
-                "user_id": pg_filter("eq", user_id),
-                "name": pg_filter("eq", IMPORTANT_FOLDER_NAME),
-            },
-            "id",
-        ))
         if existing_important:
             update_folder_compat(db, existing_important["id"], user_id, {
                 "emoji": IMPORTANT_FOLDER_EMOJI,
@@ -345,18 +345,22 @@ def ensure_important_default_folder(db, user_id):
         db.commit()
         return
 
-    if str(default_folder.get("name") or "").lower() == "uncategorized":
-        existing_important = first(db.select(
-            "folders",
-            {
-                "user_id": pg_filter("eq", user_id),
-                "name": pg_filter("eq", IMPORTANT_FOLDER_NAME),
-            },
-            "id",
-        ))
-        if existing_important and str(existing_important.get("id")) != str(default_folder["id"]):
-            return
+    if existing_important and str(existing_important.get("id")) != str(default_folder["id"]):
+        update_folder_compat(db, default_folder["id"], user_id, {
+            "is_default": False,
+            "updated_at": now_utc().isoformat(),
+        })
+        update_folder_compat(db, existing_important["id"], user_id, {
+            "emoji": IMPORTANT_FOLDER_EMOJI,
+            "color": IMPORTANT_FOLDER_COLOR,
+            "bg": IMPORTANT_FOLDER_BG,
+            "is_default": True,
+            "updated_at": now_utc().isoformat(),
+        })
+        db.commit()
+        return
 
+    if str(default_folder.get("name") or "") != IMPORTANT_FOLDER_NAME:
         update_folder_compat(db, default_folder["id"], user_id, {
             "name": IMPORTANT_FOLDER_NAME,
             "emoji": IMPORTANT_FOLDER_EMOJI,

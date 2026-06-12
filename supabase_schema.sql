@@ -61,7 +61,7 @@ set
   bg = '#fde8e8',
   updated_at = now()
 where f.is_default = true
-  and lower(f.name) = 'uncategorized'
+  and f.name <> 'Important Folder'
   and not exists (
     select 1
     from public.folders existing
