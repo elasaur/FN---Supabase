@@ -77,8 +77,8 @@
   border: 1px solid color-mix(in srgb, var(--red) 34%, transparent);
 }
 .modal-alert-icon-bg.session {
-  background: var(--sky2);
-  border-color: color-mix(in srgb, var(--sky) 38%, transparent);
+  background: var(--red2);
+  border-color: color-mix(in srgb, var(--red) 38%, transparent);
 }
 .modal-svg-icon {
   width: 42px;
@@ -91,7 +91,7 @@
   animation: modalIconBounce .56s ease both;
 }
 .modal-alert-icon-bg.session .modal-warning-icon {
-  --svg-icon-color: var(--sky);
+  --svg-icon-color: var(--red);
 }
 .modal-bg.open .modal-warning-icon,
 .modal-bg[style*="display: flex"] .modal-warning-icon {
