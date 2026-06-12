@@ -1502,7 +1502,8 @@ def api_download_file(file_id):
     if not f:
         return jsonify({'success': False, 'message': 'File not found.'})
     try:
-        return redirect(create_signed_url(f['stored_name']))
+        download_name = clean_display_filename(f.get('original_name')) or os.path.basename(f['stored_name'])
+        return redirect(create_signed_url(f['stored_name'], download_name=download_name))
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
