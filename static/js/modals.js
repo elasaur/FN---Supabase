@@ -25,6 +25,7 @@ function handleSessionExpired() {
 document.addEventListener('DOMContentLoaded', () => {
   const modalIcons = {
     deleteAllFiles: 'warning.svg',
+    deactivateAccount: 'warning.svg',
     deleteAccount: 'warning.svg',
     deleteFolder: 'warning.svg',
     deleteAllFolders: 'warning.svg',

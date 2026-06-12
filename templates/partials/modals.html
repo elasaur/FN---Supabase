@@ -184,13 +184,37 @@
 </div>
  
  
-<!-- ── DELETE ACCOUNT CONFIRMATION MODAL ── -->
+<!-- Account Confirmation Modals -->
+<div class="modal-bg" id="modal-deactivateAccount">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-icon-center"><span class="modal-alert-icon-bg"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></span></div>
+    <div class="modal-title danger-title">Deactivate Account?</div>
+    <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
+      This will deactivate your account and sign you out. Your files and folders will be kept for recovery.
+      You can request reactivation later.
+      Do you want to proceed?
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('deactivateAccount')">
+        No, cancel
+      </button>
+      <button class="btn btn-primary"
+              style="background:var(--red); box-shadow:none;"
+              onclick="confirmDeactivateAccount(this)">
+        Yes, deactivate account
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Delete Account Confirmation Modal -->
 <div class="modal-bg" id="modal-deleteAccount">
   <div class="modal" style="max-width: 400px;">
     <div class="modal-icon-center"><span class="modal-alert-icon-bg"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></span></div>
     <div class="modal-title danger-title">Delete Account?</div>
     <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
-      This will deactivate your account and sign you out. Your files and folders will be kept for recovery.
+      This will permanently delete your account, files, and folders. This action cannot be undone.
       Do you want to proceed?
     </p>
     <div class="modal-actions">
@@ -200,7 +224,7 @@
       <button class="btn btn-primary"
               style="background:var(--red); box-shadow:none;"
               onclick="confirmDeleteAccount(this)">
-        Yes, deactivate account
+        Yes, delete account
       </button>
     </div>
   </div>

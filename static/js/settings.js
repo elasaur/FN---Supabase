@@ -329,7 +329,35 @@ async function confirmDeleteAllFolders(button) {
   if (toastMessage) showToast(toastMessage, toastType);
 }
 
-// Account deletion: soft-delete the account and clear local tokens.
+// Account deactivation: soft-delete the account and clear local tokens.
+async function deactivateAccount() {
+  openModal('deactivateAccount');
+}
+
+async function confirmDeactivateAccount(button) {
+  const btn = getActionButton(button);
+  setButtonLoading(btn, true, 'Deactivating...');
+  const res  = await fetch('/api/user/deactivate', {
+    method:  'DELETE',
+    headers: authHeaders(),
+  });
+  const data = await res.json();
+  if (data.success) {
+    try {
+      sessionStorage.setItem('fn_flash_toast', JSON.stringify({
+        message: 'Account successfully deactivated.',
+        type: 'success',
+      }));
+    } catch (_) {}
+    if (typeof TokenStore !== 'undefined') TokenStore.clear();
+    window.location.href = '/';
+  } else {
+    setButtonLoading(btn, false);
+    showToast(data.message || 'Something went wrong.', 'error');
+  }
+}
+
+// Account deletion: hard-delete the account and clear local tokens.
 async function deleteAccount() {
   openModal('deleteAccount');
 }
@@ -343,7 +371,12 @@ async function confirmDeleteAccount(button) {
   });
   const data = await res.json();
   if (data.success) {
-    // Clear local token cache before redirecting to the landing page.
+    try {
+      sessionStorage.setItem('fn_flash_toast', JSON.stringify({
+        message: 'Account successfully deleted.',
+        type: 'success',
+      }));
+    } catch (_) {}
     if (typeof TokenStore !== 'undefined') TokenStore.clear();
     window.location.href = '/';
   } else {

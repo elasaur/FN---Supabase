@@ -40,6 +40,7 @@ from supabase_auth import (
     update_user_email,
     update_user_password,
     admin_update_user_password,
+    admin_delete_user,
     update_user_metadata,
     reset_password_for_email,
 )
@@ -250,10 +251,10 @@ def login_required(f):
         if not session_is_active():
             return auth_failure('Session expired. Please log in again.')
         db = get_db()
-        user = select_user_with_deleted_at(db, session.get('user_id'))
-        if user_is_soft_deleted(user):
+        user = select_user_with_deactivated_at(db, session.get('user_id'))
+        if user_is_deactivated(user):
             clear_auth_session()
-            return auth_failure('Account deleted.')
+            return auth_failure('Account deactivated.')
 
         # Session management: refresh activity for the sliding timeout window.
         session['last_activity'] = now_utc().isoformat()
@@ -275,20 +276,28 @@ def select_user(db, user_id, select="*"):
     return first(db.select("users", {"id": pg_filter("eq", user_id)}, select))
 
 
-def user_is_soft_deleted(user):
-    return bool(user and user.get("deleted_at"))
+def user_is_deactivated(user):
+    return bool(user and user.get("is_deactivated"))
 
 
-def is_missing_deleted_at_column(exc):
+def is_missing_deactivation_columns(exc):
     message = str(exc)
-    return "deleted_at" in message and ("42703" in message or "column users.deleted_at does not exist" in message)
+    return (
+        ("is_deactivated" in message or "deactivated_at" in message)
+        and (
+            "42703" in message
+            or "column users.is_deactivated does not exist" in message
+            or "column users.deactivated_at does not exist" in message
+            or ("PGRST204" in message and "schema cache" in message)
+        )
+    )
 
 
-def select_user_with_deleted_at(db, user_id):
+def select_user_with_deactivated_at(db, user_id):
     try:
-        return select_user(db, user_id, "id,deleted_at")
+        return select_user(db, user_id, "id,is_deactivated,deactivated_at")
     except RuntimeError as exc:
-        if is_missing_deleted_at_column(exc):
+        if is_missing_deactivation_columns(exc):
             return select_user(db, user_id, "id")
         raise
 
@@ -711,11 +720,11 @@ def index():
 
         db = get_db()
         user = select_user(db, user_id)
-        if user_is_soft_deleted(user):
+        if user_is_deactivated(user):
             try:
                 sign_out(auth['access_token'])
             except Exception:
-                app.logger.exception('Supabase sign-out failed for soft-deleted account.')
+                app.logger.exception('Supabase sign-out failed for deactivated account.')
             return jsonify({'success': False, 'message': 'This account has been deactivated.'}), 403
         if not user:
             db.insert('users', {'id': user_id, 'name': name, 'email': auth_user.get('email') or email})
@@ -1682,20 +1691,23 @@ def api_change_password():
     })
 
 
-@app.route('/api/user/delete', methods=['DELETE'])
+@app.route('/api/user/deactivate', methods=['DELETE'])
 @login_required
-def api_delete_account():
+def api_deactivate_account():
     db  = get_db()
     uid = get_current_user_id()
-    deleted_at = now_utc().isoformat()
+    deactivated_at = now_utc().isoformat()
 
     try:
-        db.update("users", {"id": pg_filter("eq", uid)}, {"deleted_at": deleted_at})
+        db.update("users", {"id": pg_filter("eq", uid)}, {
+            "is_deactivated": True,
+            "deactivated_at": deactivated_at,
+        })
     except RuntimeError as exc:
-        if is_missing_deleted_at_column(exc):
+        if is_missing_deactivation_columns(exc):
             return jsonify({
                 'success': False,
-                'message': 'Soft delete is not ready yet. Run the updated Supabase schema to add users.deleted_at.',
+                'message': 'Deactivation is not ready yet. Run the updated Supabase schema to add users.is_deactivated and users.deactivated_at.',
             }), 400
         raise
     db.commit()
@@ -1704,13 +1716,46 @@ def api_delete_account():
         try:
             sign_out(access_token)
         except Exception:
-            app.logger.exception('Supabase sign-out failed after soft delete.')
+            app.logger.exception('Supabase sign-out failed after account deactivation.')
     try:
         session.clear()
     finally:
         session.modified = True
 
-    return jsonify({'success': True, 'soft_deleted': True, 'deleted_at': deleted_at})
+    return jsonify({'success': True, 'deactivated': True, 'deactivated_at': deactivated_at})
+
+
+@app.route('/api/user/delete', methods=['DELETE'])
+@login_required
+def api_delete_account():
+    db  = get_db()
+    uid = get_current_user_id()
+
+    files = db.select("files", {"user_id": pg_filter("eq", uid)}, "stored_name")
+    try:
+        delete_files([item.get("stored_name") for item in files])
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Storage delete error: {str(e)}'})
+
+    access_token = session.get('access_token')
+    if access_token:
+        try:
+            sign_out(access_token)
+        except Exception:
+            app.logger.exception('Supabase sign-out failed before hard delete.')
+
+    if not admin_delete_user(uid):
+        return jsonify({
+            'success': False,
+            'message': 'Unable to permanently delete the Supabase Auth account. Check the service role key.',
+        }), 500
+
+    try:
+        session.clear()
+    finally:
+        session.modified = True
+
+    return jsonify({'success': True, 'hard_deleted': True})
 
 
 if __name__ == '__main__':

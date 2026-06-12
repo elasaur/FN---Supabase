@@ -104,3 +104,16 @@ function showToast(msg, type = 'info') {
     window.setTimeout(() => t.remove(), 220);
   }, 3200);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  let flash = null;
+  try {
+    flash = JSON.parse(sessionStorage.getItem('fn_flash_toast') || 'null');
+    sessionStorage.removeItem('fn_flash_toast');
+  } catch (_) {
+    try { sessionStorage.removeItem('fn_flash_toast'); } catch (_) {}
+  }
+  if (flash && flash.message) {
+    showToast(flash.message, flash.type || 'info');
+  }
+});

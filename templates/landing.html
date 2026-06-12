@@ -22,6 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/reusable_style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/landing_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
 </head>
 
 <body>
@@ -362,5 +363,7 @@
 <footer>
   File Nest - AI-Assisted File Organization System
 </footer>
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
 </body>
 </html>
