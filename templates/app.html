@@ -7,8 +7,11 @@
   (() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     if (!hash.get('access_token')) return;
-    const target = localStorage.getItem('passwordRecoveryTarget');
-    localStorage.removeItem('passwordRecoveryTarget');
+    let target = null;
+    try {
+      target = localStorage.getItem('passwordRecoveryTarget');
+      localStorage.removeItem('passwordRecoveryTarget');
+    } catch (_) {}
     window.location.replace((target === 'reset' ? '/reset_password.html' : '/change_password.html') + window.location.hash);
   })();
 </script>

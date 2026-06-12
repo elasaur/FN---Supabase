@@ -21,7 +21,6 @@ Setup (.env):
 import os
 import re
 import json
-import time
 from collections import Counter
 from typing import List, Dict, Tuple
 
@@ -344,7 +343,6 @@ Rules:
             raise RuntimeError("Gemini temporarily disabled by DISABLE_GEMINI")
 
         client = _get_client()
-        time.sleep(0.5)
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,

@@ -101,9 +101,9 @@ function openRenameFileModal(fileId, encodedName) {
   openModal('renameFile');
 }
 
-async function submitRenameFile() {
+async function submitRenameFile(button) {
   if (!fileToRenameId) return;
-  const btn = window.event?.currentTarget;
+  const btn = getActionButton(button);
   const input = document.getElementById('renameFileInput');
   const name = (input?.value || '').trim();
 
@@ -152,9 +152,9 @@ async function openMoveFileModal(fileId, currentFolderId) {
   openModal('moveFile');
 }
 
-async function submitMoveFile() {
+async function submitMoveFile(button) {
   if (!fileToMoveId) return;
-  const btn = window.event?.currentTarget;
+  const btn = getActionButton(button);
   const folderId = document.getElementById('moveFileFolder').value;
   setButtonLoading(btn, true, 'Moving...');
   try {
@@ -203,7 +203,7 @@ async function deleteFileById(id, button, confirmed = false) {
     openDeleteFileModal(id);
     return;
   }
-  const btn = button || window.event?.currentTarget;
+  const btn = getActionButton(button);
   setButtonLoading(btn, true, 'Deleting...');
   try {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });

@@ -9,6 +9,18 @@ function closeSearchModal() {
   if (modal) modal.remove();
 }
 
+function encodeSearchData(value) {
+  return encodeURIComponent(String(value || ''));
+}
+
+function decodeSearchData(value, fallback = '') {
+  try {
+    return decodeURIComponent(value || '');
+  } catch (_) {
+    return fallback;
+  }
+}
+
 function showSearchModal(files, folders, searchVal) {
   closeSearchModal();
 
@@ -25,15 +37,15 @@ function showSearchModal(files, folders, searchVal) {
     html += `<div class="search-modal-empty">No results for "${escHtml(searchVal)}"</div>`;
   } else {
     folders.forEach(f => {
-      html += `<div class="search-modal-item" data-type="folder" data-id="${f.id}" data-name="${escHtml(f.name)}" data-emoji="${escHtml(f.emoji || 'folder')}" role="button" tabindex="0">
-        <span class="search-modal-icon" data-icon="${escHtml(f.emoji)}">${folderIconHtml(f.emoji, '')}</span>
+      html += `<div class="search-modal-item" data-type="folder" data-id="${f.id}" data-name="${encodeSearchData(f.name)}" data-emoji="${encodeSearchData(f.emoji || 'folder')}" role="button" tabindex="0">
+        <span class="search-modal-icon" data-icon="${encodeSearchData(f.emoji)}">${folderIconHtml(f.emoji, '')}</span>
         <span class="search-modal-label">${escHtml(f.name)}</span>
         <span class="search-modal-tag folder">Folder</span>
       </div>`;
     });
 
     files.forEach(f => {
-      html += `<div class="search-modal-item" data-type="file" data-id="${f.id}" data-folder-id="${f.folder_id || ''}" data-folder-name="${escHtml(f.folder_name || 'Folder')}" data-folder-emoji="${escHtml(f.folder_emoji || 'folder')}" role="button" tabindex="0">
+      html += `<div class="search-modal-item" data-type="file" data-id="${f.id}" data-folder-id="${f.folder_id || ''}" data-folder-name="${encodeSearchData(f.folder_name || 'Folder')}" data-folder-emoji="${encodeSearchData(f.folder_emoji || 'folder')}" role="button" tabindex="0">
         <span class="search-modal-icon">${getExtIcon(f.original_name)}</span>
         <span class="search-modal-label">${escHtml(f.original_name)}</span>
         <span class="search-modal-tag file">File</span>
@@ -76,8 +88,8 @@ async function selectSearchResult(item) {
   closeSearchModal();
 
   if (type === 'folder') {
-    const label = item.getAttribute('data-name') || item.querySelector('.search-modal-label')?.textContent || '';
-    const emoji = item.getAttribute('data-emoji') || item.querySelector('.search-modal-icon')?.dataset.icon || 'folder';
+    const label = decodeSearchData(item.getAttribute('data-name'), item.querySelector('.search-modal-label')?.textContent || '');
+    const emoji = decodeSearchData(item.getAttribute('data-emoji'), 'folder');
 
     await openFolderFiles(id, label, emoji);
     return;
@@ -85,8 +97,8 @@ async function selectSearchResult(item) {
 
   if (type === 'file') {
     const folderId = Number(item.getAttribute('data-folder-id'));
-    const folderName = item.getAttribute('data-folder-name') || 'Folder';
-    const folderEmoji = item.getAttribute('data-folder-emoji') || 'folder';
+    const folderName = decodeSearchData(item.getAttribute('data-folder-name'), 'Folder');
+    const folderEmoji = decodeSearchData(item.getAttribute('data-folder-emoji'), 'folder');
 
     await loadAllFiles();
     if (folderId) {

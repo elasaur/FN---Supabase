@@ -7,8 +7,11 @@
     (() => {
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
       if (!hash.get('access_token')) return;
-      const target = localStorage.getItem('passwordRecoveryTarget');
-      localStorage.removeItem('passwordRecoveryTarget');
+      let target = null;
+      try {
+        target = localStorage.getItem('passwordRecoveryTarget');
+        localStorage.removeItem('passwordRecoveryTarget');
+      } catch (_) {}
       window.location.replace((target === 'change' ? '/change_password.html' : '/reset_password.html') + window.location.hash);
     })();
   </script>
@@ -493,7 +496,9 @@ async function doForgot() {
 
   setAuthButtonLoading(btn, true, 'Sending...');
   try {
-    localStorage.setItem('passwordRecoveryTarget', 'reset');
+    try {
+      localStorage.setItem('passwordRecoveryTarget', 'reset');
+    } catch (_) {}
     const res = await fetch('/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -605,8 +610,11 @@ document.addEventListener('keydown', function (e) {
 
 // ── Show reset page if token is present ────────────────────────────────────
 if (resetAccessToken) {
-  const recoveryTarget = localStorage.getItem('passwordRecoveryTarget');
-  localStorage.removeItem('passwordRecoveryTarget');
+  let recoveryTarget = null;
+  try {
+    recoveryTarget = localStorage.getItem('passwordRecoveryTarget');
+    localStorage.removeItem('passwordRecoveryTarget');
+  } catch (_) {}
   window.location.replace((recoveryTarget === 'change' ? '/change_password.html' : '/reset_password.html') + window.location.hash);
 } else if (resetToken && resetToken.trim()) {
   showReset();

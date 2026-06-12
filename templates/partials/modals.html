@@ -12,7 +12,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal('createFolder')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitCreateFolder()">Create Folder</button>
+        <button class="btn btn-primary" onclick="submitCreateFolder(this)">Create Folder</button>
       </div>
     </div>
   </div>
@@ -32,7 +32,7 @@
       <input type="hidden" id="rf-id"/>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal('editFolder')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitEditFolder()">Save</button>
+        <button class="btn btn-primary" onclick="submitEditFolder(this)">Save</button>
       </div>
     </div>
   </div>
@@ -46,7 +46,7 @@
       <div><label class="form-label">Full Name</label><input class="form-input" id="editNameInput" value="{{ user['name'] }}"/></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal('editName')">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveName()">Save</button>
+        <button type="button" class="btn btn-primary" onclick="saveName(this)">Save</button>
       </div>
     </div>
   </div>
@@ -60,7 +60,7 @@
       <div><label class="form-label">Email Address</label><input class="form-input" id="editEmailInput" value="{{ user['email'] }}"/></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal('editEmail')">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveEmail()">Save</button>
+        <button type="button" class="btn btn-primary" onclick="saveEmail(this)">Save</button>
       </div>
     </div>
   </div>
@@ -119,7 +119,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal('renameFile')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitRenameFile()">Rename</button>
+        <button class="btn btn-primary" onclick="submitRenameFile(this)">Rename</button>
       </div>
     </div>
   </div>
@@ -136,7 +136,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal('moveFile')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitMoveFile()">Move</button>
+        <button class="btn btn-primary" onclick="submitMoveFile(this)">Move</button>
       </div>
     </div>
   </div>
@@ -176,7 +176,7 @@
       </button>
       <button class="btn btn-primary"
               style="background:var(--red); box-shadow:none;"
-              onclick="confirmDeleteAllFiles()">
+              onclick="confirmDeleteAllFiles(this)">
         Yes, delete all
       </button>
     </div>
@@ -199,7 +199,7 @@
       </button>
       <button class="btn btn-primary"
               style="background:var(--red); box-shadow:none;"
-              onclick="confirmDeleteAccount()">
+              onclick="confirmDeleteAccount(this)">
         Yes, deactivate account
       </button>
     </div>
@@ -237,7 +237,7 @@
       </button>
       <button class="btn btn-primary"
               style="background:var(--red); box-shadow:none;"
-              onclick="confirmDeleteAllFolders()">
+              onclick="confirmDeleteAllFolders(this)">
         Yes, delete all
       </button>
     </div>

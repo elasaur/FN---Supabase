@@ -585,8 +585,8 @@ function openCreateFolderModal() {
 }
 
 // Creates a folder from the create-folder modal form.
-async function submitCreateFolder() {
-  const btn = window.event?.currentTarget;
+async function submitCreateFolder(button) {
+  const btn = getActionButton(button);
   const name = document.getElementById('cf-name').value.trim();
   const emoji = document.getElementById('cf-emoji').value.trim() || '📁';
 
@@ -663,8 +663,8 @@ function buildFolderModalColorPicker(containerId, onChange, selected) {
 }
 
 // Saves edits from the edit-folder modal.
-async function submitEditFolder() {
-  const btn = window.event?.currentTarget;
+async function submitEditFolder(button) {
+  const btn = getActionButton(button);
   const id = document.getElementById('rf-id').value;
   const name = document.getElementById('rf-name').value.trim();
   const emoji = document.getElementById('rf-emoji').value.trim() || '📁';

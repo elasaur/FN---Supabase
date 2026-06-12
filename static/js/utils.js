@@ -198,7 +198,10 @@ function downloadFile(id, name) {
 async function openFile(id) {
   try {
     const res = await fetch(`/api/files/${id}/open`, { method: 'POST' });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({
+      success: false,
+      message: res.ok ? 'Could not open file.' : 'Server returned an invalid response.',
+    }));
     if (!data.success) {
       showToast(data.message || 'Could not open file.', 'error');
       return;
@@ -207,6 +210,13 @@ async function openFile(id) {
   } catch (err) {
     showToast('Could not open file. Please try again.', 'error');
   }
+}
+
+function getActionButton(candidate) {
+  if (candidate instanceof HTMLElement) return candidate;
+  const currentTarget = window.event?.currentTarget;
+  if (currentTarget instanceof HTMLElement) return currentTarget;
+  return document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
 }
 
 function setButtonLoading(button, loading, label) {

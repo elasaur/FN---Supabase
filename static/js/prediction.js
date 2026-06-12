@@ -211,8 +211,8 @@ function buildPredictionColorPicker(containerId, onPick, selected) {
 
 // Called by onclick="createNewFolder()" in the HTML
 // Creates a new folder from the prediction card and selects it for upload.
-async function createNewFolder() {
-  const btn = window.event?.currentTarget;
+async function createNewFolder(button) {
+  const btn = getActionButton(button);
   const name = document.getElementById('nfName').value.trim();
   const emoji = document.getElementById('nfEmoji').value.trim() || '📁';
   if (!name) { showToast('Please enter a folder name.', 'warn'); return; }

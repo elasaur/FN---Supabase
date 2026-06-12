@@ -19,4 +19,24 @@ let fileToMoveId = null;
 let fileToRenameId = null;
 let fileToDeleteId = null;
 
-let aiEnabled = localStorage.getItem('aiEnabled') !== 'false';
+function readLocalStorage(key, fallback = null) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function writeLocalStorage(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (_) {}
+}
+
+function removeLocalStorage(key) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch (_) {}
+}
+
+let aiEnabled = readLocalStorage('aiEnabled') !== 'false';

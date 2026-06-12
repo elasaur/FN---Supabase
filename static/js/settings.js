@@ -21,8 +21,8 @@ function authHeaders(extra = {}) {
 }
 
 // Name settings: update local profile rows and visible UI labels.
-async function saveName() {
-  const btn = window.event?.currentTarget;
+async function saveName(button) {
+  const btn = getActionButton(button);
   const v = document.getElementById('editNameInput').value.trim();
   if (!v) return;
 
@@ -67,8 +67,8 @@ async function saveName() {
 }
 
 // Email settings: request a Supabase Auth email change and mirror profile data.
-async function saveEmail() {
-  const btn = window.event?.currentTarget;
+async function saveEmail(button) {
+  const btn = getActionButton(button);
   const v = document.getElementById('editEmailInput').value.trim();
   if (!v) return;
 
@@ -185,7 +185,7 @@ function updateSettingsPasswordFormState(showMessage = true) {
 }
 
 async function savePassword(button) {
-  const btn = button || window.event?.currentTarget;
+  const btn = getActionButton(button);
   const current = document.getElementById('editPasswordCurrent')?.value || '';
   const newPw = document.getElementById('editPasswordNew')?.value || '';
   const confirm = document.getElementById('editPasswordConfirm')?.value || '';
@@ -278,8 +278,8 @@ async function deleteAllFiles() {
   openModal('deleteAllFiles');
 }
 
-async function confirmDeleteAllFiles() {
-  const btn = window.event?.currentTarget;
+async function confirmDeleteAllFiles(button) {
+  const btn = getActionButton(button);
   setButtonLoading(btn, true, 'Deleting...');
   let toastMessage = '';
   let toastType = 'warn';
@@ -306,8 +306,8 @@ async function deleteAllFolders() {
   openModal('deleteAllFolders');
 }
 
-async function confirmDeleteAllFolders() {
-  const btn = window.event?.currentTarget;
+async function confirmDeleteAllFolders(button) {
+  const btn = getActionButton(button);
   setButtonLoading(btn, true, 'Deleting...');
   let toastMessage = '';
   let toastType = 'warn';
@@ -334,8 +334,8 @@ async function deleteAccount() {
   openModal('deleteAccount');
 }
 
-async function confirmDeleteAccount() {
-  const btn = window.event?.currentTarget;
+async function confirmDeleteAccount(button) {
+  const btn = getActionButton(button);
   setButtonLoading(btn, true, 'Deleting...');
   const res  = await fetch('/api/user/delete', {
     method:  'DELETE',

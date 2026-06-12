@@ -173,8 +173,8 @@ function resetUploadZone() {
 }
 
 // Confirm upload feature: resolve the target folder and persist the file.
-async function confirmUpload() {
-  const btn = window.event?.currentTarget;
+async function confirmUpload(button) {
+  const btn = getActionButton(button);
   if (uploadSaveInFlight) return;
   if (!currentFile) { showToast('No file selected.', 'warn'); return; }
   if (!currentAnalysis) { showToast('Please analyze the file before saving.', 'warn'); return; }
@@ -216,7 +216,7 @@ async function confirmUpload() {
       formData.append('folder_color', chosenFolder?.color || '#7ec8e3');
       formData.append('folder_bg',    chosenFolder?.bg    || '#e0f4fb');
     }
-    formData.append('ai_sorted', chosenFolder && !chosenFolder._db_id ? '1' : '0');
+    formData.append('ai_sorted', chosenFolder ? '1' : '0');
     formData.append('keywords', (currentAnalysis?.keywords || []).join(','));
 
     const res = await fetch('/api/confirm-upload', { method: 'POST', body: formData });

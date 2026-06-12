@@ -50,6 +50,14 @@ def _json_or_empty(resp):
         return {}
 
 
+def _json_or_error(resp, fallback_message: str) -> dict:
+    data = _json_or_empty(resp)
+    if resp.status_code >= 400:
+        data.setdefault("error", f"supabase_auth_failed_{resp.status_code}")
+        data.setdefault("msg", data.get("message") or data.get("error_description") or fallback_message)
+    return data
+
+
 def sign_up(email: str, password: str, name: str) -> dict:
     """Create a new Supabase Auth user."""
     require_supabase_auth_config()
@@ -66,7 +74,7 @@ def sign_up(email: str, password: str, name: str) -> dict:
         },
         timeout=10,
     )
-    data = _json_or_empty(resp)
+    data = _json_or_error(resp, "Unable to create account.")
     logger.info("Supabase sign_up status=%s", resp.status_code)
     return data
 
@@ -136,7 +144,7 @@ def update_user_email(access_token: str, new_email: str) -> dict:
         json={"email": new_email},
         timeout=10,
     )
-    return _json_or_empty(resp)
+    return _json_or_error(resp, "Unable to update email.")
 
 
 def update_user_password(access_token: str, new_password: str) -> dict:
@@ -152,11 +160,7 @@ def update_user_password(access_token: str, new_password: str) -> dict:
         json={"password": new_password},
         timeout=10,
     )
-    data = _json_or_empty(resp)
-    if resp.status_code >= 400:
-        data.setdefault("error", f"supabase_update_password_failed_{resp.status_code}")
-        data.setdefault("msg", data.get("message") or "Unable to update password.")
-    return data
+    return _json_or_error(resp, "Unable to update password.")
 
 
 def admin_update_user_password(user_id: str, new_password: str) -> dict:
@@ -198,7 +202,7 @@ def update_user_metadata(access_token: str, metadata: dict) -> dict:
         json={"data": metadata},
         timeout=10,
     )
-    return _json_or_empty(resp)
+    return _json_or_error(resp, "Unable to update profile.")
 
 
 def admin_delete_user(user_id: str) -> bool:

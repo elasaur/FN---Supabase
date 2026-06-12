@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import json
 import os
+import posixpath
 import re
 import threading
 import uuid
@@ -22,7 +23,7 @@ load_dotenv()
 
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, session, jsonify, send_from_directory
+    url_for, session, jsonify, send_from_directory, abort
 )
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -30,7 +31,7 @@ from flask_limiter.errors import RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
-from database import init_db, get_db, close_db
+from database import init_db, get_db, close_db, _filter as pg_filter
 from supabase_auth import (
     sign_in,
     sign_up,
@@ -92,10 +93,10 @@ app.teardown_appcontext(close_db)
 @app.route('/icons-pack/<path:filename>')
 @limiter.exempt
 def icons_pack(filename):
-    icon_path = os.path.join(ICONS_FOLDER, filename)
-    if not os.path.isfile(icon_path):
-        filename = os.path.basename(filename)
-    return send_from_directory(ICONS_FOLDER, filename)
+    safe_filename = posixpath.normpath(filename.replace('\\', '/')).lstrip('/')
+    if safe_filename == '..' or safe_filename.startswith('../'):
+        abort(404)
+    return send_from_directory(ICONS_FOLDER, safe_filename)
 
 
 @app.errorhandler(RequestEntityTooLarge)
@@ -263,16 +264,6 @@ def login_required(f):
 
 def get_current_user_id():
     return session.get('user_id')
-
-
-def pg_filter(operator, value):
-    if value is None:
-        raise ValueError("Filter value cannot be empty.")
-    if isinstance(value, bool):
-        raw = "true" if value else "false"
-    else:
-        raw = str(value)
-    return f"{operator}.{raw}"
 
 
 # Supabase row helpers: keep common PostgREST lookups and inserts in one place.
@@ -584,7 +575,7 @@ def normalize_login_email(email):
 
 def login_attempt_key(email):
     digest = hmac.new(
-        app.secret_key.encode('utf-8'),
+        str(app.secret_key or '').encode('utf-8'),
         normalize_login_email(email).encode('utf-8'),
         hashlib.sha256,
     ).hexdigest()
@@ -607,7 +598,7 @@ def load_login_attempts():
 
 
 def save_login_attempts(attempts):
-    tmp_path = f"{LOGIN_ATTEMPTS_FILE}.tmp"
+    tmp_path = f"{LOGIN_ATTEMPTS_FILE}.{os.getpid()}.{threading.get_ident()}.tmp"
     with open(tmp_path, 'w', encoding='utf-8') as fh:
         json.dump(attempts, fh)
     os.replace(tmp_path, LOGIN_ATTEMPTS_FILE)
@@ -627,7 +618,7 @@ def parse_lockout_time(value):
 
 def format_lockout_remaining(locked_until):
     seconds = max(0, int((locked_until - now_utc()).total_seconds()))
-    minutes = max(0, (seconds - 1) // 60)
+    minutes = (seconds + 59) // 60
     hours, minutes = divmod(minutes, 60)
     return f"{hours}h {minutes}m"
 
@@ -1388,12 +1379,20 @@ def api_confirm_upload():
     db  = get_db()
     uid = get_current_user_id()
 
+    if not file or file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected.'})
+
+    filename = clean_display_filename(file.filename)
+    if not filename or not allowed_file(filename):
+        return jsonify({'success': False, 'message': 'File type not supported.'})
+
     if folder_id:
         try:
             folder_id = int(folder_id)
         except ValueError:
             folder_id = None
 
+    new_folder_payload = None
     if not folder_id and folder_name:
         existing = first(db.select(
             "folders",
@@ -1403,23 +1402,19 @@ def api_confirm_upload():
         if existing:
             folder_id = existing['id']
         else:
-            new_folder = create_folder_record(db, uid, folder_name, emoji, color, bg)
-            db.commit()
-            folder_id = new_folder['id']
+            new_folder_payload = {
+                'name': folder_name,
+                'emoji': emoji,
+                'color': color,
+                'bg': bg,
+            }
 
-    if not folder_id:
+    if not folder_id and not new_folder_payload:
         return jsonify({'success': False, 'message': 'No folder specified.'})
 
-    folder = select_folder(db, folder_id, uid)
-    if not folder:
+    folder = select_folder(db, folder_id, uid) if folder_id else None
+    if folder_id and not folder:
         return jsonify({'success': False, 'message': 'Invalid folder.'})
-
-    if not file or file.filename == '':
-        return jsonify({'success': False, 'message': 'No file selected.'})
-
-    filename    = clean_display_filename(file.filename)
-    if not filename or not allowed_file(filename):
-        return jsonify({'success': False, 'message': 'File type not supported.'})
 
     safe_name   = safe_storage_filename(filename)
     ext         = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
@@ -1434,8 +1429,33 @@ def api_confirm_upload():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage upload error: {str(e)}'})
 
-    saved_file = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords)
-    db.commit()
+    created_folder_id = None
+    try:
+        if new_folder_payload:
+            folder = create_folder_record(
+                db,
+                uid,
+                new_folder_payload['name'],
+                new_folder_payload['emoji'],
+                new_folder_payload['color'],
+                new_folder_payload['bg'],
+            )
+            folder_id = folder['id']
+            created_folder_id = folder_id
+
+        saved_file = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords)
+        db.commit()
+    except Exception:
+        try:
+            delete_files([stored_name])
+        except Exception:
+            pass
+        if created_folder_id:
+            try:
+                db.delete("folders", {"id": pg_filter("eq", created_folder_id), "user_id": pg_filter("eq", uid)})
+            except Exception:
+                pass
+        raise
 
     return jsonify({
         'success': True,
@@ -1565,12 +1585,7 @@ def api_update_user():
     name  = data.get('name', '').strip()
     email = data.get('email', '').strip()
 
-    if name:
-        access_token = session.get('access_token')
-        if access_token:
-            update_user_metadata(access_token, {'name': name})
-        db.update("users", {"id": pg_filter("eq", uid)}, {"name": name})
-
+    access_token = session.get('access_token')
     if email:
         matching_users = db.select("users", {"email": pg_filter("eq", email)}, "id")
         existing = next((row for row in matching_users if str(row.get("id")) != str(uid)), None)
@@ -1578,12 +1593,19 @@ def api_update_user():
         if existing:
             return jsonify({'success': False, 'message': 'Email already in use.'})
 
-        access_token = session.get('access_token')
         if access_token:
             result = update_user_email(access_token, email)
             if result.get('error') or result.get('msg'):
                 return jsonify({'success': False, 'message': result.get('msg') or result.get('error_description') or 'Unable to update email.'})
 
+    if name:
+        if access_token:
+            result = update_user_metadata(access_token, {'name': name})
+            if result.get('error') or result.get('msg'):
+                return jsonify({'success': False, 'message': result.get('msg') or result.get('error_description') or 'Unable to update name.'})
+        db.update("users", {"id": pg_filter("eq", uid)}, {"name": name})
+
+    if email:
         db.update("users", {"id": pg_filter("eq", uid)}, {"email": email})
 
     db.commit()
