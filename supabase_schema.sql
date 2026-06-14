@@ -54,6 +54,7 @@ create table if not exists public.files (
   file_size bigint not null default 0,
   ai_sorted boolean not null default false,
   keywords text not null default '',
+  ai_summary text not null default '',
   created_at timestamptz not null default now(),
   constraint files_stored_name_user_path check (stored_name like (user_id::text || '/%'))
 );
@@ -64,6 +65,11 @@ alter table public.folders add column if not exists note_updated_at timestamptz;
 alter table public.folders add column if not exists updated_at timestamptz not null default now();
 update public.folders set note_body = '' where note_body is null;
 alter table public.folders alter column note_body set default '';
+
+-- Short AI-generated file summary shown from file sticky-note hovers.
+alter table public.files add column if not exists ai_summary text not null default '';
+update public.files set ai_summary = '' where ai_summary is null;
+alter table public.files alter column ai_summary set default '';
 
 update public.folders f
 set

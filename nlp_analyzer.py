@@ -304,29 +304,38 @@ def ask_gemini_suggestions(
     existing_folders_str = "\n".join(f"- {f}" for f in existing_folders) or "None yet."
 
     response_schema = {
-        "type": "array",
-        "minItems": 3, "maxItems": 3,
-        "items": {
-            "type": "object",
-            "required": ["folder_name", "emoji", "is_new", "confidence", "reason"],
-            "properties": {
-                "folder_name": {"type": "string"},
-                "emoji":       {"type": "string"},
-                "is_new":      {"type": "boolean"},
-                "confidence":  {"type": "integer", "minimum": 0, "maximum": 100},
-                "reason":      {"type": "string"},
+        "type": "object",
+        "required": ["file_summary", "suggestions"],
+        "properties": {
+            "file_summary": {"type": "string"},
+            "suggestions": {
+                "type": "array",
+                "minItems": 3, "maxItems": 3,
+                "items": {
+                    "type": "object",
+                    "required": ["folder_name", "emoji", "is_new", "confidence", "reason"],
+                    "properties": {
+                        "folder_name": {"type": "string"},
+                        "emoji":       {"type": "string"},
+                        "is_new":      {"type": "boolean"},
+                        "confidence":  {"type": "integer", "minimum": 0, "maximum": 100},
+                        "reason":      {"type": "string"},
+                    },
+                },
             },
         },
     }
 
-    prompt = f"""Suggest exactly 3 folders for this file. Return ONLY a JSON array, no other text.
+    summary_context = limit_text(text, 220)
+    prompt = f"""Summarize this file and suggest exactly 3 folders. Return ONLY a JSON object, no other text.
 
 File: {filename} (.{ext})
 Name: {filename_context}
-Content: {text[:500] if text.strip() else "(none - use filename/type)"}
+Content: {summary_context if summary_context.strip() else "(none - use filename/type)"}
 Existing folders: {existing_folders_str}
 
 Rules:
+- file_summary: one plain paragraph, maximum 200 words, factual, no markdown
 - Specific names only (no: Documents, Files, Misc, General, Uploads, Other)
 - Reuse existing folders when relevant (is_new: false, exact name)
 - Vary: (1) most specific, (2) broader, (3) alternative angle
@@ -335,7 +344,7 @@ Rules:
 - Reason: <=8 words (e.g. "Contains ISTQB and testing content.")
 - One emoji per folder
 
-[{{"folder_name":"...","emoji":"...","is_new":true,"confidence":85,"reason":"..."}},...]"""
+{{"file_summary":"...","suggestions":[{{"folder_name":"...","emoji":"...","is_new":true,"confidence":85,"reason":"..."}}]}}"""
 
 
     try:
@@ -371,9 +380,17 @@ Rules:
         if not raw:
             raise ValueError("Empty response from Gemini")
 
-        items = json.loads(_repair_json(raw))
+        parsed = json.loads(_repair_json(raw))
+        if isinstance(parsed, dict):
+            file_summary = _clean_file_summary(parsed.get("file_summary"), filename, text)
+            items = parsed.get("suggestions", [])
+        elif isinstance(parsed, list):
+            file_summary = _fallback_file_summary(filename, text)
+            items = parsed
+        else:
+            raise ValueError("Gemini did not return a JSON object")
         if not isinstance(items, list):
-            raise ValueError("Gemini did not return a JSON array")
+            raise ValueError("Gemini did not return folder suggestions")
 
         suggestions = []
         for item in items[:5]:
@@ -415,7 +432,7 @@ Rules:
                 if not any(s["folder"].lower() == fb["folder"].lower() for s in suggestions):
                     suggestions.append(fb)
 
-        return suggestions[:3]
+        return {"ranked": suggestions[:3], "summary": file_summary}
 
     except Exception as e:
         print(f"GEMINI ERROR: {e}\nSwitching to TextBlob fallback...")
@@ -424,10 +441,42 @@ Rules:
         for s in suggestions:
             s["ai_source"] = "textblob"
 
-        return suggestions
+        return {"ranked": suggestions, "summary": _fallback_file_summary(filename, text)}
 
 
 # TextBlob fallback: produce deterministic suggestions when Gemini is disabled.
+
+def _clean_file_summary(summary: str, filename: str, text: str) -> str:
+    cleaned = normalize_text(str(summary or ""))
+    words = cleaned.split()
+    if len(words) > 200:
+        cleaned = " ".join(words[:200])
+    return cleaned or _fallback_file_summary(filename, text)
+
+
+def _fallback_file_summary(filename: str, text: str) -> str:
+    cleaned = normalize_text(text)
+    if cleaned:
+        sentences = re.split(r"(?<=[.!?])\s+", cleaned)
+        summary_words = []
+        for sentence in sentences:
+            sentence_words = sentence.split()
+            if not sentence_words:
+                continue
+            if len(summary_words) + len(sentence_words) > 200:
+                remaining = 200 - len(summary_words)
+                summary_words.extend(sentence_words[:remaining])
+                break
+            summary_words.extend(sentence_words)
+            if len(summary_words) >= 45:
+                break
+        if summary_words:
+            return " ".join(summary_words[:200])
+
+    name_context = clean_filename_text(filename)
+    if name_context:
+        return f"This file appears to be related to {name_context}."
+    return "No readable summary could be generated for this file."
 
 _TB_STOPWORDS = {
     "the", "and", "for", "are", "was", "with", "this", "that", "from",
@@ -708,8 +757,10 @@ def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
     if file_type == "empty" or not raw_text.strip():
         raw_text = clean_filename_text(filename)
 
-    limited_text = raw_text[:500]
-    ranked = ask_gemini_suggestions(filename, limited_text, existing_folder_names)
+    limited_text = limit_text(raw_text, 220)
+    analysis = ask_gemini_suggestions(filename, limited_text, existing_folder_names)
+    ranked = analysis.get("ranked", [])
+    summary = _clean_file_summary(analysis.get("summary"), filename, limited_text)
 
     ai_status = "textblob" if any(s.get("ai_source") == "textblob" for s in ranked) else "gemini"
 
@@ -722,6 +773,7 @@ def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
         "top_folder":   ranked[0],
         "no_match":     False,
         "text_preview": limited_text[:300],
+        "summary":      summary,
         "ai_status":    ai_status,
     }
 

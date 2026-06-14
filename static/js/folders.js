@@ -551,6 +551,7 @@ function renderCurrentFolderFilesFromCache() {
         </div>
       </div>
       <span class="folder-file-date">${timeAgo(f.created_at)}</span>
+      ${fileSummaryButton(f)}
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileFromCurrentFolder(${f.id})`)}
     </div>`;
         }).join('')}

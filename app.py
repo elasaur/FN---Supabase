@@ -45,7 +45,7 @@ from supabase_auth import (
     reset_password_for_email,
 )
 
-from storage import make_storage_path, upload_file, create_signed_url, delete_files
+from storage import make_storage_path, upload_file, download_file, create_signed_url, delete_files
 
 # Application setup: Flask, upload limits, session lifetime, and rate limiting.
 app = Flask(__name__)
@@ -420,8 +420,21 @@ def create_folder_record(db, user_id, name, emoji, color, bg, is_default=False, 
     return first(rows)
 
 
-def create_file_record(db, user_id, folder_id, original_name, stored_name, extension, file_size, ai_sorted, keywords):
-    rows = db.insert("files", {
+def normalize_ai_summary(summary):
+    cleaned = re.sub(r"\s+", " ", str(summary or "")).strip()
+    words = cleaned.split()
+    return " ".join(words[:200])
+
+
+def is_file_summary_schema_error(exc):
+    message = str(exc).lower()
+    return "ai_summary" in message and (
+        "column" in message or "schema cache" in message or "could not find" in message
+    )
+
+
+def create_file_record(db, user_id, folder_id, original_name, stored_name, extension, file_size, ai_sorted, keywords, ai_summary=""):
+    payload = {
         "user_id": user_id,
         "folder_id": folder_id,
         "original_name": original_name,
@@ -430,7 +443,15 @@ def create_file_record(db, user_id, folder_id, original_name, stored_name, exten
         "file_size": file_size,
         "ai_sorted": bool(ai_sorted),
         "keywords": keywords,
-    })
+        "ai_summary": normalize_ai_summary(ai_summary),
+    }
+    try:
+        rows = db.insert("files", payload)
+    except RuntimeError as exc:
+        if not is_file_summary_schema_error(exc):
+            raise
+        payload.pop("ai_summary", None)
+        rows = db.insert("files", payload)
     return first(rows)
 
 
@@ -1258,6 +1279,55 @@ def api_rename_file(file_id):
     return jsonify({'success': True, 'name': new_name})
 
 
+@app.route('/api/files/<int:file_id>/reanalyze-summary', methods=['POST'])
+@login_required
+@limiter.limit("5 per minute")
+def api_reanalyze_file_summary(file_id):
+    db  = get_db()
+    uid = get_current_user_id()
+    f   = select_file(db, file_id, uid)
+    if not f:
+        return jsonify({'success': False, 'message': 'File not found.'}), 404
+
+    filename = clean_display_filename(f.get('original_name') or '')
+    if not filename or not allowed_file(filename):
+        return jsonify({'success': False, 'message': 'File type not supported.'}), 400
+
+    folder_rows = db.select("folders", {"user_id": pg_filter("eq", uid)})
+    folder_list = [
+        {**dict(folder), 'folder': folder['name']}
+        for folder in folder_rows
+    ]
+
+    timestamp = now_utc().strftime('%Y%m%d%H%M%S%f')
+    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f'__reanalyze_{timestamp}_{safe_storage_filename(filename)}')
+
+    try:
+        download_file(f['stored_name'], temp_path)
+        analyze_file = get_file_analyzer()
+        result = analyze_file(temp_path, filename, folder_list)
+        summary = normalize_ai_summary(result.get('summary') or '')
+        db.update(
+            "files",
+            {"id": pg_filter("eq", file_id), "user_id": pg_filter("eq", uid)},
+            {"ai_summary": summary},
+        )
+        db.commit()
+        return jsonify({'success': True, 'summary': summary})
+    except RuntimeError as exc:
+        if is_file_summary_schema_error(exc):
+            return jsonify({
+                'success': False,
+                'message': 'AI summary column is not ready in Supabase yet. Run the ai_summary SQL update first.',
+            }), 400
+        return jsonify({'success': False, 'message': str(exc)}), 500
+    except Exception as exc:
+        return jsonify({'success': False, 'message': f'Re-analysis failed: {str(exc)}'}), 500
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+
 # AI analysis API: extract file text and return ranked folder suggestions.
 @app.route('/api/analyze', methods=['POST'])
 @login_required
@@ -1388,6 +1458,7 @@ def api_confirm_upload():
     bg          = request.form.get('folder_bg',    '#e0f4fb')
     ai_sorted   = request.form.get('ai_sorted',    '0') == '1'
     keywords    = request.form.get('keywords',     '')
+    ai_summary  = request.form.get('ai_summary',   '')
 
     db  = get_db()
     uid = get_current_user_id()
@@ -1456,7 +1527,7 @@ def api_confirm_upload():
             folder_id = folder['id']
             created_folder_id = folder_id
 
-        saved_file = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords)
+        saved_file = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords, ai_summary)
         db.commit()
     except Exception:
         try:

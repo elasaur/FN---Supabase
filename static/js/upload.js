@@ -218,6 +218,7 @@ async function confirmUpload(button) {
     }
     formData.append('ai_sorted', chosenFolder ? '1' : '0');
     formData.append('keywords', (currentAnalysis?.keywords || []).join(','));
+    formData.append('ai_summary', currentAnalysis?.summary || currentAnalysis?.ai_summary || '');
 
     const res = await fetch('/api/confirm-upload', { method: 'POST', body: formData });
     const data = await res.json().catch(() => ({
@@ -301,6 +302,7 @@ function renderUploadFileList() {
         </div>
       </div>
       <span class="fi-date">${timeAgo(f.created_at)}</span>
+      ${fileSummaryButton(f)}
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileUpload(${f.id})`)}
     </div>`).join('');
 }

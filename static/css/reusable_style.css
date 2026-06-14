@@ -52,6 +52,7 @@
   .icon-dash-calendar { --svg-icon: url('/icons-pack/custom-svg/dash-calendar.svg'); }
   .icon-dash-ai { --svg-icon: url('/icons-pack/custom-svg/dash-ai.svg'); }
   .icon-textblob { --svg-icon: url('/icons-pack/custom-svg/textblob-logo.svg'); }
+  .icon-sticky-note { --svg-icon: url('/icons-pack/custom-svg/sticky-note.svg'); }
 
   .filled-svg-icon.icon-upload { --svg-icon: url('/icons-pack/custom-svg/filled/upload.svg'); }
   .filled-svg-icon.icon-folder,
@@ -79,6 +80,7 @@
   .filled-svg-icon.icon-rocket { --svg-icon: url('/icons-pack/custom-svg/filled/rocket.svg'); }
   .filled-svg-icon.icon-danger { --svg-icon: url('/icons-pack/custom-svg/filled/danger.svg'); }
   .filled-svg-icon.icon-keyword { --svg-icon: url('/icons-pack/custom-svg/filled/keyword.svg'); }
+  .filled-svg-icon.icon-sticky-note { --svg-icon: url('/icons-pack/custom-svg/filled/sticky-note.svg'); }
   
 :root {
   --bg: #f7f4f0;

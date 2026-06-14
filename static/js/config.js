@@ -56,7 +56,7 @@ const SYSTEM_FOLDER_ICONS = [
 ];
 
 const pageTitles = {
-  dashboard:'Home',
+  dashboard:'Dashboard',
   upload:'Upload Files',
   folders:'All Folders',
   'folder-detail':'Folder',

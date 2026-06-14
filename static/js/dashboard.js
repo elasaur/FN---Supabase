@@ -94,6 +94,7 @@ function makeRecentItem(f) {
         </div>
       </div>
       <div class="recent-date">${timeAgo(f.created_at)}</div>
+      ${fileSummaryButton(f)}
       ${fileActionsButton(f.id, f.folder_id, f.original_name, `deleteFileDashboard(${f.id})`)}
     </div>`;
 }

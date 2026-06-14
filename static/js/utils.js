@@ -45,6 +45,7 @@ function filledSvgIcon(file, className = '', label = '') {
     'folder.svg': 'dash-folder.svg',
     'keyword.svg': 'keyword.svg',
     'edit.svg': 'edit.svg',
+    'sticky-note.svg': 'sticky-note.svg',
   };
   const src = localIcon(`custom-svg/filled/${filledFiles[file] || file}`);
   const aria = label
@@ -139,6 +140,137 @@ function escHtml(s) {
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;')
     .replace(/'/g,'&#039;');
+}
+
+function summaryWords(text, maxWords = 200) {
+  const words = String(text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+  return words.slice(0, maxWords).join(' ');
+}
+
+function fileSummaryText(file) {
+  const summary = summaryWords(file?.ai_summary || file?.summary || '');
+  return summary || 'No AI summary saved for this file.';
+}
+
+function fileSummaryButton(file) {
+  const encoded = encodeURIComponent(JSON.stringify({
+    id: file?.id,
+    name: file?.original_name || 'File',
+    summary: fileSummaryText(file),
+  }));
+  return `
+    <button type="button" class="file-summary-note-btn"
+      data-summary-file="${escHtml(encoded)}"
+      onmouseenter="showFileSummaryNote(event, this)"
+      onfocus="showFileSummaryNote(event, this)"
+      onmouseleave="scheduleFileSummaryNoteClose()"
+      onblur="scheduleFileSummaryNoteClose()"
+      onclick="event.stopPropagation();showFileSummaryNote(event, this)"
+      title="View AI summary"
+      aria-label="View AI summary for ${escHtml(file?.original_name || 'file')}">
+      ${filledSvgIcon('sticky-note.svg', 'file-summary-note-icon')}
+    </button>
+  `;
+}
+
+let fileSummaryNoteCloseTimer = null;
+
+function ensureFileSummaryNote() {
+  let note = document.getElementById('fileSummaryHoverNote');
+  if (note) return note;
+  note = document.createElement('div');
+  note.id = 'fileSummaryHoverNote';
+  note.className = 'file-summary-hover-note';
+  note.onmouseenter = () => clearTimeout(fileSummaryNoteCloseTimer);
+  note.onmouseleave = scheduleFileSummaryNoteClose;
+  document.body.appendChild(note);
+  return note;
+}
+
+function showFileSummaryNote(event, button) {
+  event?.stopPropagation?.();
+  clearTimeout(fileSummaryNoteCloseTimer);
+  const raw = button?.dataset?.summaryFile || '';
+  let payload = { name: 'File', summary: 'No AI summary saved for this file.' };
+  try {
+    payload = JSON.parse(decodeURIComponent(raw));
+  } catch (_) {}
+
+  const note = ensureFileSummaryNote();
+  const fileId = Number(payload.id) || 0;
+  note.innerHTML = `
+    <div class="file-summary-note-head">
+      <span class="file-summary-note-head-icon">${filledSvgIcon('sticky-note.svg', 'file-summary-note-title-icon')}</span>
+      <div class="file-summary-note-title">${escHtml(payload.name || 'File')}</div>
+    </div>
+    <div class="file-summary-note-body">${escHtml(summaryWords(payload.summary, 200) || 'No AI summary saved for this file.')}</div>
+    <div class="file-summary-note-actions">
+      <button type="button" class="file-summary-reanalyze-btn"
+        ${fileId ? `onclick="reanalyzeFileSummary(event, ${fileId}, this)"` : 'disabled'}>
+        Re-analyze Summary
+      </button>
+    </div>
+  `;
+  note.classList.add('open');
+
+  const rect = button.getBoundingClientRect();
+  const width = Math.min(360, window.innerWidth - 24);
+  const left = Math.min(Math.max(12, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 12);
+  let top = rect.bottom + 10;
+  note.style.width = `${width}px`;
+  note.style.left = `${left}px`;
+  note.style.top = `${top}px`;
+
+  const noteRect = note.getBoundingClientRect();
+  if (noteRect.bottom > window.innerHeight - 12) {
+    top = Math.max(12, rect.top - noteRect.height - 10);
+    note.style.top = `${top}px`;
+  }
+}
+
+function scheduleFileSummaryNoteClose() {
+  clearTimeout(fileSummaryNoteCloseTimer);
+  fileSummaryNoteCloseTimer = setTimeout(closeFileSummaryNote, 160);
+}
+
+function closeFileSummaryNote() {
+  document.getElementById('fileSummaryHoverNote')?.classList.remove('open');
+}
+
+async function reanalyzeFileSummary(event, fileId, button) {
+  event?.stopPropagation?.();
+  clearTimeout(fileSummaryNoteCloseTimer);
+  const btn = button;
+  const originalText = btn?.textContent || 'Re-analyze Summary';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+  }
+
+  try {
+    const res = await fetch(`/api/files/${fileId}/reanalyze-summary`, { method: 'POST' });
+    const data = await res.json().catch(() => ({ success: false, message: 'Re-analysis failed.' }));
+    if (!data.success) {
+      if (typeof showToast === 'function') showToast(data.message || 'Re-analysis failed.', 'error');
+      return;
+    }
+
+    const summary = summaryWords(data.summary || '');
+    if (typeof updateCachedFile === 'function') {
+      updateCachedFile(fileId, file => { file.ai_summary = summary; });
+    }
+    if (typeof renderEverywhereFromCache === 'function') renderEverywhereFromCache();
+
+    const note = ensureFileSummaryNote();
+    const body = note.querySelector('.file-summary-note-body');
+    if (body) body.textContent = summary || 'No AI summary saved for this file.';
+    if (typeof showToast === 'function') showToast('Summary re-analyzed.', 'success');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
 }
 
 function isSystemIcon(value) {

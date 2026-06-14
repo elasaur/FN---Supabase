@@ -43,6 +43,20 @@ def upload_file(file_storage, object_path, content_type=None):
     return response.json() if response.text else {}
 
 
+def download_file(object_path, destination_path):
+    _require_config()
+    response = requests.get(
+        f"{supabase_config.SUPABASE_URL}/storage/v1/object/{supabase_config.SUPABASE_STORAGE_BUCKET}/{object_path}",
+        headers=_headers(),
+        timeout=60,
+    )
+    if response.status_code >= 400:
+        raise RuntimeError(f"Supabase Storage download failed: {response.text}")
+    with open(destination_path, "wb") as f:
+        f.write(response.content)
+    return destination_path
+
+
 def create_signed_url(object_path, expires_in=300, download_name=None):
     _require_config()
     response = requests.post(
