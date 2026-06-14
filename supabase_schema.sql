@@ -52,6 +52,7 @@ create table if not exists public.files (
   stored_name text not null unique, -- Supabase Storage object path: {user_id}/{timestamp}_{filename}
   extension text not null default '',
   file_size bigint not null default 0,
+  file_hash text not null default '',
   ai_sorted boolean not null default false,
   keywords text not null default '',
   ai_summary text not null default '',
@@ -70,6 +71,14 @@ alter table public.folders alter column note_body set default '';
 alter table public.files add column if not exists ai_summary text not null default '';
 update public.files set ai_summary = '' where ai_summary is null;
 alter table public.files alter column ai_summary set default '';
+
+-- Content hash used to prevent duplicate uploads for each user.
+alter table public.files add column if not exists file_hash text not null default '';
+update public.files set file_hash = '' where file_hash is null;
+alter table public.files alter column file_hash set default '';
+create unique index if not exists idx_files_user_file_hash_unique
+  on public.files(user_id, file_hash)
+  where file_hash <> '';
 
 update public.folders f
 set

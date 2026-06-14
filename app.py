@@ -79,6 +79,12 @@ LOGIN_LOCKOUT_DURATION = timedelta(hours=24)
 LOGIN_ATTEMPTS_FILE = os.path.join(app.instance_path, 'login_attempts.json')
 ANALYZE_REQUEST_DIR = os.path.join(UPLOAD_FOLDER, '.analyze_requests')
 ANALYZE_REQUEST_LOCK = threading.Lock()
+
+
+class DuplicateFileError(Exception):
+    pass
+
+
 os.makedirs(app.instance_path, exist_ok=True)
 os.makedirs(ANALYZE_REQUEST_DIR, exist_ok=True)
 
@@ -185,6 +191,19 @@ def uploaded_file_size(file_storage):
     size = file_storage.stream.tell()
     file_storage.stream.seek(pos)
     return size
+
+
+def uploaded_file_hash(file_storage):
+    pos = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+    digest = hashlib.sha256()
+    while True:
+        chunk = file_storage.stream.read(1024 * 1024)
+        if not chunk:
+            break
+        digest.update(chunk)
+    file_storage.stream.seek(pos)
+    return digest.hexdigest()
 
 
 def is_valid_uuid(value):
@@ -399,6 +418,36 @@ def update_folder_compat(db, folder_id, user_id, payload):
         )
 
 
+def is_folder_duplicate_name_error(exc):
+    message = str(exc).lower()
+    return (
+        "folders_user_id_name_key" in message
+        or ("duplicate key" in message and "folders" in message and "name" in message)
+        or ("key (user_id, name)" in message and "already exists" in message)
+    )
+
+
+def duplicate_folder_name_response():
+    return jsonify({'success': False, 'message': 'A folder with that name already exists.'}), 409
+
+
+def find_duplicate_folder_name(db, user_id, name, exclude_folder_id=None):
+    target_name = str(name or "").strip().lower()
+    if not target_name:
+        return None
+
+    for item in db.select(
+        "folders",
+        {"user_id": pg_filter("eq", user_id)},
+        "id,name",
+    ):
+        if exclude_folder_id is not None and int(item.get("id") or 0) == int(exclude_folder_id):
+            continue
+        if str(item.get("name") or "").strip().lower() == target_name:
+            return item
+    return None
+
+
 def select_file(db, file_id, user_id, select="*"):
     return first(db.select(
         "files",
@@ -433,7 +482,80 @@ def is_file_summary_schema_error(exc):
     )
 
 
-def create_file_record(db, user_id, folder_id, original_name, stored_name, extension, file_size, ai_sorted, keywords, ai_summary=""):
+def is_file_hash_schema_error(exc):
+    message = str(exc).lower()
+    return "file_hash" in message and (
+        "column" in message or "schema cache" in message or "could not find" in message
+    )
+
+
+def is_file_hash_duplicate_error(exc):
+    message = str(exc).lower()
+    return (
+        "file_hash" in message
+        and ("duplicate key" in message or "unique constraint" in message or "idx_files_user_file_hash_unique" in message)
+    )
+
+
+def duplicate_file_response(duplicate):
+    name = duplicate.get("original_name") or "an existing file"
+    return jsonify({
+        "success": False,
+        "message": f'This file already exists as "{name}". Upload cancelled to avoid duplicates.',
+        "duplicate_file": dict(duplicate),
+    }), 409
+
+
+def duplicate_filename_response(name):
+    return jsonify({
+        "success": False,
+        "message": f'A file named "{name}" already exists. Please choose a different name.',
+    }), 409
+
+
+def find_duplicate_filename(db, user_id, original_name, exclude_file_id=None):
+    target_name = str(original_name or "").strip().lower()
+    if not target_name:
+        return None
+
+    for item in db.select(
+        "files",
+        {"user_id": pg_filter("eq", user_id)},
+        "id,original_name",
+    ):
+        if exclude_file_id is not None and int(item.get("id") or 0) == int(exclude_file_id):
+            continue
+        if str(item.get("original_name") or "").strip().lower() == target_name:
+            return item
+    return None
+
+
+def find_duplicate_file(db, user_id, original_name, file_size, file_hash=""):
+    if file_hash:
+        try:
+            duplicate = first(db.select(
+                "files",
+                {"user_id": pg_filter("eq", user_id), "file_hash": pg_filter("eq", file_hash)},
+                "id,original_name,folder_id,file_size,file_hash",
+            ))
+            if duplicate:
+                return duplicate
+        except RuntimeError as exc:
+            if not is_file_hash_schema_error(exc):
+                raise
+
+    target_name = str(original_name or "").strip().lower()
+    for item in db.select(
+        "files",
+        {"user_id": pg_filter("eq", user_id), "file_size": pg_filter("eq", file_size)},
+        "id,original_name,folder_id,file_size",
+    ):
+        if str(item.get("original_name") or "").strip().lower() == target_name:
+            return item
+    return None
+
+
+def create_file_record(db, user_id, folder_id, original_name, stored_name, extension, file_size, ai_sorted, keywords, ai_summary="", file_hash=""):
     payload = {
         "user_id": user_id,
         "folder_id": folder_id,
@@ -441,17 +563,25 @@ def create_file_record(db, user_id, folder_id, original_name, stored_name, exten
         "stored_name": stored_name,
         "extension": extension,
         "file_size": file_size,
+        "file_hash": file_hash,
         "ai_sorted": bool(ai_sorted),
         "keywords": keywords,
         "ai_summary": normalize_ai_summary(ai_summary),
     }
-    try:
-        rows = db.insert("files", payload)
-    except RuntimeError as exc:
-        if not is_file_summary_schema_error(exc):
+    while True:
+        try:
+            rows = db.insert("files", payload)
+            break
+        except RuntimeError as exc:
+            if "ai_summary" in payload and is_file_summary_schema_error(exc):
+                payload.pop("ai_summary", None)
+                continue
+            if "file_hash" in payload and is_file_hash_schema_error(exc):
+                payload.pop("file_hash", None)
+                continue
+            if "file_hash" in payload and is_file_hash_duplicate_error(exc):
+                raise DuplicateFileError() from exc
             raise
-        payload.pop("ai_summary", None)
-        rows = db.insert("files", payload)
     return first(rows)
 
 
@@ -1033,15 +1163,16 @@ def api_create_folder():
 
     db  = get_db()
     uid = get_current_user_id()
-    existing = first(db.select(
-        "folders",
-        {"user_id": pg_filter("eq", uid), "name": pg_filter("eq", name)},
-        "id",
-    ))
+    existing = find_duplicate_folder_name(db, uid, name)
     if existing:
-        return jsonify({'success': False, 'message': 'A folder with that name already exists.'})
+        return duplicate_folder_name_response()
 
-    folder = create_folder_record(db, uid, name, emoji, color, bg)
+    try:
+        folder = create_folder_record(db, uid, name, emoji, color, bg)
+    except RuntimeError as exc:
+        if is_folder_duplicate_name_error(exc):
+            return duplicate_folder_name_response()
+        raise
     db.commit()
     return jsonify({'success': True, 'folder': dict(folder)})
 
@@ -1075,9 +1206,15 @@ def api_update_folder(folder_id):
         payload["note_body"] = str(data.get("note_body") or "")
         payload["note_updated_at"] = data.get("note_updated_at") or updated_at
 
+    duplicate = find_duplicate_folder_name(db, uid, name, exclude_folder_id=folder_id)
+    if duplicate:
+        return duplicate_folder_name_response()
+
     try:
         update_folder_payload(db, {"id": pg_filter("eq", folder_id), "user_id": pg_filter("eq", uid)}, payload)
     except RuntimeError as exc:
+        if is_folder_duplicate_name_error(exc):
+            return duplicate_folder_name_response()
         if "note_body" in payload and is_folder_note_schema_error(exc):
             return folder_note_schema_error_response()
         raise
@@ -1271,6 +1408,10 @@ def api_rename_file(file_id):
     if not f:
         return jsonify({'success': False, 'message': 'File not found.'})
 
+    duplicate = find_duplicate_filename(db, uid, new_name, exclude_file_id=file_id)
+    if duplicate:
+        return duplicate_filename_response(new_name)
+
     db.update("files", {"id": pg_filter("eq", file_id), "user_id": pg_filter("eq", uid)}, {
         "original_name": new_name,
         "extension": new_name.rsplit('.', 1)[1].lower(),
@@ -1350,13 +1491,18 @@ def api_analyze():
         return jsonify({'success': False, 'message': 'File type not supported.'})
 
     uid = get_current_user_id()
+    db  = get_db()
+    file_size = uploaded_file_size(file)
+    file_hash = uploaded_file_hash(file)
+    duplicate = find_duplicate_file(db, uid, filename, file_size, file_hash)
+    if duplicate:
+        return duplicate_file_response(duplicate)
+
     analyze_token = begin_analyze_request(uid)
     safe_name = safe_storage_filename(filename)
     timestamp = now_utc().strftime('%Y%m%d%H%M%S%f')
     temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f'__temp_{timestamp}_{safe_name}')
     file.save(temp_path)
-
-    db  = get_db()
 
     folder_rows = db.select("folders", {"user_id": pg_filter("eq", uid)})
     folder_list = [
@@ -1422,6 +1568,10 @@ def api_upload():
     timestamp   = now_utc().strftime('%Y%m%d%H%M%S%f')
     stored_name = make_storage_path(uid, f'{timestamp}_{safe_name}')
     file_size   = uploaded_file_size(file)
+    file_hash   = uploaded_file_hash(file)
+    duplicate   = find_duplicate_file(db, uid, filename, file_size, file_hash)
+    if duplicate:
+        return duplicate_file_response(duplicate)
     if get_user_storage_used_bytes(db, uid) + file_size > STORAGE_LIMIT_BYTES:
         return jsonify({'success': False, 'message': 'Storage limit reached. Delete files before uploading more.'})
 
@@ -1430,7 +1580,15 @@ def api_upload():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Storage upload error: {str(e)}'})
 
-    f = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords)
+    try:
+        f = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords, file_hash=file_hash)
+    except DuplicateFileError:
+        try:
+            delete_files([stored_name])
+        except Exception:
+            pass
+        duplicate = find_duplicate_file(db, uid, filename, file_size, file_hash)
+        return duplicate_file_response(duplicate or {"original_name": filename})
     db.commit()
 
     return jsonify({'success': True, 'file': dict(f)})
@@ -1505,6 +1663,10 @@ def api_confirm_upload():
     timestamp   = now_utc().strftime('%Y%m%d%H%M%S%f')
     stored_name = make_storage_path(uid, f'{timestamp}_{safe_name}')
     file_size   = uploaded_file_size(file)
+    file_hash   = uploaded_file_hash(file)
+    duplicate   = find_duplicate_file(db, uid, filename, file_size, file_hash)
+    if duplicate:
+        return duplicate_file_response(duplicate)
     if get_user_storage_used_bytes(db, uid) + file_size > STORAGE_LIMIT_BYTES:
         return jsonify({'success': False, 'message': 'Storage limit reached. Delete files before uploading more.'})
 
@@ -1527,8 +1689,20 @@ def api_confirm_upload():
             folder_id = folder['id']
             created_folder_id = folder_id
 
-        saved_file = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords, ai_summary)
+        saved_file = create_file_record(db, uid, folder_id, filename, stored_name, ext, file_size, ai_sorted, keywords, ai_summary, file_hash)
         db.commit()
+    except DuplicateFileError:
+        try:
+            delete_files([stored_name])
+        except Exception:
+            pass
+        if created_folder_id:
+            try:
+                db.delete("folders", {"id": pg_filter("eq", created_folder_id), "user_id": pg_filter("eq", uid)})
+            except Exception:
+                pass
+        duplicate = find_duplicate_file(db, uid, filename, file_size, file_hash)
+        return duplicate_file_response(duplicate or {"original_name": filename})
     except Exception:
         try:
             delete_files([stored_name])
