@@ -270,7 +270,10 @@ def login_required(f):
         if not session_is_active():
             return auth_failure('Session expired. Please log in again.')
         db = get_db()
-        user = select_user_with_deactivated_at(db, session.get('user_id'))
+        user = ensure_user_profile(db, session.get('user_id'), session.get('access_token', ''))
+        if not user:
+            clear_auth_session()
+            return auth_failure('Session expired. Please log in again.')
         if user_is_deactivated(user):
             clear_auth_session()
             return auth_failure('Account deactivated.')
@@ -293,6 +296,39 @@ def first(rows):
 
 def select_user(db, user_id, select="*"):
     return first(db.select("users", {"id": pg_filter("eq", user_id)}, select))
+
+
+def profile_from_auth_user(auth_user, fallback_email=""):
+    email = (auth_user.get("email") or fallback_email or "").strip()
+    metadata = auth_user.get("user_metadata") or {}
+    name = str(metadata.get("name") or (email.split("@")[0] if email else "") or "User").strip()
+    return name, email
+
+
+def ensure_user_profile(db, user_id, access_token=""):
+    user = select_user(db, user_id)
+    if user:
+        return user
+
+    auth_user = get_auth_user(access_token)
+    if auth_user.get("error") or auth_user.get("msg") or str(auth_user.get("id")) != str(user_id):
+        return None
+
+    name, email = profile_from_auth_user(auth_user)
+    if not email:
+        return None
+
+    try:
+        db.insert("users", {"id": user_id, "name": name, "email": email})
+        db.commit()
+    except RuntimeError as exc:
+        if "duplicate key" not in str(exc) and "23505" not in str(exc):
+            raise
+
+    user = select_user(db, user_id)
+    if user:
+        ensure_important_default_folder(db, user_id)
+    return user
 
 
 def user_is_deactivated(user):
@@ -1081,7 +1117,10 @@ def dashboard():
     db = get_db()
     uid = session['user_id']
 
-    user = select_user(db, uid)
+    user = ensure_user_profile(db, uid, session.get('access_token', ''))
+    if not user:
+        clear_auth_session()
+        return auth_failure('Session expired. Please log in again.')
 
     expires_at = current_session_expires_at()
     return render_template(
@@ -1824,7 +1863,7 @@ def api_get_user():
     """
     uid  = get_current_user_id()
     db   = get_db()
-    user = select_user(db, uid)
+    user = ensure_user_profile(db, uid, session.get('access_token', ''))
     if not user:
         return jsonify({'success': False, 'message': 'User not found.'}), 404
     return jsonify({

@@ -229,6 +229,27 @@
     </div>
   </div>
 </div>
+
+<!-- Logout Confirmation Modal -->
+<div class="modal-bg" id="modal-logout">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-icon-center"><span class="modal-alert-icon-bg"><span class="svg-icon filled-svg-icon modal-svg-icon modal-warning-icon icon-warning" aria-hidden="true"></span></span></div>
+    <div class="modal-title danger-title">Logout?</div>
+    <p style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;">
+      You will be signed out of File Nest. Do you want to proceed?
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('logout')">
+        No, cancel
+      </button>
+      <button class="btn btn-primary"
+              style="background:var(--red); box-shadow:none;"
+              onclick="confirmLogout()">
+        Yes, logout
+      </button>
+    </div>
+  </div>
+</div>
  
  
 <!-- Delete Folder -->

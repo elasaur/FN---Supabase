@@ -651,16 +651,25 @@ function openEditModal(id, name, emoji, color, bg) {
 // Builds color swatches for create/edit folder modals.
 function buildFolderModalColorPicker(containerId, onChange, selected) {
   const el = document.getElementById(containerId);
+  const selectedColor = selected || COLOR_OPTIONS[0];
 
-  // Inline handlers keep the existing swatch behavior used by the modal markup.
   el.innerHTML = COLOR_OPTIONS.map(c => `
-    <div class="color-swatch ${selected && selected.val === c.val ? 'active' : ''}"
-         style="background:${c.val};"
-         onclick="this.parentElement.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-                  this.classList.add('active');
-                  (${onChange.toString()})(${JSON.stringify(c)})">
-    </div>
+    <button type="button"
+            class="color-opt${selectedColor.val === c.val ? ' picked' : ''}"
+            style="background:${c.val};"
+            aria-label="Select folder color">
+    </button>
   `).join('');
+
+  el.querySelectorAll('.color-opt').forEach((button, index) => {
+    button.addEventListener('click', () => {
+      el.querySelectorAll('.color-opt').forEach(option => option.classList.remove('picked'));
+      button.classList.add('picked');
+      onChange(COLOR_OPTIONS[index]);
+    });
+  });
+
+  onChange(selectedColor);
 }
 
 // Saves edits from the edit-folder modal.

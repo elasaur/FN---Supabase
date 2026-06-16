@@ -107,6 +107,12 @@ img.rec-folder-icon {
   -webkit-box-orient: vertical;
 }
 .file-actions-cell { position: relative; }
+.file-actions-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
 .file-menu-trigger { margin-left: auto; }
 .file-summary-note-btn {
   width: 30px;

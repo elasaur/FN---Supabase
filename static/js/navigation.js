@@ -18,6 +18,10 @@ function navigate(page, el) {
 }
 
 async function doLogout() {
+  openModal('logout');
+}
+
+async function confirmLogout() {
   try {
     sessionStorage.removeItem('fn_access');
     sessionStorage.removeItem('fn_refresh');
