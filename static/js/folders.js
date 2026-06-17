@@ -21,12 +21,19 @@ function showDeleteFolderModal(id, name) {
 }
 
 // Confirms the pending folder deletion and closes the confirmation modal.
-function confirmDeleteFolder() {
-  if (folderToDeleteId !== null) {
-    deleteFolder(folderToDeleteId);
+async function confirmDeleteFolder(button) {
+  if (folderToDeleteId === null) return;
+  const id = folderToDeleteId;
+  const btn = getActionButton(button);
+  setButtonLoading(btn, true, 'Deleting...');
+
+  const deleted = await deleteFolder(id);
+  setButtonLoading(btn, false);
+
+  if (deleted) {
     folderToDeleteId = null;
+    hideDeleteFolderModal('deleteFolder');
   }
-  hideDeleteFolderModal('deleteFolder');
 }
 
 // Hides a delete modal by its modal id suffix.
@@ -73,43 +80,27 @@ function renderFoldersLoadError(err) {
   `;
 }
 
+function updateFolderSortLabel() {
+  const labels = { name: 'Name', created: 'Date Created', modified: 'Date Modified' };
+  const direction = getSortModeDirection(folderSortMode) === 'asc' ? 'Ascending' : 'Descending';
+  setCustomDropdownLabel('folderSortLabel', `${labels[getSortModeField(folderSortMode)] || 'Name'} - ${direction}`);
+}
+
 // Updates the active folder sort mode and rerenders the grid.
-function setFolderSort(mode, el) {
-  // Date columns toggle direction each time the same chip is clicked.
-  if (mode === 'created' || mode === 'modified') {
-    const descMode = `${mode}-desc`;
-    const ascMode = `${mode}-asc`;
-    folderSortMode = folderSortMode === descMode ? ascMode : descMode;
-  } else {
-    folderSortMode = mode;
-  }
-  syncFolderSortChips(el);
+function setFolderSortField(field, option) {
+  folderSortMode = updateSortModeField(folderSortMode, field);
+  selectCustomDropdownOption(option);
+  updateFolderSortLabel();
+  closeCustomDropdowns();
   renderFolderGrid();
 }
 
-// Keeps folder sort chips visually aligned with the active sort mode.
-function syncFolderSortChips(activeEl) {
-  document.querySelectorAll('#page-folders .sort-chip').forEach(chip => {
-    const chipSort = chip.dataset.sort;
-    const isDateChip = chipSort === 'created' || chipSort === 'modified';
-    const isActive = isDateChip
-      ? folderSortMode.startsWith(`${chipSort}-`)
-      : chipSort === folderSortMode;
-
-    chip.classList.toggle(
-      'active',
-      chip === activeEl || isActive
-    );
-
-    if (isDateChip) {
-      const baseLabel = chipSort === 'created' ? 'Created Date' : 'Modified Date';
-      // Date chip labels include the active direction indicator.
-      chip.textContent = isActive
-        ? `${baseLabel} ${folderSortMode.endsWith('-asc') ? '↑' : '↓'}`
-        : baseLabel;
-      chip.title = `${baseLabel}: click to sort ${folderSortMode.endsWith('-desc') && isActive ? 'oldest first' : 'newest first'}`;
-    }
-  });
+function setFolderSortDirection(direction, option) {
+  folderSortMode = updateSortModeDirection(folderSortMode, direction);
+  selectCustomDropdownOption(option);
+  updateFolderSortLabel();
+  closeCustomDropdowns();
+  renderFolderGrid();
 }
 
 // Renders all folders, sorted and with pinned folders first.
@@ -119,7 +110,6 @@ function renderFolderGrid() {
 
   let sorted = [...allFolders];
   const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
-  const byCount = (a, b) => Number(b.file_count || 0) - Number(a.file_count || 0);
   const byPinned = (a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
 
   // Modified folders use updated_at first, then note_updated_at, then created_at.
@@ -130,8 +120,8 @@ function renderFolderGrid() {
     return parseAppDate(value)?.getTime() || 0;
   };
   const sorters = {
-    name: byName,
-    count: byCount,
+    'name-asc': byName,
+    'name-desc': (a, b) => byName(b, a),
     'created-asc': (a, b) => folderDateValue(a, 'created_at') - folderDateValue(b, 'created_at'),
     'created-desc': (a, b) => folderDateValue(b, 'created_at') - folderDateValue(a, 'created_at'),
     'modified-asc': (a, b) => folderDateValue(a, 'updated_at') - folderDateValue(b, 'updated_at'),
@@ -142,9 +132,7 @@ function renderFolderGrid() {
   // Keep pinned folders first, then apply selected sorting, then use name as fallback.
   sorted.sort((a, b) => byPinned(a, b) || bySelectedMode(a, b) || byName(a, b));
 
-  syncFolderSortChips();
   el.innerHTML = sorted.map(f => makeFolderCard(f, false)).join('');
-  el.innerHTML += `<div class="add-folder-card" onclick="openCreateFolderModal()"><div class="plus">＋</div><div style="font-weight:700;font-size:0.85rem;">New Folder</div></div>`;
 }
 
 // Builds the HTML for one folder card.
@@ -311,6 +299,7 @@ async function togglePin(id, currentPinned) {
   if (folder) folder.pinned = nextPinned;
   renderFolderGrid();
   renderDashboardPinnedFoldersFromCache();
+  showToast(nextPinned ? 'Folder pinned.' : 'Folder unpinned.', 'success');
 
   try {
     const res = await fetch(`/api/folders/${id}`, {
@@ -322,7 +311,6 @@ async function togglePin(id, currentPinned) {
     if (!data.success) throw new Error(data.message || 'Could not update pin.');
 
     if (folder) folder.updated_at = data.updated_at || new Date().toISOString();
-    showToast(nextPinned ? 'Folder pinned.' : 'Folder unpinned.', 'success');
     syncCachesSilently();
   } catch (err) {
     // Restore previous local state when the API update fails.
@@ -347,16 +335,22 @@ function renderDashboardPinnedFoldersFromCache() {
 
 // Deletes a folder and updates local caches after success.
 async function deleteFolder(id) {
-  const res = await fetch(`/api/folders/${id}`, { method: 'DELETE' });
-  const data = await res.json();
+  try {
+    const res = await fetch(`/api/folders/${id}`, { method: 'DELETE' });
+    const data = await res.json();
 
-  if (data.success) {
-    removeCachedFolder(id);
-    showToast('Folder deleted.', 'warn');
-    syncCachesSilently();
-  } else {
+    if (data.success) {
+      removeCachedFolder(id);
+      showToast('Folder deleted.', 'success');
+      syncCachesSilently();
+      return true;
+    }
+
     showToast(data.message, 'error');
+  } catch (_) {
+    showToast('Could not delete folder.', 'error');
   }
+  return false;
 }
 
 // Opens the folder detail page and loads files for that folder.
@@ -366,14 +360,12 @@ async function openFolderFiles(folderId, folderName, emoji) {
 
   const title = document.getElementById('folderFilesTitle');
   if (title) title.innerHTML = `${folderIconHtml(emoji, 'modal-title-icon')} ${escHtml(folderName)}`;
+  updateTopbarCopy?.(folderName, 'View files and notes in this folder.');
 
   const detailPage = document.getElementById('page-folder-detail');
   if (detailPage) detailPage.style.setProperty('--folder-color', folder.color || COLOR_OPTIONS[0].val);
 
   navigate('folder-detail');
-
-  const topbar = document.getElementById('topbarTitle');
-  if (topbar) topbar.textContent = 'All Folders';
 
   renderFolderNoteTab(folder);
 
@@ -512,18 +504,13 @@ function renderCurrentFolderFilesFromCache() {
   const countEl = document.getElementById('folderFilesCount');
   if (!listEl) return;
 
-  const files = allFiles.filter(f => Number(f.folder_id) === Number(currentFolderFilesContext.id));
+  const files = filterFilesByType(
+    allFiles.filter(f => Number(f.folder_id) === Number(currentFolderFilesContext.id)),
+    folderFilesTypeFilter
+  );
 
   // Sort only the filtered list for the currently opened folder.
-  if (folderFilesSortMode === 'name') {
-    files.sort((a, b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
-  }
-  if (folderFilesSortMode === 'type') {
-    files.sort((a, b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
-  }
-  if (folderFilesSortMode === 'date') {
-    files.sort((a, b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
-  }
+  sortFilesByMode(files, folderFilesSortMode);
 
   if (countEl) countEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
 
@@ -560,10 +547,33 @@ function renderCurrentFolderFilesFromCache() {
 }
 
 // Updates folder-detail file sort mode and rerenders the file list.
-function setFolderFilesSort(mode, el) {
-  folderFilesSortMode = mode;
-  document.querySelectorAll('.folder-files-sort .sort-chip').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
+function updateFolderFilesSortLabel() {
+  const field = getSortModeField(folderFilesSortMode) === 'name' ? 'Name' : 'Date Created';
+  const direction = getSortModeDirection(folderFilesSortMode) === 'asc' ? 'Ascending' : 'Descending';
+  setCustomDropdownLabel('folderFilesSortLabel', `${field} - ${direction}`);
+}
+
+function setFolderFilesSortField(field, option) {
+  folderFilesSortMode = updateSortModeField(folderFilesSortMode, field);
+  selectCustomDropdownOption(option);
+  updateFolderFilesSortLabel();
+  closeCustomDropdowns();
+  renderCurrentFolderFilesFromCache();
+}
+
+function setFolderFilesSortDirection(direction, option) {
+  folderFilesSortMode = updateSortModeDirection(folderFilesSortMode, direction);
+  selectCustomDropdownOption(option);
+  updateFolderFilesSortLabel();
+  closeCustomDropdowns();
+  renderCurrentFolderFilesFromCache();
+}
+
+function setFolderFilesTypeFilter(type, option) {
+  folderFilesTypeFilter = type;
+  selectCustomDropdownOption(option);
+  if (option) setCustomDropdownLabel('folderFilesTypeLabel', option.textContent.trim());
+  closeCustomDropdowns();
   renderCurrentFolderFilesFromCache();
 }
 

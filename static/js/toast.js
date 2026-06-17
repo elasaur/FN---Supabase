@@ -32,9 +32,9 @@ function playToastSound(type) {
     gain.connect(ctx.destination);
 
     const soundMap = {
-      success: { freq: 880, type: 'sine',     duration: 0.15 },
-      error:   { freq: 220, type: 'sawtooth', duration: 0.25 },
-      warn:    { freq: 440, type: 'sine',     duration: 0.2  },
+      success: { freq: 880, type: 'sine',     duration: 0.16 },
+      error:   { freq: 180, type: 'sawtooth', duration: 0.28 },
+      warn:    { freq: 180, type: 'sawtooth', duration: 0.28 },
       info:    { freq: 660, type: 'sine',     duration: 0.12 },
     };
 

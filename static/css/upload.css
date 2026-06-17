@@ -37,8 +37,7 @@
   pointer-events: none;
 }
 
-.upload-zone:hover,
-.upload-zone.drag-over {
+.upload-zone:hover {
   border-color: var(--accent);
   background:
     radial-gradient(circle at 14% 16%, rgba(232,133,90,0.16), transparent 28%),

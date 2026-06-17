@@ -1,7 +1,7 @@
 // All files feature: list, sort, rename, move, download, and delete files.
 
 async function loadAllFiles(search) {
-  let url = `/api/files?sort=${allFilesSortMode}`;
+  let url = `/api/files?sort=${fileSortApiParam(allFilesSortMode)}`;
   if (search) url += `&search=${encodeURIComponent(search)}`;
   const tbody = document.getElementById('allFilesTbody');
   if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr>`;
@@ -12,29 +12,51 @@ async function loadAllFiles(search) {
   renderAllFilesTable();
 }
 
-function setAllFilesSort(mode, el) {
-  allFilesSortMode = mode;
-  document.querySelectorAll('#page-files .sort-chip').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
+function updateAllFilesSortLabel() {
+  const field = getSortModeField(allFilesSortMode) === 'name' ? 'Name' : 'Date Created';
+  const direction = getSortModeDirection(allFilesSortMode) === 'asc' ? 'Ascending' : 'Descending';
+  setCustomDropdownLabel('allFilesSortLabel', `${field} - ${direction}`);
+}
+
+function setAllFilesSortField(field, option) {
+  allFilesSortMode = updateSortModeField(allFilesSortMode, field);
+  selectCustomDropdownOption(option);
+  updateAllFilesSortLabel();
+  closeCustomDropdowns();
   sortAllFilesCache();
   renderAllFilesTable();
 }
 
+function setAllFilesSortDirection(direction, option) {
+  allFilesSortMode = updateSortModeDirection(allFilesSortMode, direction);
+  selectCustomDropdownOption(option);
+  updateAllFilesSortLabel();
+  closeCustomDropdowns();
+  sortAllFilesCache();
+  renderAllFilesTable();
+}
+
+function setAllFilesTypeFilter(type, option) {
+  allFilesTypeFilter = type;
+  selectCustomDropdownOption(option);
+  if (option) setCustomDropdownLabel('allFilesTypeLabel', option.textContent.trim());
+  closeCustomDropdowns();
+  renderAllFilesTable();
+}
+
 function sortAllFilesCache() {
-  if (allFilesSortMode === 'name') allFiles.sort((a,b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
-  if (allFilesSortMode === 'folder') allFiles.sort((a,b) => String(a.folder_name || '').localeCompare(String(b.folder_name || ''), undefined, { sensitivity: 'base' }));
-  if (allFilesSortMode === 'type') allFiles.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
-  if (allFilesSortMode === 'date') allFiles.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+  sortFilesByMode(allFiles, allFilesSortMode);
 }
 
 function renderAllFilesTable() {
   const tbody = document.getElementById('allFilesTbody');
   if (!tbody) return;
-  if (!allFiles.length) {
+  const files = filterFilesByType(allFiles, allFilesTypeFilter);
+  if (!files.length) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">${filledSvgIcon('file.svg', 'empty-svg-icon')}</div><div class="es-text">No files yet - upload some to get started!</div></div></td></tr>`;
     return;
   }
-  tbody.innerHTML = allFiles.map(f => `
+  tbody.innerHTML = files.map(f => `
     <tr class="file-folder-link" data-file-id="${f.id}" role="button" tabindex="0" onclick="openFileFolder(${f.id})" onkeydown="handleFileFolderKeydown(event, ${f.id})">
       <td><span class="file-name-cell">${getExtIcon(f.original_name)} <span class="file-name-text" style="font-weight:700;">${escHtml(f.original_name)}</span>${newFileBadge(f.created_at)}</span></td>
       <td><span style="font-size:0.72rem;background:var(--bg);padding:2px 8px;border-radius:6px;font-weight:700;color:var(--text2);">${getExt(f.original_name).toUpperCase()||'—'}</span></td>
@@ -146,13 +168,29 @@ document.addEventListener('click', function(e) {
 async function openMoveFileModal(fileId, currentFolderId) {
   fileToMoveId = fileId;
   if (!allFolders.length) await loadFolders();
-  const select = document.getElementById('moveFileFolder');
-  select.innerHTML = allFolders.map(f => `
-    <option value="${f.id}" ${Number(f.id) === Number(currentFolderId) ? 'selected' : ''}>
-      ${escHtml(f.name)}
-    </option>
-  `).join('');
+  const input = document.getElementById('moveFileFolder');
+  const label = document.getElementById('moveFileFolderLabel');
+  const options = document.getElementById('moveFileFolderOptions');
+  const selected = allFolders.find(f => Number(f.id) === Number(currentFolderId)) || allFolders[0];
+
+  if (input) input.value = selected?.id || '';
+  if (label) label.textContent = selected?.name || 'Select folder';
+  if (options) {
+    options.innerHTML = allFolders.map(f => {
+      const encodedName = encodeURIComponent(f.name || 'Folder');
+      const selectedClass = Number(f.id) === Number(selected?.id) ? ' selected' : '';
+      return `<button type="button" class="fn-dropdown-option${selectedClass}" onclick="setMoveFileFolder(${f.id}, '${encodedName}', this)">${escHtml(f.name)}</button>`;
+    }).join('');
+  }
   openModal('moveFile');
+}
+
+function setMoveFileFolder(folderId, encodedName, option) {
+  const input = document.getElementById('moveFileFolder');
+  if (input) input.value = folderId;
+  selectCustomDropdownOption(option);
+  setCustomDropdownLabel('moveFileFolderLabel', decodeURIComponent(encodedName || 'Folder'));
+  closeCustomDropdowns();
 }
 
 async function submitMoveFile(button) {

@@ -62,6 +62,7 @@ ALLOWED_EXTENSIONS = {
     'mp3', 'mp4',
     'zip', 'csv',
 }
+BROWSER_PREVIEW_EXTENSIONS = {'pdf', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'mp3', 'mp4'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
@@ -1770,6 +1771,11 @@ def api_open_file(file_id):
     f   = select_file(db, file_id, uid)
     if not f:
         return jsonify({'success': False, 'message': 'File not found.'})
+    if str(f.get('extension') or '').lower() not in BROWSER_PREVIEW_EXTENSIONS:
+        return jsonify({
+            'success': False,
+            'message': 'Some files cannot be viewed unless downloaded.',
+        }), 415
 
     try:
         return jsonify({'success': True, 'url': create_signed_url(f['stored_name'])})

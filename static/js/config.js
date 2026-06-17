@@ -67,3 +67,13 @@ const pageTitles = {
   about:'About the System',
   settings:'Settings',
 };
+
+const pageSubtitles = {
+  dashboard:"Here's an overview of your file system.",
+  upload:'Store and access your files anytime.',
+  folders:'Browse and manage your organized folders.',
+  'folder-detail':'View files and notes in this folder.',
+  files:'Access, sort, and manage all uploaded files.',
+  stats:'Track uploads, activity, and storage insights.',
+  settings:'Manage your account preferences and system settings.',
+};

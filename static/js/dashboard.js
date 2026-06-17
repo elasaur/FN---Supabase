@@ -13,6 +13,7 @@ async function loadDashboard() {
   document.getElementById('dashTotalFiles').textContent = data.total_files;
   document.getElementById('dashRecentCount').textContent = data.recent_count;
   document.getElementById('dashAiAccepted').textContent = `${data.ai_suggestions_accepted} / ${data.total_files}`;
+  if (typeof renderSidebarStorage === 'function') renderSidebarStorage(data);
 
   allFolders = folders;
   allFiles = files;
@@ -56,21 +57,40 @@ function updateDashboardGreeting(name) {
   if (greetName) greetName.textContent = displayGivenNames(name || window.FILE_NEST_USER?.name || greetName.textContent);
 }
 
-function setDashboardRecentSort(mode, el) {
-  dashRecentSortMode = mode;
-  document.querySelectorAll('.dashboard-recent-sort .dashboard-recent-chip').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
+function updateDashboardRecentSortLabel() {
+  const field = getSortModeField(dashRecentSortMode) === 'name' ? 'Name' : 'Date Created';
+  const direction = getSortModeDirection(dashRecentSortMode) === 'asc' ? 'Ascending' : 'Descending';
+  setCustomDropdownLabel('dashboardRecentSortLabel', `${field} - ${direction}`);
+}
+
+function setDashboardRecentSortField(field, option) {
+  dashRecentSortMode = updateSortModeField(dashRecentSortMode, field);
+  selectCustomDropdownOption(option);
+  updateDashboardRecentSortLabel();
+  closeCustomDropdowns();
+  renderDashboardRecentUploads();
+}
+
+function setDashboardRecentSortDirection(direction, option) {
+  dashRecentSortMode = updateSortModeDirection(dashRecentSortMode, direction);
+  selectCustomDropdownOption(option);
+  updateDashboardRecentSortLabel();
+  closeCustomDropdowns();
+  renderDashboardRecentUploads();
+}
+
+function setDashboardRecentTypeFilter(type, option) {
+  dashRecentTypeFilter = type;
+  selectCustomDropdownOption(option);
+  if (option) setCustomDropdownLabel('dashboardRecentTypeLabel', option.textContent.trim());
+  closeCustomDropdowns();
   renderDashboardRecentUploads();
 }
 
 function renderDashboardRecentUploads() {
   const recEl = document.getElementById('dashRecentList');
   if (!recEl) return;
-  const sorted = [...dashRecentFiles];
-  if (dashRecentSortMode === 'name') sorted.sort((a,b) => a.original_name.localeCompare(b.original_name));
-  if (dashRecentSortMode === 'folder') sorted.sort((a,b) => String(a.folder_name || '').localeCompare(String(b.folder_name || '')));
-  if (dashRecentSortMode === 'type') sorted.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
-  if (dashRecentSortMode === 'date') sorted.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+  const sorted = sortFilesByMode(filterFilesByType([...dashRecentFiles], dashRecentTypeFilter), dashRecentSortMode);
   recEl.innerHTML = sorted.length
     ? sorted.slice(0,5).map(f => makeRecentItem(f)).join('')
     : `<div class="empty-state">

@@ -28,10 +28,12 @@ function formatStorageRemaining(bytes, usedBytes) {
   return formatSize(bytes);
 }
 
+function formatStorageUsed(bytes) {
+  return Number(bytes || 0) === 0 ? '0' : formatSize(bytes);
+}
+
 function renderStorageUsage(storage) {
   const el = document.getElementById('storageUsageSummary');
-  if (!el) return;
-
   const files = Array.isArray(storage) ? storage : allFiles;
   const usedBytes = Array.isArray(storage)
     ? files.reduce((sum, file) => sum + Number(file.file_size || 0), 0)
@@ -48,21 +50,53 @@ function renderStorageUsage(storage) {
   const isNearLimit = pct >= 90;
   const isFull = pct >= 100;
 
-  el.innerHTML = `
-    <div class="storage-summary">
-      <div>
-        <div class="storage-kicker">Default storage</div>
-        <div class="storage-value">${formatSize(usedBytes)} <span>used of ${formatSize(limitBytes)}</span></div>
+  renderSidebarStorage({
+    usedBytes,
+    limitBytes,
+    displayPct,
+    roundedPct,
+    isNearLimit,
+    isFull,
+  });
+
+  if (el) {
+    el.innerHTML = `
+      <div class="storage-summary">
+        <div>
+          <div class="storage-kicker">Default storage</div>
+          <div class="storage-value">${formatStorageUsed(usedBytes)} <span>used of ${formatSize(limitBytes)}</span></div>
+        </div>
+        <div class="storage-percent ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}">${roundedPct}%</div>
       </div>
-      <div class="storage-percent ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}">${roundedPct}%</div>
-    </div>
-    <div class="storage-track" title="${formatSize(usedBytes)} used of ${formatSize(limitBytes)}">
-      <div class="storage-fill ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}" style="width:${displayPct}%;"></div>
-    </div>
-    <div class="storage-meta">
-      <span>${formatStorageRemaining(remainingBytes, usedBytes)} remaining</span>
-      <span>${files.length} file${files.length === 1 ? '' : 's'} uploaded</span>
-    </div>`;
+      <div class="storage-track" title="${formatStorageUsed(usedBytes)} used of ${formatSize(limitBytes)}">
+        <div class="storage-fill ${isFull ? 'is-full' : isNearLimit ? 'is-near' : ''}" style="width:${displayPct}%;"></div>
+      </div>
+      <div class="storage-meta">
+        <span>${formatStorageRemaining(remainingBytes, usedBytes)} remaining</span>
+        <span>${files.length} file${files.length === 1 ? '' : 's'} uploaded</span>
+      </div>`;
+  }
+}
+
+function renderSidebarStorage(storage) {
+  const fill = document.getElementById('sidebarStorageFill');
+  const pctEl = document.getElementById('sidebarStoragePercent');
+  const meta = document.getElementById('sidebarStorageMeta');
+  if (!fill || !pctEl || !meta) return;
+
+  const usedBytes = Number(storage?.usedBytes ?? storage?.storage_used_bytes ?? 0);
+  const limitBytes = Number(storage?.limitBytes ?? storage?.storage_limit_bytes ?? STORAGE_LIMIT_BYTES);
+  const pct = limitBytes ? (usedBytes / limitBytes) * 100 : 0;
+  const displayPct = Number(storage?.displayPct ?? Math.min(pct, 100));
+  const roundedPct = storage?.roundedPct ?? (pct < 0.1 && usedBytes > 0 ? '<0.1' : Math.min(pct, 100).toFixed(1).replace(/\.0$/, ''));
+  const isNearLimit = Boolean(storage?.isNearLimit ?? pct >= 90);
+  const isFull = Boolean(storage?.isFull ?? pct >= 100);
+
+  pctEl.textContent = `${roundedPct}%`;
+  fill.style.width = `${displayPct}%`;
+  fill.classList.toggle('is-near', isNearLimit && !isFull);
+  fill.classList.toggle('is-full', isFull);
+  meta.textContent = `${formatStorageUsed(usedBytes)} used of ${formatSize(limitBytes)}`;
 }
 
 function renderFolderBars(chartData) {

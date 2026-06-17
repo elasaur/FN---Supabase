@@ -132,7 +132,16 @@
     <div class="modal-form">
       <div>
         <label class="form-label">Destination Folder</label>
-        <select class="form-input" id="moveFileFolder"></select>
+        <input type="hidden" id="moveFileFolder">
+        <div class="fn-dropdown move-folder-dropdown">
+          <button type="button" class="fn-dropdown-btn" onclick="toggleCustomDropdown(this, event)" aria-expanded="false">
+            <span class="fn-dropdown-btn-main">
+              <span class="fn-dropdown-label" id="moveFileFolderLabel">Select folder</span>
+            </span>
+            <span class="fn-dropdown-caret" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" /></svg></span>
+          </button>
+          <div class="fn-dropdown-menu" id="moveFileFolderOptions"></div>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal('moveFile')">Cancel</button>
@@ -260,7 +269,7 @@
     <p id="deleteFolderMsg" style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.6; margin-bottom: 24px;"></p>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="hideDeleteFolderModal('deleteFolder')">No, cancel</button>
-      <button class="btn btn-primary" style="background:var(--red); box-shadow:none;" onclick="confirmDeleteFolder()">Yes, delete</button>
+      <button class="btn btn-primary" style="background:var(--red); box-shadow:none;" onclick="confirmDeleteFolder(this)">Yes, delete</button>
     </div>
   </div>
 </div>

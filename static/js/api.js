@@ -122,6 +122,7 @@ function renderDashboardFromCache() {
   if (totalFiles) totalFiles.textContent = stats.total_files;
   if (recentCount) recentCount.textContent = stats.recent_count;
   if (aiAccepted) aiAccepted.textContent = `${stats.ai_suggestions_accepted} / ${stats.total_files}`;
+  if (typeof renderSidebarStorage === 'function') renderSidebarStorage(stats);
 
   if (typeof renderDashboardPinnedFoldersFromCache === 'function') renderDashboardPinnedFoldersFromCache();
   if (typeof renderDashboardRecentUploads === 'function') renderDashboardRecentUploads();

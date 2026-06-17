@@ -12,8 +12,8 @@
 </div>
   <div class="nav-section">
     <div class="nav-label">Main</div>
-    <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard',this)"><span class="svg-icon nav-icon icon icon-home" aria-hidden="true"></span>Dashboard</div>
-    <div class="nav-item" id="nav-upload" onclick="navigate('upload',this)"><span class="svg-icon nav-icon icon icon-upload" aria-hidden="true"></span>Upload Files <span class="nav-badge">+</span></div>
+    <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="nav-icon icon" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" /></svg>Dashboard</div>
+    <div class="nav-item" id="nav-upload" onclick="navigate('upload',this)"><span class="svg-icon nav-icon icon icon-upload" aria-hidden="true"></span>Upload Files <span class="nav-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg></span></div>
     <div class="nav-item" id="nav-stats" onclick="navigate('stats',this)"><span class="svg-icon nav-icon icon icon-statistics" aria-hidden="true"></span>Statistics</div>
   </div>
   <div class="nav-section" style="margin-top:8px;">
@@ -25,6 +25,16 @@
     <div class="nav-label">Account</div>
     <div class="nav-item" id="nav-settings" onclick="navigate('settings',this)"><span class="svg-icon nav-icon icon icon-setting" aria-hidden="true"></span>Settings</div>
     <div class="nav-item" onclick="doLogout()"><span class="svg-icon nav-icon icon icon-logout" aria-hidden="true"></span>Logout</div>
+    <div class="sidebar-storage" id="sidebarStorageSummary">
+      <div class="sidebar-storage-head">
+        <span>Storage</span>
+        <strong id="sidebarStoragePercent">0%</strong>
+      </div>
+      <div class="sidebar-storage-track" aria-hidden="true">
+        <div class="sidebar-storage-fill" id="sidebarStorageFill" style="width:0%;"></div>
+      </div>
+      <div class="sidebar-storage-meta" id="sidebarStorageMeta">0 B used</div>
+    </div>
   </div>
   <div class="sidebar-footer">
     <div class="user-card">

@@ -40,14 +40,6 @@ function validateUploadExtension(file) {
   return false;
 }
 
-function onDragOver(e)  { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag-over'); }
-function onDragLeave(e) { document.getElementById('uploadZone').classList.remove('drag-over'); }
-function onDrop(e) {
-  e.preventDefault();
-  document.getElementById('uploadZone').classList.remove('drag-over');
-  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
-}
-
 async function handleFiles(files) {
   if (!files || !files.length) return;
 
@@ -169,7 +161,7 @@ function setUploadStep(active) {
 function resetUploadZone() {
   document.getElementById('uploadLoading').style.display = 'none';
   document.getElementById('uploadDefault').style.display = 'block';
-  document.getElementById('uploadZoneTitle').textContent = 'Drag & drop your file here';
+  document.getElementById('uploadZoneTitle').textContent = 'Choose a file to upload';
 }
 
 // Confirm upload feature: resolve the target folder and persist the file.
@@ -267,23 +259,20 @@ async function loadUploadFileList(sortMode) {
   if (sortMode) uploadSortMode = sortMode;
   const list    = document.getElementById('fileList');
   if (list) list.innerHTML = '<div style="text-align:center;padding:24px;"><div class="spinner"></div></div>';
-  const res = await fetch(`/api/files?sort=${uploadSortMode}&recent_minutes=5&t=${Date.now()}`);
+  const res = await fetch(`/api/files?sort=${fileSortApiParam(uploadSortMode)}&recent_minutes=5&t=${Date.now()}`);
   uploadFiles = await res.json();
   sortUploadFilesCache();
   renderUploadFileList();
 }
 
 function sortUploadFilesCache() {
-  if (uploadSortMode === 'name') uploadFiles.sort((a,b) => String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' }));
-  if (uploadSortMode === 'folder') uploadFiles.sort((a,b) => String(a.folder_name || '').localeCompare(String(b.folder_name || ''), undefined, { sensitivity: 'base' }));
-  if (uploadSortMode === 'type') uploadFiles.sort((a,b) => getExt(a.original_name).localeCompare(getExt(b.original_name)));
-  if (uploadSortMode === 'date') uploadFiles.sort((a,b) => (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0));
+  sortFilesByMode(uploadFiles, uploadSortMode);
 }
 
 function renderUploadFileList() {
   const list = document.getElementById('fileList');
   if (!list) return;
-  const files = filterRecentUploadFiles(uploadFiles);
+  const files = filterFilesByType(filterRecentUploadFiles(uploadFiles), uploadTypeFilter);
   const countEl = document.getElementById('filesCount');
   if (countEl) countEl.textContent = files.length;
   if (!files.length) {
@@ -307,11 +296,35 @@ function renderUploadFileList() {
     </div>`).join('');
 }
 
-function sortFiles(mode, el) {
-  uploadSortMode = mode;
-  document.querySelectorAll('.sort-chip2').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
+function updateUploadSortLabel() {
+  const field = getSortModeField(uploadSortMode) === 'name' ? 'Name' : 'Date Created';
+  const direction = getSortModeDirection(uploadSortMode) === 'asc' ? 'Ascending' : 'Descending';
+  setCustomDropdownLabel('uploadSortLabel', `${field} - ${direction}`);
+}
+
+function setUploadSortField(field, option) {
+  uploadSortMode = updateSortModeField(uploadSortMode, field);
+  selectCustomDropdownOption(option);
+  updateUploadSortLabel();
+  closeCustomDropdowns();
   sortUploadFilesCache();
+  renderUploadFileList();
+}
+
+function setUploadSortDirection(direction, option) {
+  uploadSortMode = updateSortModeDirection(uploadSortMode, direction);
+  selectCustomDropdownOption(option);
+  updateUploadSortLabel();
+  closeCustomDropdowns();
+  sortUploadFilesCache();
+  renderUploadFileList();
+}
+
+function setUploadTypeFilter(type, option) {
+  uploadTypeFilter = type;
+  selectCustomDropdownOption(option);
+  if (option) setCustomDropdownLabel('uploadTypeLabel', option.textContent.trim());
+  closeCustomDropdowns();
   renderUploadFileList();
 }
 

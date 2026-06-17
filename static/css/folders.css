@@ -207,8 +207,21 @@
   padding: 8px 16px; border-radius: 30px;
   border: 2px dashed var(--accent2); background: var(--surface);
   cursor: pointer; font-family: inherit; font-weight: 800;
-  font-size: 0.83rem; color: var(--accent);
+  font-size: 0; color: var(--accent);
   transition: all .18s; margin-bottom: 0;
+}
+.create-folder-btn::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 4.5v15m7.5-7.5h-15'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 4.5v15m7.5-7.5h-15'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.create-folder-btn::after {
+  content: "Create New Folder";
+  font-size: 0.83rem;
 }
 .create-folder-btn:hover { border-color: var(--accent); background: var(--accent3); }
 

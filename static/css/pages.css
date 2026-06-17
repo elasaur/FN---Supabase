@@ -40,3 +40,15 @@
   color: var(--text3);
   margin-top: 3px;
 }
+
+.page:not(#page-dashboard) > .section-header:first-child:not(:has(.btn)) {
+  display: none;
+}
+
+.page:not(#page-dashboard) > .section-header:first-child:has(.btn) {
+  justify-content: flex-end;
+}
+
+.page:not(#page-dashboard) > .section-header:first-child:has(.btn) > div:first-child {
+  display: none;
+}

@@ -9,7 +9,6 @@
 
     <!-- UPLOAD ZONE -->
     <div class="upload-zone" id="uploadZone"
-      ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)"
       onclick="document.getElementById('fileInput').click()">
 
       <!-- Default state -->
@@ -26,8 +25,8 @@
             <span class="upload-mini-icon" style="--upload-icon-color:var(--mint); --upload-icon-bg:var(--mint2);"><span class="svg-icon filled-svg-icon upload-tile-svg icon-folder"></span></span>
           </div>
         </div>
-        <div class="upload-title" id="uploadZoneTitle">Drag & drop your file here</div>
-        <div class="upload-sub">or click to browse from your device</div>
+        <div class="upload-title" id="uploadZoneTitle">Choose a file to upload</div>
+        <div class="upload-sub">Click to browse from your device</div>
         <button class="browse-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Browse Files</button>
         <div class="file-types">
           <span class="file-type-chip">PDF</span><span class="file-type-chip">DOCX</span>
@@ -139,7 +138,7 @@
             <span class="svg-icon filled-svg-icon upload-tile-svg icon-upload" aria-hidden="true"></span>
           </div>
           <div class="guideline-title">Upload Files</div>
-          <div class="guideline-sub">Drag & drop or click to upload. One file at a time for best AI results.</div>
+          <div class="guideline-sub">Click to browse and upload. One file at a time for best AI results.</div>
         </div>
 
         <div class="guideline-card">
@@ -163,7 +162,15 @@
             <span class="svg-icon filled-svg-icon upload-tile-svg icon-edit" aria-hidden="true"></span>
           </div>
           <div class="guideline-title">Override Anytime</div>
-          <div class="guideline-sub">Review and change the predicted folder before confirming — you're always in control.</div>
+          <div class="guideline-sub">Review and change the predicted folder before confirming - you're always in control.</div>
+        </div>
+
+        <div class="guideline-card">
+          <div class="guideline-icon upload-tile-icon" style="--upload-icon-color:var(--yellow); --upload-icon-bg:var(--yellow2);">
+            <span class="svg-icon filled-svg-icon upload-tile-svg icon-sticky-note" aria-hidden="true"></span>
+          </div>
+          <div class="guideline-title">AI File Summarization</div>
+          <div class="guideline-sub">When readable text is available, File Nest saves a short AI summary that you can view from the sticky-note button.</div>
         </div>
 
         <div class="guideline-card">
@@ -182,10 +189,55 @@
       <div class="files-header">
         <div><span class="files-title" style="color: var(--text2);">Uploaded Files</span><span class="files-count" id="filesCount">0</span></div>
         <div class="sort-row">
-          <button class="sort-chip2 active" onclick="sortFiles('date',this)">Date</button>
-          <button class="sort-chip2" onclick="sortFiles('name',this)">Name</button>
-          <button class="sort-chip2" onclick="sortFiles('folder',this)">Folder</button>
-          <button class="sort-chip2" onclick="sortFiles('type',this)">Type</button>
+          <label class="sort-control">
+            <span class="sort-control-label">Sort by:</span>
+            <div class="fn-dropdown">
+              <button type="button" class="fn-dropdown-btn" onclick="toggleCustomDropdown(this, event)" aria-expanded="false">
+                <span class="fn-dropdown-btn-main">
+                  <span class="fn-dropdown-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" /></svg></span>
+                  <span class="fn-dropdown-label" id="uploadSortLabel">Date Created - Descending</span>
+                </span>
+                <span class="fn-dropdown-caret" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" /></svg></span>
+              </button>
+              <div class="fn-dropdown-menu">
+                <button type="button" class="fn-dropdown-option" data-group="field" onclick="setUploadSortField('name', this)">Name</button>
+                <button type="button" class="fn-dropdown-option selected" data-group="field" onclick="setUploadSortField('date', this)">Date Created</button>
+                <div class="fn-dropdown-separator"></div>
+                <button type="button" class="fn-dropdown-option" data-group="direction" onclick="setUploadSortDirection('asc', this)">Ascending</button>
+                <button type="button" class="fn-dropdown-option selected" data-group="direction" onclick="setUploadSortDirection('desc', this)">Descending</button>
+              </div>
+            </div>
+          </label>
+          <label class="sort-control">
+            <span class="sort-control-label">Filter by:</span>
+            <div class="fn-dropdown">
+              <button type="button" class="fn-dropdown-btn" onclick="toggleCustomDropdown(this, event)" aria-expanded="false">
+                <span class="fn-dropdown-btn-main">
+                  <span class="fn-dropdown-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg></span>
+                  <span class="fn-dropdown-label" id="uploadTypeLabel">All file types</span>
+                </span>
+                <span class="fn-dropdown-caret" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" /></svg></span>
+              </button>
+              <div class="fn-dropdown-menu">
+                <button type="button" class="fn-dropdown-option selected" onclick="setUploadTypeFilter('all', this)">All file types</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('pdf', this)">PDF</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('docx', this)">DOCX</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('doc', this)">DOC</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('xlsx', this)">XLSX</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('xls', this)">XLS</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('pptx', this)">PPTX</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('ppt', this)">PPT</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('txt', this)">TXT</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('jpg', this)">JPG</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('jpeg', this)">JPEG</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('png', this)">PNG</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('mp3', this)">MP3</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('mp4', this)">MP4</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('zip', this)">ZIP</button>
+                <button type="button" class="fn-dropdown-option" onclick="setUploadTypeFilter('csv', this)">CSV</button>
+              </div>
+            </div>
+          </label>
         </div>
       </div>
       <div class="file-list" id="fileList">

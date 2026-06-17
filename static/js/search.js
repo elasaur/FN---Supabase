@@ -176,7 +176,7 @@ async function onGlobalSearch(val, forceModal) {
   searchFetchTimer = setTimeout(async function() {
     try {
       const [filesRes, foldersRes] = await Promise.all([
-        fetch(`/api/files?sort=${typeof allFilesSortMode === 'string' ? allFilesSortMode : 'date'}&search=${encodeURIComponent(searchVal)}`),
+        fetch(`/api/files?sort=${fileSortApiParam(allFilesSortMode)}&search=${encodeURIComponent(searchVal)}`),
         fetch(`/api/folders?search=${encodeURIComponent(searchVal)}`)
       ]);
       const files = await filesRes.json();

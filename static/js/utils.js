@@ -327,7 +327,109 @@ function downloadFile(id, name) {
   window.location.href = `/api/files/${id}/download`;
 }
 
+function fileSortApiParam(mode) {
+  return String(mode || '').startsWith('name') ? 'name' : 'date';
+}
+
+function sortFilesByMode(files, mode) {
+  const sortMode = mode || 'date-desc';
+  files.sort((a, b) => {
+    if (sortMode === 'name-asc') {
+      return String(a.original_name || '').localeCompare(String(b.original_name || ''), undefined, { sensitivity: 'base' });
+    }
+    if (sortMode === 'name-desc') {
+      return String(b.original_name || '').localeCompare(String(a.original_name || ''), undefined, { sensitivity: 'base' });
+    }
+    if (sortMode === 'date-asc') {
+      return (parseAppDate(a.created_at)?.getTime() || 0) - (parseAppDate(b.created_at)?.getTime() || 0);
+    }
+    return (parseAppDate(b.created_at)?.getTime() || 0) - (parseAppDate(a.created_at)?.getTime() || 0);
+  });
+  return files;
+}
+
+function filterFilesByType(files, typeFilter) {
+  const filter = String(typeFilter || 'all').toLowerCase();
+  if (filter === 'all') return files;
+  return files.filter(file => getExt(file.original_name) === filter);
+}
+
+function getSortModeField(mode) {
+  const field = String(mode || '').split('-')[0];
+  if (field === 'created' || field === 'modified' || field === 'name') return field;
+  return 'date';
+}
+
+function getSortModeDirection(mode) {
+  return String(mode || '').endsWith('-asc') ? 'asc' : 'desc';
+}
+
+function updateSortModeField(mode, field) {
+  return `${field}-${getSortModeDirection(mode)}`;
+}
+
+function updateSortModeDirection(mode, direction) {
+  return `${getSortModeField(mode)}-${direction}`;
+}
+
+function setCustomDropdownLabel(labelId, text) {
+  const label = document.getElementById(labelId);
+  if (label) label.textContent = text;
+}
+
+function selectCustomDropdownOption(option) {
+  const menu = option?.closest?.('.fn-dropdown-menu');
+  if (!menu) return;
+  const group = option.dataset.group || 'default';
+  menu.querySelectorAll('.fn-dropdown-option').forEach(item => {
+    if ((item.dataset.group || 'default') === group) {
+      item.classList.toggle('selected', item === option);
+    }
+  });
+}
+
+function closeCustomDropdowns(except) {
+  document.querySelectorAll('.fn-dropdown.open').forEach(dropdown => {
+    if (dropdown === except) return;
+    dropdown.classList.remove('open');
+    dropdown.querySelector('.fn-dropdown-btn')?.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function toggleCustomDropdown(button, event) {
+  event?.stopPropagation?.();
+  const dropdown = button?.closest?.('.fn-dropdown');
+  if (!dropdown) return;
+  const willOpen = !dropdown.classList.contains('open');
+  closeCustomDropdowns(dropdown);
+  dropdown.classList.toggle('open', willOpen);
+  button.setAttribute('aria-expanded', String(willOpen));
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.fn-dropdown')) closeCustomDropdowns();
+});
+
+const BROWSER_PREVIEW_EXTENSIONS = new Set(['pdf', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'mp3', 'mp4']);
+
+function findCachedFileById(id) {
+  const fileId = Number(id);
+  return [allFiles, uploadFiles, dashRecentFiles]
+    .flat()
+    .find(file => Number(file?.id) === fileId) || null;
+}
+
+function canPreviewFile(file) {
+  return BROWSER_PREVIEW_EXTENSIONS.has(getExt(file?.original_name || ''));
+}
+
 async function openFile(id) {
+  const file = findCachedFileById(id);
+  if (!canPreviewFile(file)) {
+    showToast('Some files cannot be viewed unless downloaded.', 'error');
+    return;
+  }
+
   try {
     const res = await fetch(`/api/files/${id}/open`, { method: 'POST' });
     const data = await res.json().catch(() => ({
