@@ -9,8 +9,7 @@ function showDeleteFolderModal(id, name) {
   if (msg) {
     msg.innerHTML = `
       This will permanently delete <strong>${name}</strong> 
-      and delete all files inside that folder.<br>
-      This action cannot be undone. Do you want to proceed?
+      and delete all files inside that folder. This action cannot be undone. Do you want to proceed?
     `;
   }
 
