@@ -212,24 +212,24 @@ function renderAiSortingSummary(stats) {
   summary.innerHTML = `
     <div class="ai-summary-meter">
       <div>
-        <div class="ai-summary-kicker">AI suggestions accepted</div>
+        <div class="ai-summary-kicker">Helpful choices made with AI</div>
         <div class="ai-summary-value">${aiPct}%</div>
       </div>
     </div>
-    <div class="ai-summary-track" title="${accepted} of ${total} uploads followed the AI recommendation">
+    <div class="ai-summary-track" title="${accepted} of ${total} uploads used an AI-guided folder choice">
       <div class="ai-summary-fill" style="width:${aiPct}%;"></div>
     </div>
     <div class="ai-summary-tiles">
       <div class="ai-summary-tile" style="--tile-color:var(--accent);">
-        <div class="ai-summary-label">Total Uploads</div>
+        <div class="ai-summary-label">Uploads Reviewed</div>
         <div class="ai-summary-count" id="statTotal">${total}</div>
       </div>
       <div class="ai-summary-tile" style="--tile-color:var(--mint);">
-        <div class="ai-summary-label">AI Suggestions Accepted</div>
+        <div class="ai-summary-label">AI-Guided Saves</div>
         <div class="ai-summary-count" id="statAI">${accepted}</div>
       </div>
       <div class="ai-summary-tile" style="--tile-color:var(--yellow);">
-        <div class="ai-summary-label">Manual Choices</div>
+        <div class="ai-summary-label">Manual Picks</div>
         <div class="ai-summary-count" id="statManual">${manual}</div>
       </div>
     </div>`;

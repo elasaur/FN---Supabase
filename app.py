@@ -13,6 +13,7 @@ import json
 import os
 import posixpath
 import re
+import base64
 import threading
 import uuid
 from functools import wraps
@@ -36,6 +37,7 @@ from supabase_auth import (
     sign_in,
     sign_up,
     sign_out,
+    refresh_session,
     get_auth_user,
     update_user_email,
     update_user_password,
@@ -334,6 +336,38 @@ def session_is_active():
     return True
 
 
+def jwt_payload(access_token):
+    try:
+        payload = access_token.split('.')[1]
+        payload += '=' * (-len(payload) % 4)
+        return json.loads(base64.urlsafe_b64decode(payload.encode('ascii')).decode('utf-8'))
+    except Exception:
+        return {}
+
+
+def access_token_expires_soon(access_token, skew_seconds=60):
+    payload = jwt_payload(access_token)
+    exp = payload.get('exp')
+    if not exp:
+        return False
+    return datetime.fromtimestamp(int(exp), timezone.utc) <= now_utc() + timedelta(seconds=skew_seconds)
+
+
+def refresh_auth_session_if_needed():
+    access_token = session.get('access_token') or ''
+    if not access_token or not access_token_expires_soon(access_token):
+        return True
+
+    refreshed = refresh_session(session.get('refresh_token') or '')
+    if not refreshed.get('access_token'):
+        return False
+
+    session['access_token'] = refreshed['access_token']
+    session['refresh_token'] = refreshed.get('refresh_token') or session.get('refresh_token', '')
+    session.modified = True
+    return True
+
+
 def auth_failure(message='Session expired.'):
     if request.accept_mimetypes.accept_html and not request.path.startswith('/api/'):
         return redirect(url_for('index', expired='1'))
@@ -348,6 +382,9 @@ def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session_is_active():
+            return auth_failure('Session expired. Please log in again.')
+        if not refresh_auth_session_if_needed():
+            clear_auth_session()
             return auth_failure('Session expired. Please log in again.')
         db = get_db()
         user = ensure_user_profile(db, session.get('user_id'), session.get('access_token', ''))
@@ -2037,9 +2074,7 @@ def api_change_password():
     uid = get_current_user_id()
     db = get_db()
     user = select_user(db, uid)
-    auth_header = request.headers.get('Authorization', '')
-    bearer_token = auth_header.removeprefix('Bearer ').strip() if auth_header.startswith('Bearer ') else ''
-    access_token = bearer_token or session.get('access_token', '')
+    access_token = session.get('access_token', '')
     auth_user = get_auth_user(access_token)
 
     if auth_user.get('error') or auth_user.get('msg'):
@@ -2051,10 +2086,6 @@ def api_change_password():
     if auth_user.get('id') and str(auth_user.get('id')) != str(uid):
         clear_auth_session()
         return auth_failure('Session expired. Please log in again.')
-    if bearer_token:
-        session['access_token'] = bearer_token
-        session.modified = True
-
     auth_email = (auth_user.get('email') or (user or {}).get('email') or '').strip()
     current_auth = sign_in(auth_email, current_pw) if auth_email else {}
     if not current_auth.get('access_token'):

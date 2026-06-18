@@ -36,7 +36,7 @@ function showPredictionCard(file, analysis) {
 
   // Default to the top ranked suggestion when the analyzer returns choices.
   const ranked = analysis.ranked || [];
-  selectedFolderObj = ranked.length ? ranked[0] : null;
+  selectedFolderObj = ranked.length ? { ...ranked[0], _choiceSource: 'ai' } : null;
 
   const confWrap = document.getElementById('confBarWrap');
   if (confWrap) confWrap.style.display = 'none';
@@ -91,7 +91,7 @@ function showPredictionCard(file, analysis) {
         document.querySelectorAll('.folder-option').forEach(b => b.classList.remove('selected'));
         card.classList.add('selected');
         card.querySelector('.rec-select-check').textContent = '✓';
-        selectedFolderObj = r;
+        selectedFolderObj = { ...r, _choiceSource: 'ai' };
       };
 
       recList.appendChild(card);
@@ -146,7 +146,7 @@ function buildAllFoldersPicker(analysis) {
       });
       document.querySelectorAll('.folder-option').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      selectedFolderObj = { folder: f.name, emoji: f.emoji, color: f.color, bg: f.bg, _db_id: f.id };
+      selectedFolderObj = { folder: f.name, emoji: f.emoji, color: f.color, bg: f.bg, _db_id: f.id, _choiceSource: 'manual' };
     };
 
     opts.appendChild(btn);
@@ -240,7 +240,7 @@ async function createNewFolder(button) {
 
     const f = data.folder;
     allFolders.push(f);
-    selectedFolderObj = { folder: f.name, emoji: f.emoji, color: f.color, bg: f.bg, _db_id: f.id };
+    selectedFolderObj = { folder: f.name, emoji: f.emoji, color: f.color, bg: f.bg, _db_id: f.id, _choiceSource: 'manual' };
 
     document.getElementById('newFolderPanel').classList.remove('show');
     document.getElementById('nfName').value = '';

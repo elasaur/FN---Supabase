@@ -1,23 +1,14 @@
 // Settings feature: profile, credentials, bulk cleanup, and account deletion.
 //
-// All fetch() calls include the Supabase access token in the Authorization
-// header so the @login_required decorator on the Flask side can verify the
-// request via Supabase Auth (no local password hashes).
-//
-// TokenStore is defined in index.html / app.html and manages the in-memory
-// + sessionStorage token cache.
+// Settings calls rely on the Flask session cookie. Supabase access tokens are
+// kept server-side so stale browser-cached tokens cannot override the session.
 
-// Auth header helper: attach the current Supabase access token to settings calls.
+// Shared JSON headers for settings requests.
 function authHeaders(extra = {}) {
-  const token = (typeof TokenStore !== 'undefined' && TokenStore.access)
-    ? TokenStore.access
-    : (sessionStorage.getItem('fn_access') || '');
-  const headers = {
+  return {
     'Content-Type':  'application/json',
     ...extra,
   };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
 }
 
 // Name settings: update local profile rows and visible UI labels.
@@ -282,7 +273,7 @@ async function confirmDeleteAllFiles(button) {
   const btn = getActionButton(button);
   await beginButtonAction(btn, 'Deleting...');
   let toastMessage = '';
-  let toastType = 'warn';
+  let toastType = 'success';
   const res  = await fetch('/api/files/delete-all', {
     method:  'DELETE',
     headers: authHeaders(),
@@ -310,7 +301,7 @@ async function confirmDeleteAllFolders(button) {
   const btn = getActionButton(button);
   await beginButtonAction(btn, 'Deleting...');
   let toastMessage = '';
-  let toastType = 'warn';
+  let toastType = 'success';
   const res  = await fetch('/api/folders/delete-all', {
     method:  'DELETE',
     headers: authHeaders(),

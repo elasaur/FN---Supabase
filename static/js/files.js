@@ -262,7 +262,7 @@ async function deleteFileById(id, button, confirmed = false) {
     if (data.success) {
       closeModal('deleteFile');
       removeCachedFile(id);
-      showToast('File deleted.', 'warn');
+      showToast('File deleted.', 'success');
       syncCachesSilently();
     } else {
       showToast(data.message, 'error');

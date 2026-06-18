@@ -212,7 +212,13 @@ function renderDashboardFromCache() {
   if (totalFolders) totalFolders.textContent = stats.total_folders;
   if (totalFiles) totalFiles.textContent = stats.total_files;
   if (recentCount) recentCount.textContent = stats.recent_count;
-  if (aiAccepted) aiAccepted.textContent = `${stats.ai_suggestions_accepted} / ${stats.total_files}`;
+  if (aiAccepted) {
+    const aiScore = stats.total_files
+      ? Math.round((stats.ai_suggestions_accepted / stats.total_files) * 100)
+      : 0;
+    aiAccepted.textContent = `${aiScore}%`;
+    aiAccepted.title = `${stats.ai_suggestions_accepted} of ${stats.total_files} uploads used an AI-guided folder choice`;
+  }
   if (typeof renderSidebarStorage === 'function') renderSidebarStorage(stats);
 
   if (typeof renderDashboardPinnedFoldersFromCache === 'function') renderDashboardPinnedFoldersFromCache();

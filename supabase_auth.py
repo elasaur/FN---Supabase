@@ -96,6 +96,26 @@ def sign_in(email: str, password: str) -> dict:
     return data
 
 
+def refresh_session(refresh_token: str) -> dict:
+    """Refresh a Supabase Auth session using the stored refresh token."""
+    require_supabase_auth_config()
+    if not refresh_token:
+        return {}
+
+    resp = http_requests.post(
+        f"{AUTH_URL}/token?grant_type=refresh_token",
+        headers={
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+        },
+        json={"refresh_token": refresh_token},
+        timeout=10,
+    )
+    data = _json_or_error(resp, "Session expired. Please log in again.")
+    logger.info("Supabase refresh_session status=%s", resp.status_code)
+    return data
+
+
 def sign_out(access_token: str) -> bool:
     """Invalidate the access token on Supabase."""
     require_supabase_auth_config()

@@ -181,6 +181,7 @@ async function confirmUpload(button) {
 
   try {
     const chosenFolder = selectedFolderObj;
+    const isAiGuidedSave = chosenFolder?._choiceSource === 'ai';
     const chosenName = chosenFolder ? (chosenFolder.folder || chosenFolder.name || '') : '';
     const existingFolder = chosenName
       ? allFolders.find(f => String(f.name || '').toLowerCase() === chosenName.toLowerCase())
@@ -208,7 +209,7 @@ async function confirmUpload(button) {
       formData.append('folder_color', chosenFolder?.color || '#7ec8e3');
       formData.append('folder_bg',    chosenFolder?.bg    || '#e0f4fb');
     }
-    formData.append('ai_sorted', chosenFolder ? '1' : '0');
+    formData.append('ai_sorted', isAiGuidedSave ? '1' : '0');
     formData.append('keywords', (currentAnalysis?.keywords || []).join(','));
     formData.append('ai_summary', currentAnalysis?.summary || currentAnalysis?.ai_summary || '');
 
