@@ -5,6 +5,10 @@ async function apiGet(url) {
   return await res.json();
 }
 
+const AUTHENTICATED_APP_CACHE_VERSION = 1;
+let appDataSyncPromise = null;
+let appCachePersistTimer = null;
+
 async function apiPost(url, body, isFormData = false) {
   const options = { method: 'POST' };
 
@@ -73,6 +77,93 @@ function filterRecentUploadFiles(files, minutes = 5) {
     const created = parseAppDate(file.created_at)?.getTime();
     return created && created >= cutoff;
   });
+}
+
+function authenticatedAppCacheKey() {
+  const userId = String(window.FILE_NEST_USER?.id || '').trim();
+  return userId ? `fn_app_cache:${AUTHENTICATED_APP_CACHE_VERSION}:${userId}` : '';
+}
+
+function applyAuthenticatedAppData(folders, files) {
+  allFolders = Array.isArray(folders) ? folders : [];
+  allFiles = Array.isArray(files) ? files : [];
+  uploadFiles = filterRecentUploadFiles(allFiles);
+  dashRecentFiles = [...allFiles];
+  allFilesLoaded = true;
+}
+
+function hasAuthenticatedAppData() {
+  return allFilesLoaded || allFolders.length > 0 || allFiles.length > 0;
+}
+
+function clearAuthenticatedAppCache() {
+  const key = authenticatedAppCacheKey();
+  if (!key) return;
+  try {
+    sessionStorage.removeItem(key);
+  } catch (_) {}
+}
+
+function persistAuthenticatedAppCache() {
+  const key = authenticatedAppCacheKey();
+  if (!key) return;
+  try {
+    sessionStorage.setItem(key, JSON.stringify({
+      savedAt: Date.now(),
+      folders: allFolders,
+      files: allFiles,
+    }));
+  } catch (_) {}
+}
+
+function scheduleAuthenticatedAppCachePersist() {
+  window.clearTimeout(appCachePersistTimer);
+  appCachePersistTimer = window.setTimeout(persistAuthenticatedAppCache, 80);
+}
+
+function hydrateAuthenticatedAppCache() {
+  const key = authenticatedAppCacheKey();
+  if (!key) return false;
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed?.folders) || !Array.isArray(parsed?.files)) {
+      clearAuthenticatedAppCache();
+      return false;
+    }
+    applyAuthenticatedAppData(parsed.folders, parsed.files);
+    return true;
+  } catch (_) {
+    clearAuthenticatedAppCache();
+    return false;
+  }
+}
+
+async function fetchFreshAuthenticatedAppData() {
+  if (appDataSyncPromise) return appDataSyncPromise;
+  appDataSyncPromise = (async () => {
+    const [foldersRes, filesRes] = await Promise.all([
+      fetch('/api/folders'),
+      fetch('/api/files?sort=date'),
+    ]);
+    if (!foldersRes.ok || !filesRes.ok) {
+      throw new Error('Could not load app data.');
+    }
+    const [folders, files] = await Promise.all([
+      foldersRes.json(),
+      filesRes.json(),
+    ]);
+    applyAuthenticatedAppData(folders, files);
+    renderEverywhereFromCache();
+    return { folders, files };
+  })();
+
+  try {
+    return await appDataSyncPromise;
+  } finally {
+    appDataSyncPromise = null;
+  }
 }
 
 function currentStatsFromCache() {
@@ -146,6 +237,7 @@ function renderEverywhereFromCache() {
   if (typeof renderCurrentFolderFilesFromCache === 'function') renderCurrentFolderFilesFromCache();
   renderDashboardFromCache();
   renderStatsFromCache();
+  scheduleAuthenticatedAppCachePersist();
 }
 
 function updateCachedFile(fileId, updater) {
@@ -249,6 +341,7 @@ function clearCachedFiles() {
   allFiles = [];
   uploadFiles = [];
   dashRecentFiles = [];
+  allFilesLoaded = false;
   renderEverywhereFromCache();
 }
 
@@ -268,15 +361,5 @@ function removeCachedNonDefaultFolders() {
 }
 
 function syncCachesSilently() {
-  Promise.all([
-    fetch('/api/folders').then(res => res.json()),
-    fetch('/api/files?sort=date').then(res => res.json()),
-  ]).then(([folders, files]) => {
-    allFolders = folders;
-    allFiles = files;
-    uploadFiles = filterRecentUploadFiles(files);
-    dashRecentFiles = [...files];
-    allFilesLoaded = true;
-    renderEverywhereFromCache();
-  }).catch(() => {});
+  return fetchFreshAuthenticatedAppData().catch(() => null);
 }

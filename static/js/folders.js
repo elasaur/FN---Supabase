@@ -24,7 +24,7 @@ async function confirmDeleteFolder(button) {
   if (folderToDeleteId === null) return;
   const id = folderToDeleteId;
   const btn = getActionButton(button);
-  setButtonLoading(btn, true, 'Deleting...');
+  await beginButtonAction(btn, 'Deleting...');
 
   const deleted = await deleteFolder(id);
   setButtonLoading(btn, false);
@@ -47,12 +47,15 @@ function hideDeleteFolderModal(modalId) {
 // Folders feature: list, sort, pin, open, edit, note, and delete folders.
 // Loads folders from the API and renders the folder grid.
 async function loadFolders() {
+  if (hasAuthenticatedAppData()) {
+    renderFolderGrid();
+    syncCachesSilently();
+    return;
+  }
+
   setFoldersLoading();
   try {
-    const res = await fetch('/api/folders');
-    if (!res.ok) throw new Error('Could not load folders.');
-    allFolders = await res.json();
-    renderFolderGrid();
+    await fetchFreshAuthenticatedAppData();
   } catch (err) {
     renderFoldersLoadError(err);
     showToast(err.message || 'Could not load folders.', 'error');
@@ -607,7 +610,7 @@ async function submitCreateFolder(button) {
 
   let toastMessage = '';
   let toastType = 'success';
-  setButtonLoading(btn, true, 'Creating...');
+  await beginButtonAction(btn, 'Creating...');
   try {
     const res = await fetch('/api/folders', {
       method: 'POST',
@@ -695,7 +698,7 @@ async function submitEditFolder(button) {
 
   let toastMessage = '';
   let toastType = 'success';
-  setButtonLoading(btn, true, 'Saving...');
+  await beginButtonAction(btn, 'Saving...');
   try {
     const res = await fetch(`/api/folders/${id}`, {
       method: 'PUT',

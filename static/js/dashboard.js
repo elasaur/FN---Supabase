@@ -2,37 +2,13 @@
 
 async function loadDashboard() {
   updateDashboardGreeting();
-  setDashboardLoading();
-  const [data, folders, files] = await Promise.all([
-    apiGet('/api/stats'),
-    apiGet('/api/folders'),
-    apiGet('/api/files?sort=date'),
-  ]);
+  if (hasAuthenticatedAppData()) {
+    renderDashboardFromCache();
+    syncCachesSilently();
+    return;
+  }
 
-  document.getElementById('dashTotalFolders').textContent = data.total_folders;
-  document.getElementById('dashTotalFiles').textContent = data.total_files;
-  document.getElementById('dashRecentCount').textContent = data.recent_count;
-  document.getElementById('dashAiAccepted').textContent = `${data.ai_suggestions_accepted} / ${data.total_files}`;
-  if (typeof renderSidebarStorage === 'function') renderSidebarStorage(data);
-
-  allFolders = folders;
-  allFiles = files;
-  uploadFiles = filterRecentUploadFiles(files);
-  allFilesLoaded = true;
-
-  const pinned = allFolders.filter(f => f.pinned);
-  const pinnedEl = document.getElementById('dashPinnedFolders');
-  pinnedEl.innerHTML = pinned.length
-    ? pinned.map(f => makeFolderCard(f, true)).join('')
-    : `<div class="empty-state" style="grid-column:1/-1;padding:20px;">
-    <div class="es-icon">${filledSvgIcon('pin-folder.svg', 'empty-svg-icon')}</div>
-    <div class="es-text">
-        No pinned folders yet - pin one from the Folders page!
-    </div>
-</div>`;
-
-  dashRecentFiles = files;
-  renderDashboardRecentUploads();
+  await fetchFreshAuthenticatedAppData();
 }
 
 function displayGivenNames(fullName) {
@@ -53,8 +29,12 @@ function philippineGreeting() {
 function updateDashboardGreeting(name) {
   const greetText = document.getElementById('greetText');
   const greetName = document.getElementById('greetName');
-  if (greetText) greetText.textContent = philippineGreeting();
-  if (greetName) greetName.textContent = displayGivenNames(name || window.FILE_NEST_USER?.name || greetName.textContent);
+  if (greetText) greetText.textContent = window.FILE_NEST_USER?.dashboardGreeting || philippineGreeting();
+  if (greetName) {
+    greetName.textContent = displayGivenNames(
+      name || window.FILE_NEST_USER?.dashboardName || window.FILE_NEST_USER?.name || greetName.textContent
+    );
+  }
 }
 
 function updateDashboardRecentSortLabel() {

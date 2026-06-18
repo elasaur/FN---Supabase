@@ -17,6 +17,7 @@ const SESSION_ACTIVITY_SYNC_MS = 5 * 60 * 1000;
       sessionStorage.removeItem('fn_access');
       sessionStorage.removeItem('fn_refresh');
     } catch (_) {}
+    if (typeof clearAuthenticatedAppCache === 'function') clearAuthenticatedAppCache();
   }
 
   // Logs out locally and shows the expired-session UI once.

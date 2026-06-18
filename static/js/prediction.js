@@ -219,7 +219,7 @@ async function createNewFolder(button) {
 
   let toastMessage = '';
   let toastType = 'success';
-  setButtonLoading(btn, true, 'Creating...');
+  await beginButtonAction(btn, 'Creating...');
   try {
     const res = await fetch('/api/folders', {
       method: 'POST',

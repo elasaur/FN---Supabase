@@ -19,22 +19,35 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet"></noscript>
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/reusable_style.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/folders.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/files.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/notes.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/search-modal.css') }}">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/folders.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/files.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/notes.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/stats.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/settings.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/upload.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/modal.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/auth.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/toast.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ url_for('static', filename='css/search-modal.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/folders.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/files.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/notes.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/search-modal.css') }}">
+</noscript>
 </head>
 <body>
 
@@ -59,31 +72,34 @@
 
 <script>
   window.FILE_NEST_USER = {
+    id: {{ (user['id'] or '')|tojson }},
     name: {{ (user['name'] or '')|tojson }},
-    email: {{ (user['email'] or '')|tojson }}
+    email: {{ (user['email'] or '')|tojson }},
+    dashboardName: {{ (dashboard_name or '')|tojson }},
+    dashboardGreeting: {{ (dashboard_greeting or '')|tojson }}
   };
   window.FILE_NEST_SESSION_EXPIRES_AT = {{ (session_expires_at or '')|tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/config.js') }}"></script>
-<script src="{{ url_for('static', filename='js/state.js') }}"></script>
-<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/api.js') }}"></script>
-<script src="{{ url_for('static', filename='js/modals.js') }}"></script>
-<script src="{{ url_for('static', filename='js/security.js') }}"></script>
-<script src="{{ url_for('static', filename='js/folders.js') }}"></script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-<script src="{{ url_for('static', filename='js/files.js') }}"></script>
-<script src="{{ url_for('static', filename='js/notes.js') }}"></script>
-<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
-<script src="{{ url_for('static', filename='js/prediction.js') }}"></script>
-<script src="{{ url_for('static', filename='js/toast.js') }}"></script>  
-<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
-<script src="{{ url_for('static', filename='js/password_validation.js') }}"></script>
-<script src="{{ url_for('static', filename='js/password_toggle.js') }}"></script>
-<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
-<script src="{{ url_for('static', filename='js/search.js') }}"></script>
-<script src="{{ url_for('static', filename='js/navigation.js') }}"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/config.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/state.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/modals.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/security.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/folders.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/files.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/notes.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/stats.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/prediction.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/upload.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/password_validation.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/password_toggle.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/settings.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/navigation.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 
 </body>

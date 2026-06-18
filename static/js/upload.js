@@ -173,7 +173,7 @@ async function confirmUpload(button) {
   if (!validateUploadSize(currentFile)) return;
   uploadSaveInFlight = true;
   resetUploadZone();
-  setButtonLoading(btn, true, 'Saving...');
+  await beginButtonAction(btn, 'Saving...');
   document.getElementById('predictionCard').classList.add('saving');
 
   let toastMessage = '';
@@ -258,11 +258,14 @@ function cancelUpload() {
 async function loadUploadFileList(sortMode) {
   if (sortMode) uploadSortMode = sortMode;
   const list    = document.getElementById('fileList');
+  if (hasAuthenticatedAppData()) {
+    sortUploadFilesCache();
+    renderUploadFileList();
+    syncCachesSilently();
+    return;
+  }
   if (list) list.innerHTML = '<div style="text-align:center;padding:24px;"><div class="spinner"></div></div>';
-  const res = await fetch(`/api/files?sort=${fileSortApiParam(uploadSortMode)}&recent_minutes=5&t=${Date.now()}`);
-  uploadFiles = await res.json();
-  sortUploadFilesCache();
-  renderUploadFileList();
+  await fetchFreshAuthenticatedAppData();
 }
 
 function sortUploadFilesCache() {

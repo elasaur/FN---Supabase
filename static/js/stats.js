@@ -3,21 +3,14 @@ let activeTypeSegment = null;
 const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024;
 
 async function loadStats() {
-  setStatsLoading();
-  const [statsRes, chartRes, filesRes] = await Promise.all([
-    fetch('/api/stats'), fetch('/api/stats/chart'), fetch('/api/files'),
-  ]);
-  const stats = await statsRes.json();
-  const chartData = await chartRes.json();
-  const files = await filesRes.json();
-  allFiles = files;
-  uploadFiles = filterRecentUploadFiles(files);
-  allFilesLoaded = true;
+  if (hasAuthenticatedAppData()) {
+    renderStatsFromCache();
+    syncCachesSilently();
+    return;
+  }
 
-  renderAiSortingSummary(stats);
-  renderStorageUsage(stats);
-  renderFolderBars(chartData);
-  renderTypeDonut(files);
+  setStatsLoading();
+  await fetchFreshAuthenticatedAppData();
 }
 
 function formatStorageRemaining(bytes, usedBytes) {

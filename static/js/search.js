@@ -100,7 +100,7 @@ async function selectSearchResult(item) {
     const folderName = decodeSearchData(item.getAttribute('data-folder-name'), 'Folder');
     const folderEmoji = decodeSearchData(item.getAttribute('data-folder-emoji'), 'folder');
 
-    await loadAllFiles();
+    await loadAllFiles('', true);
     if (folderId) {
       await openFolderFiles(folderId, folderName, folderEmoji);
       return;

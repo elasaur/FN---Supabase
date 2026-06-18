@@ -19,6 +19,7 @@ function handleSessionExpired() {
       sessionStorage.removeItem('fn_access');
       sessionStorage.removeItem('fn_refresh');
     } catch (_) {}
+    if (typeof clearAuthenticatedAppCache === 'function') clearAuthenticatedAppCache();
     window.location.href = "/login?expired=1";
 }
 

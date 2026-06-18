@@ -7,19 +7,37 @@ function updateTopbarCopy(title, subtitle) {
   if (topbarSub) topbarSub.textContent = subtitle || '';
 }
 
-function navigate(page, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+function runAfterNavigationPaint(callback) {
+  if (typeof callback !== 'function') return;
+  requestAnimationFrame(() => requestAnimationFrame(callback));
+}
 
-  document.getElementById('page-' + page).classList.add('active');
+function loadPageDataAfterPaint(page) {
+  if (window.initialDataLoaded) return;
+  runAfterNavigationPaint(() => {
+    if (!document.getElementById('page-' + page)?.classList.contains('active')) return;
+    if (page === 'dashboard') loadDashboard();
+    if (page === 'folders') loadFolders();
+    if (page === 'files') loadAllFiles();
+    if (page === 'stats') loadStats();
+    if (page === 'upload') loadUploadFileList();
+  });
+}
+
+function navigate(page, el) {
+  const nextPage = document.getElementById('page-' + page);
+  if (!nextPage) return;
+
+  const activePage = document.querySelector('.page.active');
+  const activeNav = document.querySelector('.nav-item.active');
+  if (activePage !== nextPage) activePage?.classList.remove('active');
+  if (activeNav !== el) activeNav?.classList.remove('active');
+
+  nextPage.classList.add('active');
   if (el) el.classList.add('active');
   updateTopbarCopy(pageTitles[page] || page, pageSubtitles[page] || '');
 
-  if (!window.initialDataLoaded && page === 'dashboard') loadDashboard();
-  if (!window.initialDataLoaded && page === 'folders') loadFolders();
-  if (!window.initialDataLoaded && page === 'files') loadAllFiles();
-  if (!window.initialDataLoaded && page === 'stats') loadStats();
-  if (!window.initialDataLoaded && page === 'upload') loadUploadFileList();
+  loadPageDataAfterPaint(page);
   if (page === 'settings') loadMemberSince();
 }
 
@@ -32,5 +50,6 @@ async function confirmLogout() {
     sessionStorage.removeItem('fn_access');
     sessionStorage.removeItem('fn_refresh');
   } catch (_) {}
+  if (typeof clearAuthenticatedAppCache === 'function') clearAuthenticatedAppCache();
   window.location.replace('/logout');
 }

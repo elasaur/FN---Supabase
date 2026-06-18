@@ -80,6 +80,12 @@ LOGIN_LOCKOUT_DURATION = timedelta(hours=24)
 LOGIN_ATTEMPTS_FILE = os.path.join(app.instance_path, 'login_attempts.json')
 ANALYZE_REQUEST_DIR = os.path.join(UPLOAD_FOLDER, '.analyze_requests')
 ANALYZE_REQUEST_LOCK = threading.Lock()
+PUBLIC_WARMUP_LOCK = threading.Lock()
+PUBLIC_WARMUP_STATE = {
+    "running": False,
+    "done": False,
+    "error": "",
+}
 
 
 class DuplicateFileError(Exception):
@@ -96,6 +102,63 @@ limiter = Limiter(
     default_limits=["2000 per day", "300 per hour"],
 )
 app.teardown_appcontext(close_db)
+
+
+def start_public_warmup():
+    with PUBLIC_WARMUP_LOCK:
+        if PUBLIC_WARMUP_STATE["running"] or PUBLIC_WARMUP_STATE["done"]:
+            return
+        PUBLIC_WARMUP_STATE["running"] = True
+        PUBLIC_WARMUP_STATE["error"] = ""
+
+    thread = threading.Thread(
+        target=run_public_warmup,
+        name="filenest-public-warmup",
+        daemon=True,
+    )
+    thread.start()
+
+
+def run_public_warmup():
+    error = ""
+    try:
+        warm_public_services()
+    except Exception:
+        error = "warmup_failed"
+        app.logger.exception("Public login-page warmup failed.")
+    finally:
+        with PUBLIC_WARMUP_LOCK:
+            PUBLIC_WARMUP_STATE["running"] = False
+            PUBLIC_WARMUP_STATE["done"] = not bool(error)
+            PUBLIC_WARMUP_STATE["error"] = error
+
+
+def warm_public_services():
+    # Only config/schema-level work is warmed here. No user, file, folder row,
+    # storage object, or account metadata is loaded before authentication.
+    with app.app_context():
+        init_db()
+        db = get_db()
+        try:
+            db._request("GET", "folders", params={"select": "id", "limit": "0"})
+        finally:
+            close_db()
+
+    import nlp_analyzer
+
+    getattr(nlp_analyzer, "analyze_file", None)
+    try:
+        from textblob import Word
+        Word("files").singularize()
+    except Exception:
+        app.logger.debug("TextBlob warmup skipped.", exc_info=True)
+
+    try:
+        gemini_key = nlp_analyzer._runtime_env_value("GEMINI_API_KEY").strip()
+        if gemini_key and not nlp_analyzer._runtime_env_flag("DISABLE_GEMINI"):
+            nlp_analyzer._get_client()
+    except Exception:
+        app.logger.debug("Gemini warmup skipped.", exc_info=True)
 
 
 @app.route('/icons-pack/<path:filename>')
@@ -147,6 +210,22 @@ def add_security_headers(response):
 
 def now_utc():
     return datetime.now(timezone.utc)
+
+
+MANILA_TZ = timezone(timedelta(hours=8))
+
+
+def dashboard_display_name(name):
+    return str(name or '').strip() or 'there'
+
+
+def dashboard_greeting_text(dt=None):
+    local_now = (dt or now_utc()).astimezone(MANILA_TZ)
+    if local_now.hour < 12:
+        return 'Good morning'
+    if local_now.hour < 18:
+        return 'Good afternoon'
+    return 'Good evening'
 
 
 def allowed_file(filename):
@@ -875,6 +954,19 @@ def clear_failed_logins(email):
         save_login_attempts(attempts)
 
 
+@app.route('/api/public/warmup', methods=['POST'])
+@limiter.limit("30 per minute")
+def api_public_warmup():
+    start_public_warmup()
+    with PUBLIC_WARMUP_LOCK:
+        state = dict(PUBLIC_WARMUP_STATE)
+    return jsonify({
+        'success': True,
+        'running': state['running'],
+        'ready': state['done'],
+    })
+
+
 # Authentication and public pages: login, signup, logout, and static pages.
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit(
@@ -936,12 +1028,14 @@ def index():
     if session_is_active():
         return redirect(url_for('dashboard'))
 
+    start_public_warmup()
     return render_template('index.html')
 
 @app.route('/index.html')
 def index_html():
     if session_is_active():
         return redirect(url_for('dashboard'))
+    start_public_warmup()
     return render_template('index.html', token='')
 
 @app.route('/')
@@ -1127,6 +1221,8 @@ def dashboard():
     return render_template(
         'app.html',
         user=user,
+        dashboard_greeting=dashboard_greeting_text(),
+        dashboard_name=dashboard_display_name(user.get('name')),
         session_expires_at=expires_at.isoformat() if expires_at else '',
     )
 
@@ -1512,8 +1608,8 @@ def api_reanalyze_file_summary(file_id):
 # AI analysis API: extract file text and return ranked folder suggestions.
 @app.route('/api/analyze', methods=['POST'])
 @login_required
-@limiter.limit("3 per minute")
-@limiter.limit("1 per 5 seconds")
+@limiter.limit("12 per minute")
+@limiter.limit("1 per second")
 def api_analyze():
 
     # AI analysis flow: keep the session active during longer Gemini work.

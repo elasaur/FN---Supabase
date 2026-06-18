@@ -26,7 +26,7 @@ async function saveName(button) {
   const v = document.getElementById('editNameInput').value.trim();
   if (!v) return;
 
-  setButtonLoading(btn, true, 'Saving...');
+  await beginButtonAction(btn, 'Saving...');
   try {
     const res = await fetch('/api/user', {
       method:  'PUT',
@@ -72,7 +72,7 @@ async function saveEmail(button) {
   const v = document.getElementById('editEmailInput').value.trim();
   if (!v) return;
 
-  setButtonLoading(btn, true, 'Saving...');
+  await beginButtonAction(btn, 'Saving...');
   try {
     const res = await fetch('/api/user', {
       method:  'PUT',
@@ -198,7 +198,7 @@ async function savePassword(button) {
   }
 
   setSettingsPasswordMessage('');
-  setButtonLoading(btn, true, 'Updating...');
+  await beginButtonAction(btn, 'Updating...');
   try {
     const res = await fetch('/api/user/password', {
       method:  'PUT',
@@ -280,7 +280,7 @@ async function deleteAllFiles() {
 
 async function confirmDeleteAllFiles(button) {
   const btn = getActionButton(button);
-  setButtonLoading(btn, true, 'Deleting...');
+  await beginButtonAction(btn, 'Deleting...');
   let toastMessage = '';
   let toastType = 'warn';
   const res  = await fetch('/api/files/delete-all', {
@@ -308,7 +308,7 @@ async function deleteAllFolders() {
 
 async function confirmDeleteAllFolders(button) {
   const btn = getActionButton(button);
-  setButtonLoading(btn, true, 'Deleting...');
+  await beginButtonAction(btn, 'Deleting...');
   let toastMessage = '';
   let toastType = 'warn';
   const res  = await fetch('/api/folders/delete-all', {
@@ -336,7 +336,7 @@ async function deactivateAccount() {
 
 async function confirmDeactivateAccount(button) {
   const btn = getActionButton(button);
-  setButtonLoading(btn, true, 'Deactivating...');
+  await beginButtonAction(btn, 'Deactivating...');
   const res  = await fetch('/api/user/deactivate', {
     method:  'DELETE',
     headers: authHeaders(),
@@ -349,6 +349,7 @@ async function confirmDeactivateAccount(button) {
         type: 'success',
       }));
     } catch (_) {}
+    if (typeof clearAuthenticatedAppCache === 'function') clearAuthenticatedAppCache();
     if (typeof TokenStore !== 'undefined') TokenStore.clear();
     window.location.href = '/';
   } else {
@@ -364,7 +365,7 @@ async function deleteAccount() {
 
 async function confirmDeleteAccount(button) {
   const btn = getActionButton(button);
-  setButtonLoading(btn, true, 'Deleting...');
+  await beginButtonAction(btn, 'Deleting...');
   const res  = await fetch('/api/user/delete', {
     method:  'DELETE',
     headers: authHeaders(),
@@ -377,6 +378,7 @@ async function confirmDeleteAccount(button) {
         type: 'success',
       }));
     } catch (_) {}
+    if (typeof clearAuthenticatedAppCache === 'function') clearAuthenticatedAppCache();
     if (typeof TokenStore !== 'undefined') TokenStore.clear();
     window.location.href = '/';
   } else {

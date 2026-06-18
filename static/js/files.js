@@ -1,10 +1,20 @@
 // All files feature: list, sort, rename, move, download, and delete files.
 
-async function loadAllFiles(search) {
+async function loadAllFiles(search, forceFresh = false) {
   let url = `/api/files?sort=${fileSortApiParam(allFilesSortMode)}`;
   if (search) url += `&search=${encodeURIComponent(search)}`;
   const tbody = document.getElementById('allFilesTbody');
+  if (!search && !forceFresh && hasAuthenticatedAppData()) {
+    sortAllFilesCache();
+    renderAllFilesTable();
+    syncCachesSilently();
+    return;
+  }
   if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr>`;
+  if (!search) {
+    await fetchFreshAuthenticatedAppData();
+    return;
+  }
   const res = await fetch(url);
   allFiles = await res.json();
   allFilesLoaded = true;
@@ -137,7 +147,7 @@ async function submitRenameFile(button) {
     return;
   }
 
-  setButtonLoading(btn, true, 'Renaming...');
+  await beginButtonAction(btn, 'Renaming...');
   try {
     const res = await fetch(`/api/files/${fileToRenameId}/rename`, {
       method: 'PUT',
@@ -197,7 +207,7 @@ async function submitMoveFile(button) {
   if (!fileToMoveId) return;
   const btn = getActionButton(button);
   const folderId = document.getElementById('moveFileFolder').value;
-  setButtonLoading(btn, true, 'Moving...');
+  await beginButtonAction(btn, 'Moving...');
   try {
     const res = await fetch(`/api/files/${fileToMoveId}/move`, {
       method: 'PUT',
@@ -245,7 +255,7 @@ async function deleteFileById(id, button, confirmed = false) {
     return;
   }
   const btn = getActionButton(button);
-  setButtonLoading(btn, true, 'Deleting...');
+  await beginButtonAction(btn, 'Deleting...');
   try {
     const res  = await fetch(`/api/files/${id}`, { method:'DELETE' });
     const data = await res.json();

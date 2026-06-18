@@ -2,13 +2,17 @@
 document.addEventListener('DOMContentLoaded', async () => {
   window.initialDataLoaded = false;
   updateDashboardGreeting?.();
+  const hydrated = typeof hydrateAuthenticatedAppCache === 'function' && hydrateAuthenticatedAppCache();
+
+  if (hydrated) {
+    if (typeof renderEverywhereFromCache === 'function') renderEverywhereFromCache();
+    window.initialDataLoaded = true;
+    syncCachesSilently?.();
+    return;
+  }
+
   try {
     await loadDashboard();
-    if (typeof renderFolderGrid === 'function') renderFolderGrid();
-    if (typeof sortAllFilesCache === 'function') sortAllFilesCache();
-    if (typeof renderAllFilesTable === 'function') renderAllFilesTable();
-    if (typeof renderUploadFileList === 'function') renderUploadFileList();
-    if (typeof renderStatsFromCache === 'function') renderStatsFromCache();
   } catch (err) {
     if (typeof showToast === 'function') showToast('Could not load dashboard data.', 'error');
   } finally {

@@ -470,8 +470,23 @@ function setButtonLoading(button, loading, label) {
   }
 }
 
-async function withButtonLoading(button, label, task) {
+function waitForNextPaint() {
+  return new Promise(resolve => {
+    if (typeof requestAnimationFrame !== 'function') {
+      setTimeout(resolve, 0);
+      return;
+    }
+    requestAnimationFrame(() => resolve());
+  });
+}
+
+async function beginButtonAction(button, label) {
   setButtonLoading(button, true, label);
+  await waitForNextPaint();
+}
+
+async function withButtonLoading(button, label, task) {
+  await beginButtonAction(button, label);
   try {
     return await task();
   } finally {

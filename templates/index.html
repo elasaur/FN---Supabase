@@ -20,7 +20,49 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/reusable_style.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/pages.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/folders.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/files.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/notes.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/stats.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/settings.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/upload.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/modal.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/toast.css') }}">
+  <link rel="preload" as="style" href="{{ url_for('static', filename='css/search-modal.css') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/config.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/state.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/utils.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/api.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/modals.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/security.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/folders.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/dashboard.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/files.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/notes.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/stats.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/prediction.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/upload.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/settings.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/search.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/navigation.js') }}">
+  <link rel="preload" as="script" href="{{ url_for('static', filename='js/main.js') }}">
+  <link rel="preload" as="image" href="{{ url_for('static', filename='images/logo.png') }}">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/dash-folder.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/dash-file.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/dash-calendar.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/dash-ai.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/filled/dash-folder.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/filled/file.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/filled/calendar.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/filled/pin-folder.svg">
+  <link rel="preload" as="image" href="/icons-pack/custom-svg/filled/sticky-note.svg">
+  <link rel="preload" as="image" href="/icons-pack/005-txt.png">
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/reusable_style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
@@ -269,6 +311,22 @@
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
 <script src="{{ url_for('static', filename='js/password_validation.js') }}"></script>
 <script src="{{ url_for('static', filename='js/password_toggle.js') }}"></script>
+<script>
+(() => {
+  const warmupUrl = '/api/public/warmup';
+  try {
+    if (navigator.sendBeacon && navigator.sendBeacon(warmupUrl, new Blob(['{}'], { type: 'application/json' }))) {
+      return;
+    }
+  } catch (_) {}
+  fetch(warmupUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+    keepalive: true,
+  }).catch(() => {});
+})();
+</script>
 
 <script>
 // ── Token Storage Helpers ────────────────────────────────────────────────────
@@ -382,6 +440,7 @@ async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
   const errEl    = document.getElementById('loginError');
+  let redirecting = false;
   errEl.classList.remove('success');
   errEl.style.display = 'none';
 
@@ -402,7 +461,9 @@ async function doLogin() {
     const data = await res.json();
 
     if (data.success) {
-      window.location.href = '/dashboard';
+      redirecting = true;
+      window.location.replace('/dashboard');
+      return;
     } else {
       errEl.textContent    = data.message;
       errEl.style.display  = 'block';
@@ -411,7 +472,7 @@ async function doLogin() {
     errEl.textContent = 'Something went wrong. Try again.';
     errEl.style.display = 'block';
   } finally {
-    setAuthButtonLoading(btn, false);
+    if (!redirecting) setAuthButtonLoading(btn, false);
   }
 }
 
@@ -424,6 +485,7 @@ async function doSignup() {
   const confirm  = document.getElementById('signupConfirm').value.trim();
   const termsAccepted = document.getElementById('signupTerms').checked;
   const errEl    = document.getElementById('signupError');
+  let redirecting = false;
   errEl.style.display = 'none';
 
   if (!name || !email || !password || !confirm) {
@@ -465,7 +527,9 @@ async function doSignup() {
       showLogin();
     } else {
       // Signup successful, redirect to dashboard
-      window.location.href = '/dashboard';
+      redirecting = true;
+      window.location.replace('/dashboard');
+      return;
     }
   } else {
     errEl.textContent   = data.message;
@@ -475,8 +539,10 @@ async function doSignup() {
     errEl.textContent = 'Something went wrong. Try again.';
     errEl.style.display = 'block';
   } finally {
-    setAuthButtonLoading(btn, false);
-    updateSignupSubmitState();
+    if (!redirecting) {
+      setAuthButtonLoading(btn, false);
+      updateSignupSubmitState();
+    }
   }
 }
 
