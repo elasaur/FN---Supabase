@@ -1,13 +1,13 @@
 """
 File Nest - NLP Analyzer Module
 
-Uses Gemini 2.5 Flash to suggest folders based on file content.
+Uses Gemini 3.1 Flash-Lite to suggest folders based on file content.
 Falls back to TextBlob analysis when Gemini is unavailable.
 
 Flow:
     1. Upload file → detect type → extract text
     2. Clean and limit text (~1000 words)
-    3. Send filename + text to Gemini 2.5 Flash
+    3. Send filename + text to Gemini 3.1 Flash-Lite
     4. Return 3 ranked folder suggestions
        └─ Gemini fail → TextBlob
 
@@ -353,7 +353,7 @@ Rules:
 
         client = _get_client()
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.1-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.2,

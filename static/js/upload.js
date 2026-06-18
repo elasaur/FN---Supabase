@@ -111,7 +111,7 @@ async function handleFiles(files) {
       }
       if (engineLabel) {
         engineLabel.textContent =
-          'Analyzed by Gemini 2.5 Flash · Review and confirm below';
+          'Analyzed by Gemini 3.1 Flash-Lite · Review and confirm below';
         engineLabel.style.color = '';
       }
     }
