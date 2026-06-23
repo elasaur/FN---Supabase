@@ -33,6 +33,10 @@
   background: var(--folder-color, var(--accent));
 }
 .folder-card:hover { box-shadow: var(--shadow2); border-color: var(--folder-color, var(--accent2)); }
+.folder-card.temp-highlight {
+  border-color: var(--folder-color, var(--accent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--folder-color, var(--accent)) 28%, transparent), var(--shadow2);
+}
 .folder-emoji { font-size: 2rem; margin-bottom: 10px; display: block; width: max-content; }
 .folder-name { font-weight: 800; font-size: 0.92rem; margin-bottom: 4px; }
 .folder-count { font-size: 0.78rem; color: var(--text3); font-weight: 600; }
@@ -78,11 +82,6 @@
 .folder-top-right {
   position: absolute; top: 10px; right: 10px;
   display: flex; align-items: center; gap: 6px;
-}
-.folder-badge {
-  background: var(--folder-color, var(--accent));
-  color: #fff; font-size: 0.7rem; font-weight: 800;
-  padding: 2px 8px; border-radius: 20px;
 }
 
 .pinned-dot {

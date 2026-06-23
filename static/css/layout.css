@@ -165,8 +165,10 @@ svg.nav-icon {
 .sidebar-footer {
   margin-top: auto;
   padding: 16px 14px;
-  border-top: 1px solid rgba(236,221,211,0.78);
   flex-shrink: 0;
+}
+.sidebar-footer .sidebar-storage {
+  margin-top: 10px;
 }
 .user-card {
   display: flex; align-items: center; gap: 10px;

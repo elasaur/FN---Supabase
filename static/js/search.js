@@ -81,7 +81,7 @@ function showSearchModal(files, folders, searchVal) {
   });
 }
 
-async function selectSearchResult(item) {
+function selectSearchResult(item) {
   const type = item.getAttribute('data-type');
   const id = Number(item.getAttribute('data-id'));
 
@@ -90,8 +90,7 @@ async function selectSearchResult(item) {
   if (type === 'folder') {
     const label = decodeSearchData(item.getAttribute('data-name'), item.querySelector('.search-modal-label')?.textContent || '');
     const emoji = decodeSearchData(item.getAttribute('data-emoji'), 'folder');
-
-    await openFolderFiles(id, label, emoji);
+    void openFolderFiles(id, label, emoji);
     return;
   }
 
@@ -100,13 +99,14 @@ async function selectSearchResult(item) {
     const folderName = decodeSearchData(item.getAttribute('data-folder-name'), 'Folder');
     const folderEmoji = decodeSearchData(item.getAttribute('data-folder-emoji'), 'folder');
 
-    await loadAllFiles('', true);
     if (folderId) {
-      await openFolderFiles(folderId, folderName, folderEmoji);
+      void openFolderFiles(folderId, folderName, folderEmoji);
       return;
     }
 
-    openFileFolder(id);
+    navigate('files', document.getElementById('nav-files'));
+    renderAllFilesTable();
+    highlightFileRow(id);
   }
 }
 
@@ -153,6 +153,15 @@ function highlightFileRow(fileId) {
   }
 }
 
+function highlightFolderCard(folderId) {
+  const card = document.querySelector(`#allFoldersList .folder-card[data-folder-id="${folderId}"]`);
+  if (card) {
+    card.classList.add('temp-highlight');
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => card.classList.remove('temp-highlight'), 1200);
+  }
+}
+
 async function onGlobalSearch(val, forceModal) {
   const searchVal = String(val || '').trim();
   lastSearchVal = searchVal;
@@ -192,7 +201,7 @@ async function onGlobalSearch(val, forceModal) {
         showSearchModal([], [], searchVal);
       }
     }
-  }, hasLocalCache ? 180 : 0);
+  }, 0);
 }
 
 // Register input and keydown handlers for global search bar

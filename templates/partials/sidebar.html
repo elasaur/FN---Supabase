@@ -25,6 +25,15 @@
     <div class="nav-label">Account</div>
     <div class="nav-item" id="nav-settings" onclick="navigate('settings',this)"><span class="svg-icon nav-icon icon icon-setting" aria-hidden="true"></span>Settings</div>
     <div class="nav-item" onclick="doLogout()"><span class="svg-icon nav-icon icon icon-logout" aria-hidden="true"></span>Logout</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="userAvatar">{{ user['name'][0].upper() }}</div>
+      <div>
+        <div class="user-name" id="userName">{{ user['name'] }}</div>
+        <div class="user-email" id="userEmail">{{ user['email'] }}</div>
+      </div>
+    </div>
     <div class="sidebar-storage" id="sidebarStorageSummary">
       <div class="sidebar-storage-head">
         <span>Storage</span>
@@ -34,15 +43,6 @@
         <div class="sidebar-storage-fill" id="sidebarStorageFill" style="width:0%;"></div>
       </div>
       <div class="sidebar-storage-meta" id="sidebarStorageMeta">0 B used</div>
-    </div>
-  </div>
-  <div class="sidebar-footer">
-    <div class="user-card">
-      <div class="avatar" id="userAvatar">{{ user['name'][0].upper() }}</div>
-      <div>
-        <div class="user-name" id="userName">{{ user['name'] }}</div>
-        <div class="user-email" id="userEmail">{{ user['email'] }}</div>
-      </div>
     </div>
   </div>
 </div>

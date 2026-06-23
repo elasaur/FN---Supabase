@@ -1,13 +1,13 @@
 """
 File Nest - NLP Analyzer Module
 
-Uses Gemini 3.1 Flash-Lite to suggest folders based on file content.
+Uses Gemini 3.1 Flash Lite to suggest folders based on file content.
 Falls back to TextBlob analysis when Gemini is unavailable.
 
 Flow:
     1. Upload file → detect type → extract text
     2. Clean and limit text (~1000 words)
-    3. Send filename + text to Gemini 3.1 Flash-Lite
+    3. Send filename + text to Gemini 3.1 Flash Lite
     4. Return 3 ranked folder suggestions
        └─ Gemini fail → TextBlob
 
@@ -335,14 +335,19 @@ Content: {summary_context if summary_context.strip() else "(none - use filename/
 Existing folders: {existing_folders_str}
 
 Rules:
-- file_summary: one plain paragraph, maximum 200 words, factual, no markdown
-- Specific names only (no: Documents, Files, Misc, General, Uploads, Other)
-- Reuse existing folders when relevant (is_new: false, exact name)
-- Vary: (1) most specific, (2) broader, (3) alternative angle
-- Title Case, 2-4 words, no special characters
-- Confidence: 85-100 strong, 65-84 good, 40-64 reasonable
-- Reason: <=8 words (e.g. "Contains ISTQB and testing content.")
-- One emoji per folder
+- file_summary: one plain paragraph, factual, max 120 words.
+- Suggest exactly 3 folders.
+- Folder names must be specific, Title Case, 2-4 words, no special characters.
+- Do not use generic names: Documents, Files, Misc, General, Uploads, Other, School, Work.
+- Option 1: most specific.
+- Option 2: broader but still specific.
+- Option 3: alternative angle.
+- Reuse existing folder only if clearly relevant. Copy exact name, emoji and set is_new false.
+- If no close match exists, create a new unique folder and set is_new true.
+- Avoid repeating folder names unless the topic is truly the same.
+- confidence: 85-100 strong, 65-84 good, 40-64 reasonable.
+- reason: 8 words or fewer.
+- emoji: one related emoji.
 
 {{"file_summary":"...","suggestions":[{{"folder_name":"...","emoji":"...","is_new":true,"confidence":85,"reason":"..."}}]}}"""
 

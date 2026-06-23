@@ -148,7 +148,6 @@ function makeFolderCard(f, minimal) {
   const encodedEmoji = encodeURIComponent(f.emoji || 'folder');
   const actions = `
     <div class="folder-top-right" onclick="event.stopPropagation()">
-      <div class="folder-badge">${count}</div>
       <div class="folder-menu-wrap">
         <button class="folder-menu-btn"
           data-folder-id="${f.id}"
@@ -164,7 +163,7 @@ function makeFolderCard(f, minimal) {
       </div>
     </div>`;
   return `
-    <div class="folder-card" style="--folder-color:${f.color};" onclick="openFolderCard(${f.id},'${encodedName}','${encodedEmoji}')">
+    <div class="folder-card" data-folder-id="${f.id}" style="--folder-color:${f.color};" onclick="openFolderCard(${f.id},'${encodedName}','${encodedEmoji}')">
       ${pinDot}
       ${actions}
       ${icon}

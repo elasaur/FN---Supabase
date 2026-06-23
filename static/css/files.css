@@ -3,6 +3,10 @@ tr.temp-highlight td {
   background: var(--accent3) !important;
   transition: background 0.5s;
 }
+.folder-file-row.temp-highlight {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent3), var(--shadow2);
+}
 /* ── FILE TABLE ── */
 .files-table-card { padding: 0; overflow: hidden; }
 .files-table-scroll {
