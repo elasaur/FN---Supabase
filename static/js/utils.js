@@ -204,12 +204,6 @@ function showFileSummaryNote(event, button) {
       <div class="file-summary-note-title">${escHtml(payload.name || 'File')}</div>
     </div>
     <div class="file-summary-note-body">${escHtml(summaryWords(payload.summary, 200) || 'No AI summary saved for this file.')}</div>
-    <div class="file-summary-note-actions">
-      <button type="button" class="file-summary-reanalyze-btn"
-        ${fileId ? `onclick="reanalyzeFileSummary(event, ${fileId}, this)"` : 'disabled'}>
-        Re-analyze Summary
-      </button>
-    </div>
   `;
   note.classList.add('open');
 

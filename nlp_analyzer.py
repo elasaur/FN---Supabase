@@ -71,6 +71,7 @@ def _runtime_env_flag(name: str) -> bool:
 
 _GENERIC_FOLDER_NAMES = {"documents", "files", "misc", "general", "uploads", "other"}
 
+# Simple heuristic to assign an emoji based on keywords in the folder name.
 _EMOJI_COLORS = {
     "📁": ("#e8b84b", "#fef7dd"), "🗂️": ("#e8b84b", "#fef7dd"),
     "📂": ("#e8b84b", "#fef7dd"), "🗃️": ("#9b87d4", "#ede8f8"),
@@ -107,7 +108,7 @@ _EMOJI_COLORS = {
     "🍽️": ("#f5d06b", "#fef7dd"), "☕": ("#8b6f5c", "#f3ebe5"),
     "🧁": ("#f5a7c7", "#fce8f3"), "🍵": ("#7ecfb3", "#d9f5ec"),
 
-    "🏥": ("#e87a7a", "#fde8e8"), "💊": ("#7ec8e3", "#e0f4fb"),
+    "🏥": ("#e87a7a", "#fde8e8"), "🫐": ("#7ec8e3", "#e0f4fb"),
     "🩺": ("#52b788", "#d8f3e8"), "💪": ("#e8855a", "#fde8de"),
     "🧘": ("#9b87d4", "#ede8f8"), "🍎": ("#d94f70", "#fde6ee"),
     "🥗": ("#52b788", "#d8f3e8"), "💧": ("#7ec8e3", "#e0f4fb"),
@@ -117,7 +118,7 @@ _EMOJI_COLORS = {
     "🏕️": ("#52b788", "#d8f3e8"), "🚗": ("#e8855a", "#fde8de"),
     "🚲": ("#7ecfb3", "#d9f5ec"), "🎟️": ("#f5a7c7", "#fce8f3"),
 
-    "⚖️": ("#9b87d4", "#ede8f8"), "🛡️": ("#52b788", "#d8f3e8"),
+    "⚖️": ("#9b87d4", "#ede8f8"), "📗": ("#52b788", "#d8f3e8"),
     "🔐": ("#e8b84b", "#fef7dd"), "🔑": ("#f5d06b", "#fef7dd"),
     "📜": ("#c49a6c", "#f7eadc"), "🤝": ("#7ecfb3", "#d9f5ec"),
     "📣": ("#e8855a", "#fde8de"), "📥": ("#b09e94", "#f7f4f0"),
@@ -482,7 +483,8 @@ def _fallback_file_summary(filename: str, text: str) -> str:
     if name_context:
         return f"This file appears to be related to {name_context}."
     return "No readable summary could be generated for this file."
-
+    
+# TextBlob fallback: produce suggestions when Gemini is disabled.
 _TB_STOPWORDS = {
     "the", "and", "for", "are", "was", "with", "this", "that", "from",
     "have", "has", "had", "not", "but", "all", "can", "its", "will",
@@ -565,6 +567,7 @@ def _textblob_fallback_suggestions(
         ]
         print(f"   Top TextBlob terms: {top_words[:6]}")
 
+        # Generate candidate folder names based on top terms, with simple heuristics for confidence and reasoning.
         candidates = []
         if len(top_words) >= 2:
             candidates.append((f"{top_words[0].title()} {top_words[1].title()}", 72.0,
@@ -613,7 +616,7 @@ def _textblob_fallback_suggestions(
         print(f"WARNING: TextBlob fallback error: {e}")
         return _textblob_default_suggestions(existing_folders)
 
-
+# When TextBlob fails to find strong terms, provide some safe default suggestions.
 def _textblob_default_suggestions(existing_folders: List[str]) -> List[Dict]:
     defaults = [
         ("Inbox", "📥", 30.0, "TextBlob could not identify strong terms."),
@@ -632,7 +635,7 @@ def _textblob_default_suggestions(existing_folders: List[str]) -> List[Dict]:
         })
     return suggestions
 
-
+# Simple heuristic to assign an emoji based on keywords in the folder name.
 def _emoji_for_phrase(name: str) -> str:
     name_l = name.lower()
 
@@ -737,7 +740,6 @@ def _emoji_for_phrase(name: str) -> str:
 
 
 # Main analyzer: combine extraction, AI/fallback suggestions, and metadata.
-
 def analyze_file(path: str, filename: str, folders: List[Dict] = None) -> Dict:
     """
     Full pipeline. Returns a dict with file_type, extension, word_count,
